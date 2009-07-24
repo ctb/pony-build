@@ -1,0 +1,14 @@
+#! /usr/bin/env python
+import _mypath
+from pony_build import server
+
+HOST='localhost'
+PORT=8080
+
+server = server.create(HOST, PORT)
+
+try:
+    print 'serving on http://%s:%d/xmlrpc' % (HOST, PORT)
+    server.serve_forever()
+except KeyboardInterrupt:
+    print 'exiting'
