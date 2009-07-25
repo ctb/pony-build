@@ -6,18 +6,19 @@ import os
 import tempfile
 import shutil
 
-repo_url = '/Users/t/dev/pygr'
+python_exe = sys.argv[1]
+repo_url = sys.argv[2]
 
-name = 'pygr'
+name = 'pygr.' + python_exe
 server_url = 'http://localhost:8080/xmlrpc'
 #server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
 
 context = TempDirectoryContext()
 commands = [ SetupCommand(['git', 'clone', repo_url],
                           name='checkout'),
-             BuildCommand(['python', 'setup.py', 'build_ext', '-i'],
+             BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
                           name='compile', run_cwd='pygr'),
-             TestCommand(['python', 'runtest.py', 'seqdb_test.py'],
+             TestCommand([python_exe, 'runtest.py', 'seqdb_test.py'],
                          name='run seqdb_test', run_cwd='pygr/tests')
              ]
 
