@@ -3,6 +3,7 @@ import sys
 from pony_build_client import BuildCommand, TestCommand, do
 import os
 import tempfile
+import shutil
 
 repo_url = '/Users/t/dev/pygr'
 

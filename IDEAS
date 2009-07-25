@@ -1,7 +1,5 @@
 have overall 'success'/'failure' flag
-
-always cleanup vs cleanup_if_fail
-send temp dir info to master
+inspect
+bsddb
 
 BUGS:
- -1 doesn't work with no results ;)
