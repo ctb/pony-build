@@ -1,11 +1,25 @@
 from urlparse import urlparse
 
+_DEBUG_SAVE_RESULTS=True
+_debug_results_filename='results.pickle'
+
 class SimpleApp(object):
     pages = { '' : 'index',
               'hello' : 'hello' }
     
     def __init__(self):
         self.results_list = []
+        if _DEBUG_SAVE_RESULTS:
+            from cPickle import load
+            try:
+                fp = open(_debug_results_filename)
+                self.results_list = load(fp)
+                fp.close()
+
+                print '_DEBUG: LOADED'
+                print self.results_list
+            except IOError:
+                pass
 
     def handle(self, command, path, headers):
         url = urlparse(path)
@@ -28,6 +42,12 @@ class SimpleApp(object):
         print results
         print '---'
         self.results_list.append((client_info, results))
+
+        if _DEBUG_SAVE_RESULTS:
+            from cPickle import dump
+            fp = open(_debug_results_filename, 'w')
+            dump(self.results_list, fp)
+            fp.close()
 
     def index(self, headers, query):
         x = []

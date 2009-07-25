@@ -5,6 +5,7 @@ name = 'build-example'
 server_url = 'http://localhost:8080/xmlrpc'
 
 commands = [ BuildCommand(['/bin/echo', 'hello, world']),
+             BuildCommand(['/bin/ls', '/blahblah']),
              TestCommand(['/bin/echo', 'this is a test'])
              ]
 
