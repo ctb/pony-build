@@ -125,19 +125,22 @@ class SimpleApp(object):
 
         x.append("<hr>\n")
 
-        receipt, client_info, results = self.results_list[-1]
-        timestamp = receipt['time']
-        host = client_info['host']
-        arch = client_info['arch']
-        pkg_name = client_info['package_name']
-        x.append("<a href='display_result_detail?n=-1'>View latest result</a> - from %s, %s, %s, %s" % (host, arch, pkg_name, format_timestamp(timestamp),))
+        if self.results_list:
+            receipt, client_info, results = self.results_list[-1]
+            timestamp = receipt['time']
+            host = client_info['host']
+            arch = client_info['arch']
+            pkg_name = client_info['package_name']
+            x.append("<a href='display_result_detail?n=-1'>View latest result</a> - from %s, %s, %s, %s" % (host, arch, pkg_name, format_timestamp(timestamp),))
 
-        x.append("<hr>\n")
+            x.append("<hr>\n")
 
-        x.append("<a href='packages'>List packages</a><p>")
-        x.append("<a href='hosts'>List hosts</a><p>")
-        x.append("<a href='archs'>List architectures</a><p>")
-        
+            x.append("<a href='packages'>List packages</a><p>")
+            x.append("<a href='hosts'>List hosts</a><p>")
+            x.append("<a href='archs'>List architectures</a><p>")
+        else:
+            x = ['No results yet.']
+
         return 200, ["Content-type: text/html"], "%s" % ("\n".join(x))
 
     def packages(self, headers):
@@ -149,7 +152,7 @@ class SimpleApp(object):
             s = "%s - <a href='view_package?package=%s'>view latest result</a>" % (pkg, urllib.quote_plus(pkg))
             x.append(s)
 
-        x = "Packages: <ul>" + "<li>".join(x) + "</ul>"
+        x = "Packages: <ul><li>" + "<li>".join(x) + "</ul>"
         return 200, ["Content-type: text/html"], x
 
     def hosts(self, headers):
@@ -162,7 +165,7 @@ class SimpleApp(object):
                 % (host, urllib.quote_plus(host),)
             x.append(s)
 
-        x = "<title>Hosts</title>Hosts: <ul>" + "<li>".join(x) + "</ul>"
+        x = "<title>Hosts</title>Hosts: <ul><li>" + "<li>".join(x) + "</ul>"
         return 200, ["Content-type: text/html"], x
 
     def archs(self, headers):
@@ -175,7 +178,7 @@ class SimpleApp(object):
                 % (arch, urllib.quote_plus(arch))
             x.append(s)
 
-        x = "Architectures: <ul>" + "<li>".join(x) + "</ul>"
+        x = "Architectures: <ul><li>" + "<li>".join(x) + "</ul>"
         return 200, ["Content-type: text/html"], x
 
     def view_arch(self, headers, arch=''):
@@ -183,27 +186,21 @@ class SimpleApp(object):
             return 200, ["Content-type: text/html"], "no such arch"
         
         latest = self._archs[arch][-1]
-        receipt, client_info, results = self.results_list[latest]
-
-        return self.display_result(receipt, client_info, results)
+        return self.display_result_detail(headers, n=latest)
 
     def view_host(self, headers, host=''):
         if not len(self._hosts.get(host, [])):
             return 200, ["Content-type: text/html"], "no such host"
         
         latest = self._hosts[host][-1]
-        receipt, client_info, results = self.results_list[latest]
-
-        return self.display_result(receipt, client_info, results)
+        return self.display_result_detail(headers, n=latest)
 
     def view_package(self, headers, package=''):
         if not len(self._packages.get(package, [])):
             return 200, ["Content-type: text/html"], "no such package"
         
         latest = self._packages[package][-1]
-        receipt, client_info, results = self.results_list[latest]
-
-        return self.display_result(receipt, client_info, results)
+        return self.display_result_detail(headers, n=latest)
 
     def display_result(self, receipt, client_info, results):
         host = client_info['host']

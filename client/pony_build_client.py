@@ -11,13 +11,14 @@ def _run_command(command_list, cwd):
     return (ret, out, err)
 
 class BaseCommand(object):
-    def __init__(self):
-        self.name = ''
-        self.command_type = None
+    def __init__(self, command_list, name='', run_cwd=None):
+        self.command_list = command_list
+        self.command_name = name
+        self.run_cwd = run_cwd
+        
         self.status = None
         self.output = None
         self.errout = None
-        self.run_cwd = None
         
     def run(self):
         (ret, out, err) = _run_command(self.command_list, self.run_cwd)
@@ -26,18 +27,14 @@ class BaseCommand(object):
         self.errout = err
 
 class BuildCommand(BaseCommand):
-    def __init__(self, command_list, name=''):
-        BaseCommand.__init__(self)
-        self.command_list = command_list
-        self.command_type = 'build'
-        self.command_name = name
+    command_type = 'build'
+    def __init__(self, *args, **kwargs):
+        BaseCommand.__init__(self, *args, **kwargs)
         
 class TestCommand(BaseCommand):
-    def __init__(self, command_list, name=''):
-        BaseCommand.__init__(self)
-        self.command_list = command_list
-        self.command_type = 'test'
-        self.command_name = name
+    command_type = 'test'
+    def __init__(self, *args, **kwargs):
+        BaseCommand.__init__(self, *args, **kwargs)
 
 def _send(server, info, results):
     print 'connecting to', server
@@ -48,6 +45,7 @@ def do(name, commands, server, hostname=None, arch=None):
     reslist = []
 
     for c in commands:
+        print 'running: %s (%s)' % (c.command_name, c.command_type)
         c.run()
         results = dict(status=c.status,
                        output=c.output,
