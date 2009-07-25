@@ -21,6 +21,7 @@ class SimpleApp(object):
               'view_host' : 'view_host',
               'view_package' : 'view_package',
               'display_result_detail' : 'display_result_detail',
+              'inspect' : 'inspect'
               }
     
     def __init__(self):
@@ -280,3 +281,27 @@ class SimpleApp(object):
 
         return 200, ["content-type: text/html"], x
         
+    def inspect(self, headers, n=''):
+        n = int(n)
+        receipt, client_info, results = self.results_list[n]
+
+        l = ["Receipt info:<pre>"]
+        for k in receipt:
+            v = receipt[k]
+            l.append("%s: %s\n" % (k, repr(v)))
+            
+        l.append("</pre><hr>Client info:<pre>")
+        for k in client_info:
+            v = client_info[k]
+            l.append("%s: %s\n" % (k, repr(v)))
+            
+        l.append("</pre><hr>Results:<ol>")
+        for n, result_d in enumerate(results):
+            l.append('<li>Result %d:<br><pre>' % (n,))
+            for k in result_d:
+                v = result_d[k]
+                l.append("%s: %s\n" % (k, repr(v)))
+            l.append('</pre>')
+            
+
+        return 200, ["Content-type: text/html"], "".join(l)

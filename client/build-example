@@ -12,6 +12,6 @@ commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='David'),
              ]
 
 context = TempDirectoryContext()
-results = do(name, commands, context=context)
+results = do(name, commands, context=context, stop_if_failure=False)
 print results
 send(server_url, results, hostname='laptop')

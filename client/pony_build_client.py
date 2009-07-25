@@ -96,7 +96,7 @@ def _send(server, info, results):
     s = xmlrpclib.ServerProxy(server)
     print s.add_results(info, results)
 
-def do(name, commands, context=None, arch=None):
+def do(name, commands, context=None, arch=None, stop_if_failure=True):
     reslist = []
 
     if context:
@@ -117,6 +117,9 @@ def do(name, commands, context=None, arch=None):
                        name=c.command_name)
         reslist.append(results)
 
+        if stop_if_failure and not c.success():
+            break
+
     if context:
         context.finish()
 
@@ -124,7 +127,9 @@ def do(name, commands, context=None, arch=None):
         import sys
         arch = sys.platform
 
-    client_info = dict(package_name=name, arch=arch)
+    success = all([ c.success() for c in commands ])
+
+    client_info = dict(package_name=name, arch=arch, success=success)
     if context:
         context.update_client_info(client_info)
         
