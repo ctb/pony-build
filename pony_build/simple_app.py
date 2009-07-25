@@ -5,7 +5,7 @@ class SimpleApp(object):
               'hello' : 'hello' }
     
     def __init__(self):
-        pass
+        self.results_list = []
 
     def handle(self, command, path, headers):
         url = urlparse(path)
@@ -23,8 +23,22 @@ class SimpleApp(object):
         
         return fn(headers, url.query)
 
+    def add_results(self, client_info, results):
+        print client_info
+        print results
+        print '---'
+        self.results_list.append((client_info, results))
+
     def index(self, headers, query):
-        return 200, ["Content-type: text/html"], "index"
+        x = []
+        for client_info, results in self.results_list:
+            host = client_info['host']
+            arch = client_info['arch']
+            pkg_name = client_info['package_name']
+
+            x.append("%s - %s - %s<p>" % (host, arch, pkg_name,))
+        
+        return 200, ["Content-type: text/html"], "%s" % ("\n".join(x))
 
     def hello(self, headers, query):
         return 200, ["Content-type: text/html"], "hello"

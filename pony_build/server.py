@@ -13,8 +13,7 @@ def add_results(client_info, results):
     for d in results:
         d.keys()
 
-    print client_info
-    print results
+    _app.add_results(client_info, results)
 
     return 1
     

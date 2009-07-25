@@ -1,9 +1,6 @@
 import subprocess
 import xmlrpclib
 
-HOST='laptop'
-MACHTYPE='linux/test'
-
 def _run_command(command_list, cwd):
     p = subprocess.Popen(command_list, shell=False, cwd=cwd,
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -44,7 +41,7 @@ def _send(server, info, results):
     s = xmlrpclib.ServerProxy(server)
     print s.add_results(info, results)
 
-def do(name, commands, server):
+def do(name, commands, server, hostname=None, arch=None):
     reslist = []
 
     for c in commands:
@@ -55,7 +52,15 @@ def do(name, commands, server):
                        type=c.command_type)
         reslist.append(results)
 
-    client_info = dict(package_name=name, host=HOST, arch=MACHTYPE)
+    if hostname is None:
+        import socket
+        hostname = socket.gethostname()
+
+    if arch is None:
+        import sys
+        arch = sys.platform
+
+    client_info = dict(package_name=name, host=hostname, arch=arch)
 
     print client_info
     print reslist
