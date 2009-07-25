@@ -4,9 +4,9 @@ from pony_build_client import BuildCommand, TestCommand, do
 name = 'build-example'
 server_url = 'http://localhost:8080/xmlrpc'
 
-commands = [ BuildCommand(['/bin/echo', 'hello, world']),
-             BuildCommand(['/bin/ls', '/blahblah']),
-             TestCommand(['/bin/echo', 'this is a test'])
+commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='David'),
+             BuildCommand(['/bin/ls', '/blahblah'], name='Stephanie'),
+             TestCommand(['/bin/echo', 'this is a test'], name='Bill')
              ]
 
-do(name, commands, server_url)
+do(name, commands, server_url, hostname='laptop')

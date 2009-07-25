@@ -4,6 +4,7 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 from BaseHTTPServer import BaseHTTPRequestHandler
 
+client_ip = None
 def add_results(client_info, results):
     # client_info is a dictionary of client information
     # results is a list of dictionaries, each dict containing build/test info
@@ -13,7 +14,7 @@ def add_results(client_info, results):
     for d in results:
         d.keys()
 
-    _app.add_results(client_info, results)
+    _app.add_results(client_ip, client_info, results)
 
     return 1
     
@@ -27,6 +28,9 @@ class RequestHandler(BaseHTTPRequestHandler, SimpleXMLRPCRequestHandler):
         if not SimpleXMLRPCRequestHandler.is_rpc_path_valid(self):
             return self.do_nonrpc_POST()
 
+        # @CTB hack hack hack, I should be ashamed of myself.
+        global client_ip
+        client_ip = self.client_address[0]
         return SimpleXMLRPCRequestHandler.do_POST(self)
 
     def do_nonrpc_POST(self):

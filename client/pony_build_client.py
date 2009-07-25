@@ -12,6 +12,7 @@ def _run_command(command_list, cwd):
 
 class BaseCommand(object):
     def __init__(self):
+        self.name = ''
         self.command_type = None
         self.status = None
         self.output = None
@@ -25,16 +26,18 @@ class BaseCommand(object):
         self.errout = err
 
 class BuildCommand(BaseCommand):
-    def __init__(self, command_list):
+    def __init__(self, command_list, name=''):
         BaseCommand.__init__(self)
         self.command_list = command_list
         self.command_type = 'build'
+        self.command_name = name
         
 class TestCommand(BaseCommand):
-    def __init__(self, command_list):
+    def __init__(self, command_list, name=''):
         BaseCommand.__init__(self)
         self.command_list = command_list
         self.command_type = 'test'
+        self.command_name = name
 
 def _send(server, info, results):
     print 'connecting to', server
@@ -49,7 +52,9 @@ def do(name, commands, server, hostname=None, arch=None):
         results = dict(status=c.status,
                        output=c.output,
                        errout=c.errout,
-                       type=c.command_type)
+                       command=str(c.command_list),
+                       type=c.command_type,
+                       name=c.command_name)
         reslist.append(results)
 
     if hostname is None:
