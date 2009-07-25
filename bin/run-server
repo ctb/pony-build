@@ -1,11 +1,13 @@
 #! /usr/bin/env python
 import _mypath
-from pony_build import server
+from pony_build import server, simple_app
 
 HOST='localhost'
 PORT=8080
 
-server = server.create(HOST, PORT)
+app = simple_app.SimpleApp()
+
+server = server.create(HOST, PORT, app)
 
 try:
     print 'serving on http://%s:%d/xmlrpc' % (HOST, PORT)
