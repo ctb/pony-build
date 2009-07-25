@@ -24,20 +24,15 @@ class SimpleApp(object):
               'inspect' : 'inspect'
               }
     
-    def __init__(self):
+    def __init__(self, db=None):
         self.results_list = []
-        if _DEBUG_SAVE_RESULTS:
-            from cPickle import load
-            try:
-                fp = open(_debug_results_filename)
-                self.results_list = load(fp)
-                fp.close()
+        self.db = db
 
-                print '_DEBUG: LOADED'
-                print self.results_list
-                self._process_results()
-            except IOError:
-                pass
+        if db is not None:
+            keys = [ (int(k), k) for k in db.keys() ]
+            keys.sort()
+            self.results_list = [ db[k] for (_, k) in keys ]
+            self._process_results()
 
     def handle(self, command, path, headers):
         url = urlparse(path)
@@ -53,7 +48,6 @@ class SimpleApp(object):
         if fn_name is None or fn is None:
             return 404, ["Content-type: text/html"], "<font color='red'>not found</font>"
 
-        print 'CALLING', fn, url.query
         qs = cgi.parse_qs(url.query)
 
         qs2 = {}
@@ -64,8 +58,6 @@ class SimpleApp(object):
             qs2[k] = v
         qs = qs2
         
-        print '**', qs
-
         try:
             return fn(headers, **qs)
         except TypeError:
@@ -78,13 +70,13 @@ class SimpleApp(object):
         print results
         print '---'
         receipt = dict(time=time.time(), client_ip=client_ip)
-        self.results_list.append((receipt, client_info, results))
+        
+        next_key = str(len(self.results_list))
+        if self.db is not None:
+            self.db[next_key] = (receipt, client_info, results)
+            self.db.sync()
 
-        if _DEBUG_SAVE_RESULTS:
-            from cPickle import dump
-            fp = open(_debug_results_filename, 'w')
-            dump(self.results_list, fp)
-            fp.close()
+        self.results_list.append((receipt, client_info, results))
 
         self._process_results()
 
@@ -203,31 +195,6 @@ class SimpleApp(object):
         latest = self._packages[package][-1]
         return self.display_result_detail(headers, n=latest)
 
-    def display_result(self, receipt, client_info, results):
-        host = client_info['host']
-        arch = client_info['arch']
-        pkg = client_info['package_name']
-        
-        x = """<title>Result view</title>Package: %s<br>Host: %s<br>Architecture: %s<br><hr>""" % (pkg, host, arch,)
-
-        l = []
-        for r in results:
-            name = r['name']
-            typ = r['type']
-            status = r['status']
-            if status == 0:
-                status = 'success'
-            else:
-                status = 'failure (%d)' % (status,)
-            output = r['output']
-            errout = r['errout']
-
-            l.append("<li> <b>%s:</b> %s - %s" % (name, typ, status,))
-
-        x += "<ul>" + "\n".join(l) + "</ul>"
-
-        return 200, ["content-type: text/html"], x
-
     def display_result_detail(self, headers, n=''):
         n = int(n)
         receipt, client_info, results = self.results_list[n]
@@ -237,6 +204,12 @@ class SimpleApp(object):
         pkg = client_info['package_name']
         
         x = """<title>Result view</title><h2>Result detail</h2>Package: %s<br>Host: %s (%s)<br>Architecture: %s<br>""" % (pkg, host, receipt['client_ip'], arch,)
+
+        success = client_info['success']
+        if success:
+            x += "<p><b><font color='green'>SUCCESS</font></b>"
+        else:
+            x += "<p><b><font color='red'>FAILURE</font></b>"
 
         x += "<p>Timestamp: %s<p>" % (format_timestamp(receipt['time']),)
 

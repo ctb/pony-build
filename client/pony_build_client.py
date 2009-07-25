@@ -81,15 +81,14 @@ class BaseCommand(object):
     def success(self):
         return self.status == 0
 
+class SetupCommand(BaseCommand):
+    command_type = 'setup'
+
 class BuildCommand(BaseCommand):
     command_type = 'build'
-    def __init__(self, *args, **kwargs):
-        BaseCommand.__init__(self, *args, **kwargs)
         
 class TestCommand(BaseCommand):
     command_type = 'test'
-    def __init__(self, *args, **kwargs):
-        BaseCommand.__init__(self, *args, **kwargs)
 
 def _send(server, info, results):
     print 'connecting to', server
