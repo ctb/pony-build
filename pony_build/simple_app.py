@@ -1,3 +1,6 @@
+from BaseHTTPServer import BaseHTTPRequestHandler
+from wsgiref.headers import Headers
+
 from urlparse import urlparse
 import cgi
 import traceback
@@ -32,7 +35,12 @@ class SimpleApp(object):
             self.results_list = [ db[k] for (_, k) in keys ]
             self._process_results()
 
-    def handle(self, command, path, headers):
+    def handle(self, environ):
+        path = environ['PATH_INFO']
+        query_string = environ['QUERY_STRING']
+    
+        print 'HANDLE:', path, query_string
+        
         url = urlparse(path)
         words = url.path.split('/')[1:]
         words = filter(None, words)
@@ -46,7 +54,9 @@ class SimpleApp(object):
         if fn_name is None or fn is None:
             return 404, ["Content-type: text/html"], "<font color='red'>not found</font>"
 
-        qs = cgi.parse_qs(url.query)
+        ###
+
+        qs = cgi.parse_qs(query_string)
 
         qs2 = {}
         for k in qs:
@@ -57,10 +67,28 @@ class SimpleApp(object):
         qs = qs2
         
         try:
-            return fn(headers, **qs)
+            return fn(None, **qs)
         except TypeError:
             traceback.print_exc()
-            return 404, ["Content-type: text/html"], "<font color='red'>bad args</font>"            
+            return 404, ["Content-type: text/html"], "<font color='red'>bad args</font>"
+
+    def wsgi_interface(self, environ, start_response):
+        """
+        Provide a WSGI app.
+        """
+        status, response_headers, data = self.handle(environ)
+
+        (message, _) = BaseHTTPRequestHandler.responses[status]
+
+        response_headers = [ x.split(': ', 1) for x in response_headers ]
+        response_headers = [ (a, b) for (a, b) in response_headers ]
+        
+        #print 'R', response_headers, type(data)
+        data = str(data)
+        
+        status_str = "%d %s" % (status, message)
+        start_response(status_str, response_headers)
+        return [str(data)]
 
     def add_results(self, client_ip, client_info, results):
         print client_ip

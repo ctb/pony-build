@@ -1,8 +1,8 @@
-## use wsgiref.BaseHandler and pass in a WSGI app!!
+from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
+     SimpleXMLRPCDispatcher
+from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
+     make_server, ServerHandler, demo_app
 
-from SimpleXMLRPCServer import SimpleXMLRPCServer
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-from BaseHTTPServer import BaseHTTPRequestHandler
 
 client_ip = None
 def add_results(client_info, results):
@@ -21,46 +21,43 @@ def add_results(client_info, results):
 # Restrict to a particular path.
 
 _app = None
-class RequestHandler(BaseHTTPRequestHandler, SimpleXMLRPCRequestHandler):
+
+class Server(WSGIServer, SimpleXMLRPCDispatcher):
+    def __init__(self, *args, **kwargs):
+        WSGIServer.__init__(self, *args, **kwargs)
+        SimpleXMLRPCDispatcher.__init__(self, False, None)
+
+
+class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
     rpc_paths = ('/xmlrpc',)
 
-    def do_POST(self):
-        if not SimpleXMLRPCRequestHandler.is_rpc_path_valid(self):
-            return self.do_nonrpc_POST()
+    def handle(self):
+        self.raw_requestline = self.rfile.readline()
+        if not self.parse_request(): # An error code has been sent, just exit
+            return
 
-        # @CTB hack hack hack, I should be ashamed of myself.
-        global client_ip
-        client_ip = self.client_address[0]
-        return SimpleXMLRPCRequestHandler.do_POST(self)
+        if SimpleXMLRPCRequestHandler.is_rpc_path_valid(self):
+            # @CTB hack hack hack, I should be ashamed of myself.
+            global client_ip
+            client_ip = self.client_address[0]
+            return SimpleXMLRPCRequestHandler.do_POST(self)
 
-    def do_nonrpc_POST(self):
-        response_code, headers, content = _app.handle(self.command,
-                                                      self.path,
-                                                      self.headers)
-        
-        self.send_response(response_code)
-        for h in headers:
-            k, v = h.split(':', 1)
-            self.send_header(k, v)
-        self.end_headers()
-        
-        self.wfile.write(content)
-
-        # shut down the connection
-        self.wfile.flush()
-        self.connection.shutdown(1)
-
-    def do_GET(self):
-        return self.do_nonrpc_POST()
+        handler = ServerHandler(
+            self.rfile, self.wfile, self.get_stderr(), self.get_environ()
+        )
+        handler.request_handler = self      # backpointer for logging
+        handler.run(self.server.get_app())
 
 def create(interface, port, app):
     global _app
     
     # Create server
-    server = SimpleXMLRPCServer((interface, port),
-                                requestHandler=RequestHandler)
-    _app = app
+    server = make_server(interface, port, app.wsgi_interface,
+                         server_class=Server,
+                         handler_class=RequestHandler)
 
     server.register_function(add_results)
+    
+    _app = app
 
     return server
