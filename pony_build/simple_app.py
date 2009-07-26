@@ -138,6 +138,7 @@ class SimpleApp(object):
 {% if not results_list %}
    No results yet.
 {% else %}
+   Last build:<br>
    {% if last_status %}
       <b><font color='green'>SUCCESS</font></b>
    {% else %}
@@ -145,6 +146,9 @@ class SimpleApp(object):
    {% endif %}
 
    - {{ last_package }} / {{ last_arch }} on {{ last_timestamp }}
+   <br>
+   
+   <a href='display_result_detail?n=-1'>view</a>
 {% endif %}
 
 <hr>
