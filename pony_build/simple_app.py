@@ -4,6 +4,7 @@ import traceback
 import urllib
 import time
 import datetime
+from jinja2 import Template
 
 def format_timestamp(t):
     dt = datetime.datetime.fromtimestamp(t)
@@ -101,76 +102,96 @@ class SimpleApp(object):
 
     def index(self, headers):
         x = []
-        s = set()
-        for receipt, client_info, results in self.results_list:
-            host = client_info['host']
-            arch = client_info['arch']
-            pkg_name = client_info['package_name']
 
-            s.add((host, arch, pkg_name))
+        page = """\
+<title>pony-build main</title>
+<h2>pony-build main</h2>
 
-        x.append("<title>pony-build main</title><h2>pony-build main</h2>")
-        if self.results_list:
-            receipt, client_info, results = self.results_list[-1]
-            success = client_info['success']
-            if success:
-                success = "<b><font color='green'>SUCCESS</font></b>"
-            else:
-                success = "<b><font color='red'>FAILURE</font></b>"
-            
-            timestamp = receipt['time']
-            host = client_info['host']
-            arch = client_info['arch']
-            pkg_name = client_info['package_name']
-            x.append("<a href='display_result_detail?n=-1'>View latest result</a> - %s from %s/%s/%s, on %s" % (success, host, arch, pkg_name, format_timestamp(timestamp),))
+{% if not results_list %}
+   No results yet.
+{% else %}
+   {% if last_status %}
+      <b><font color='green'>SUCCESS</font></b>
+   {% else %}
+      <b><font color='red'>FAILURE</font></b>
+   {% endif %}
 
-            x.append("<hr>\n")
+   - {{ last_package }} / {{ last_arch }} on {{ last_timestamp }}
+{% endif %}
 
-            x.append("<a href='packages'>List packages</a><p>")
-            x.append("<a href='hosts'>List hosts</a><p>")
-            x.append("<a href='archs'>List architectures</a><p>")
-        else:
-            x = ['No results yet.']
+<hr>
+<a href='packages'>List packages</a>
+<p>
+<a href='hosts'>List hosts</a>
+<p>
+<a href='archs'>List architectures</a>
+<p>
+"""
+        results_list = self.results_list
+        if results_list:
+            receipt, client_info, results = results_list[-1]
+            last_status = client_info['success']
+            last_timestamp = format_timestamp(receipt['time'])
+            last_host = client_info['host']
+            last_arch = client_info['arch']
+            last_package = client_info['package_name']
 
-        return 200, ["Content-type: text/html"], "%s" % ("\n".join(x))
+        t = Template(page)
+        html = t.render(locals())
+        
+        return 200, ["Content-type: text/html"], html
 
     def packages(self, headers):
-        x = []
-        l = self._packages.keys()
-        l.sort()
+        packages = self._packages.keys()
+        packages.sort()
 
-        for pkg in l:
-            s = "%s - <a href='view_package?package=%s'>view latest result</a>" % (pkg, urllib.quote_plus(pkg))
-            x.append(s)
+        page = """\
+<title>Package list</title>
+<h2>Package list</h2>
 
-        x = "Packages: <ul><li>" + "<li>".join(x) + "</ul>"
-        return 200, ["Content-type: text/html"], x
+<ul>
+{% for package in packages %}
+<li> {{ package }} - <a href='view_package?package={{ package }}'>view latest result</a>
+{% endfor %}
+</ul>
+"""
+        t = Template(page)
+        return 200, ["Content-type: text/html"], t.render(locals())
 
     def hosts(self, headers):
-        x = []
-        l = self._hosts.keys()
-        l.sort()
+        hosts = self._hosts.keys()
+        hosts.sort()
 
-        for host in l:
-            s = "%s - <a href='view_host?host=%s'>view latest result</a>" \
-                % (host, urllib.quote_plus(host),)
-            x.append(s)
+        page = """\
+<title>Host list</title>
+<h2>Host list</h2>
 
-        x = "<title>Hosts</title>Hosts: <ul><li>" + "<li>".join(x) + "</ul>"
-        return 200, ["Content-type: text/html"], x
+<ul>
+{% for host in hosts %}
+<li> {{ host }} - <a href='view_host?host={{ host }}'>view latest result</a>
+{% endfor %}
+</ul>
+"""
+        t = Template(page)
+        return 200, ["Content-type: text/html"], t.render(locals())
 
     def archs(self, headers):
-        x = []
-        l = self._archs.keys()
-        l.sort()
 
-        for arch in l:
-            s = "%s - <a href='view_arch?arch=%s'>view latest result</a>" \
-                % (arch, urllib.quote_plus(arch))
-            x.append(s)
+        archs = self._archs.keys()
+        archs.sort()
 
-        x = "Architectures: <ul><li>" + "<li>".join(x) + "</ul>"
-        return 200, ["Content-type: text/html"], x
+        page = """\
+<title>Architecture list</title>
+<h2>Architecture list</h2>
+
+<ul>
+{% for arch in archs %}
+<li> {{ arch }} - <a href='view_arch?arch={{ arch }}'>view latest result</a>
+{% endfor %}
+</ul>
+"""
+        t = Template(page)
+        return 200, ["Content-type: text/html"], t.render(locals())
 
     def view_arch(self, headers, arch=''):
         if not len(self._archs.get(arch, [])):
