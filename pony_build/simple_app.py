@@ -218,84 +218,115 @@ class SimpleApp(object):
         n = int(n)
         receipt, client_info, results = self.results_list[n]
 
-        host = client_info['host']
-        arch = client_info['arch']
-        pkg = client_info['package_name']
+        timestamp = format_timestamp(receipt['time'])
         
-        x = """<title>Result view</title><h2>Result detail</h2>Package: %s<br>Host: %s (%s)<br>Architecture: %s<br>""" % (pkg, host, receipt['client_ip'], arch,)
+        page = """
+<title>Result view</title>
+<h2>Result detail</h2>
 
-        success = client_info['success']
-        if success:
-            x += "<p><b><font color='green'>SUCCESS</font></b>"
-        else:
-            x += "<p><b><font color='red'>FAILURE</font></b>"
+Package: {{ client_info['package_name'] }}<br>
+Host: {{ client_info['host'] }} ({{ receipt['client_ip'] }})<br>
+Architecture: {{client_info['arch'] }}<br>
 
-        x += "<p>Timestamp: %s<p>" % (format_timestamp(receipt['time']),)
+<p>
 
-        l = []
-        for n, r in enumerate(results):
-            name = r['name']
-            typ = r['type']
-            status = r['status']
-            if status == 0:
-                status = '<font color="green">success</font>'
-            else:
-                status = '<font color="red">failure (%d)</font>' % (status,)
-            l.append("<a href='#%d'>%s; %s; %s</a>" % (n, typ, name, status))
+<b>
+ {% if client_info['success'] -%}
+   <font color='green'>SUCCESS</font>
+ {% else %}
+   <font color='red'>FAILURE</font>
+ {% endif %}
+</b>
 
-        x += "Build steps: <ol><li>" + "<li>".join(l) + "</ol>"
+<p>
+Timestamp: {{ timestamp }}
+<p>
 
-        x += "<h2>Details</h2>"
+Build steps:
+<ol>
+{% for r in results %}
+   <li> <a href='#{{ loop.index0 }}'>{{ r['type'] }}; {{ r['name'] }};
+   {% if r['status'] == 0 %}
+      <font color="green">success</font>
+   {% else %}
+      <font color="red">failure ({{ r['status'] }})</font>
+   {% endif %}
+   </a>
+{% endfor %}
+</ol>
 
-        l = []
-        for n, r in enumerate(results):
-            name = r['name']
-            typ = r['type']
-            command = r['command']
-            status = r['status']
-            if status == 0:
-                status = '<font color="green">success</font>'
-            else:
-                status = '<font color="red">failure (%d)</font>' % (status,)
-            output = r['output']
-            errout = r['errout']
+<h2>Details</h2>
+<ul>
+{% for r in results %}
+   <hr>
+   <li> <a name='{{ loop.index0 }}'>
+   <b>{{ r['name'] }}</b> {{ r['type'] }} -
+   {% if r['status'] == 0 %}
+      <font color="green">success</font>
+   {% else %}
+      <font color="red">failure ({{ r['status'] }})</font>
+   {% endif %}
 
-            l.append("<a name='%d'>\n" % (n,))
-            l.append("<hr><b>%s:</b></b> %s - %s<p>" % (name, typ, status,))
-            l.append("<b>command line:</b> %s<p>" % (command,))
-            l.append("<b>stdout:</b><pre>%s</pre><p>" % (output,))
-            if errout.strip():
-                l.append("<b>stderr:</b><pre>%s</pre><p>" % (errout,))
-            else:
-                l.append("<i>(no stderr)</i><p>")
-
-        x += "<ul>" + "\n".join(l) + "</ul>"
-
-        x += "<hr><a href='inspect?n=%d'>inspect raw record</a>" % (n,)
-
-        return 200, ["content-type: text/html"], x
+   <p>
+   
+   <b>command line:</b>{{ r['command'] }}
+   <p>
+   <b>stdout:</b><pre>{{ r['output'] }}</pre>
+   
+   {% if r['errout'].strip() %}
+   <b>stderr:</b><pre>{{ r['errout'] }}</pre>
+   {% else %}
+   <i>no stderr</i>
+   {% endif %}
+   <p>
+{% endfor %}
+</ul>
+<hr><a href='inspect?n={{ n }}'>inspect raw record</a>
+"""
+        t = Template(page).render(locals())
+        return 200, ["content-type: text/html"], t
         
     def inspect(self, headers, n=''):
         n = int(n)
         receipt, client_info, results = self.results_list[n]
 
-        l = ["Receipt info:<pre>"]
-        for k in receipt:
-            v = receipt[k]
-            l.append("%s: %s\n" % (k, repr(v)))
-            
-        l.append("</pre><hr>Client info:<pre>")
-        for k in client_info:
-            v = client_info[k]
-            l.append("%s: %s\n" % (k, repr(v)))
-            
-        l.append("</pre><hr>Results:<ol>")
-        for n, result_d in enumerate(results):
-            l.append('<li>Result %d:<br><pre>' % (n,))
-            for k in result_d:
-                v = result_d[k]
-                l.append("%s: %s\n" % (k, repr(v)))
-            l.append('</pre>')
-            
+        def repr_dict(d):
+            return dict([ (k, repr(d[k])) for k in d ])
 
-        return 200, ["Content-type: text/html"], "".join(l)
+        receipt = repr_dict(receipt)
+        client_info = repr_dict(client_info)
+        results = [ repr_dict(d) for d in results ]
+
+        page = """\
+<title>Inspector for record {{ n }}</title>
+<h2>Inspector for record {{ n }}</h2>
+
+Receipt info:
+<pre>
+{% for k, v in receipt.items() -%}
+   {{ k }}: {{ v }}
+{% endfor -%}
+</pre>
+
+Client info:
+<pre>
+{% for k, v in client_info.items() -%}
+   {{ k }}: {{ v }}
+{% endfor -%}
+</pre>
+
+<b>Results:</b>
+<ul>
+{% for result_d in results -%}
+   <li>Result {{ loop.index }}:<br>
+   <pre>
+   {% for k, v in result_d.items() -%}
+      {{ k }}: {{ v }}
+   {% endfor -%}
+   </pre>
+{% endfor %}
+</ul>
+"""
+
+        html = Template(page).render(locals())
+        return 200, ["Content-type: text/html"], html
