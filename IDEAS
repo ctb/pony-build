@@ -1,4 +1,17 @@
+build virtualenv in?
+record time to run 
+TAGS
+
 dependency chains?
 different commands for same package/arch/etc?
+integration with unittest, etc.
+ship with tests that report back
+
+build in a proper database abstraction
 
 BUGS:
+
+
+TOOLS:
+  Template: Genshi or Jinja
+  Web: bobo or  web.py

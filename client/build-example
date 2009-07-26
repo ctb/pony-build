@@ -4,7 +4,6 @@ from pony_build_client import BuildCommand, TestCommand, do, send, \
 
 name = 'build-example'
 server_url = 'http://localhost:8080/xmlrpc'
-#server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
 
 commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='David'),
 #             BuildCommand(['/bin/ls', '/blahblah'], name='Stephanie'),
@@ -13,5 +12,4 @@ commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='David'),
 
 context = TempDirectoryContext()
 results = do(name, commands, context=context, stop_if_failure=False)
-print results
 send(server_url, results, hostname='laptop')

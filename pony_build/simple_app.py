@@ -9,9 +9,6 @@ def format_timestamp(t):
     dt = datetime.datetime.fromtimestamp(t)
     return dt.strftime("%A, %d %B %Y, %I:%M%p")
 
-_DEBUG_SAVE_RESULTS=True
-_debug_results_filename='results.pickle'
-
 class SimpleApp(object):
     pages = { '' : 'index',
               'archs' : 'archs',
@@ -112,19 +109,20 @@ class SimpleApp(object):
 
             s.add((host, arch, pkg_name))
 
-        x.append("<title>pony-build main</title><b>Host / architecture / package list</b><p>")
-        for (host, arch, pkg_name) in s:
-            x.append("%s - %s - %s<p>" % (host, arch, pkg_name,))
-
-        x.append("<hr>\n")
-
+        x.append("<title>pony-build main</title><h2>pony-build main</h2>")
         if self.results_list:
             receipt, client_info, results = self.results_list[-1]
+            success = client_info['success']
+            if success:
+                success = "<b><font color='green'>SUCCESS</font></b>"
+            else:
+                success = "<b><font color='red'>FAILURE</font></b>"
+            
             timestamp = receipt['time']
             host = client_info['host']
             arch = client_info['arch']
             pkg_name = client_info['package_name']
-            x.append("<a href='display_result_detail?n=-1'>View latest result</a> - from %s, %s, %s, %s" % (host, arch, pkg_name, format_timestamp(timestamp),))
+            x.append("<a href='display_result_detail?n=-1'>View latest result</a> - %s from %s/%s/%s, on %s" % (success, host, arch, pkg_name, format_timestamp(timestamp),))
 
             x.append("<hr>\n")
 
@@ -251,6 +249,8 @@ class SimpleApp(object):
                 l.append("<i>(no stderr)</i><p>")
 
         x += "<ul>" + "\n".join(l) + "</ul>"
+
+        x += "<hr><a href='inspect?n=%d'>inspect raw record</a>" % (n,)
 
         return 200, ["content-type: text/html"], x
         
