@@ -3,7 +3,7 @@ from pony_build_client import BuildCommand, TestCommand, do, send, \
      TempDirectoryContext
 
 name = 'build-example'
-server_url = 'http://localhost:8080/xmlrpc'
+server_url = 'http://localhost:8089/xmlrpc'
 
 commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='David'),
 #             BuildCommand(['/bin/ls', '/blahblah'], name='Stephanie'),
