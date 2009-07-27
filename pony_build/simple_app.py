@@ -95,14 +95,8 @@ class SimpleApp(object):
         print results
         print '---'
         receipt = dict(time=time.time(), client_ip=client_ip)
-        
-        next_key = str(len(self.results_list))
-        if self.db is not None:
-            self.db[next_key] = (receipt, client_info, results)
-            self.db.sync()
 
-        self.results_list.append((receipt, client_info, results))
-
+        key = self.db_add_result(client_ip, client_info, results)
         self._process_results()
 
     def _process_results(self):
@@ -160,7 +154,7 @@ class SimpleApp(object):
 """
         results_list = self.results_list
         if results_list:
-            receipt, client_info, results = results_list[-1]
+            receipt, client_info, results = self.db_get_result_info(-1)
             last_status = client_info['success']
             last_timestamp = format_timestamp(receipt['time'])
             last_host = client_info['host']
@@ -247,7 +241,7 @@ class SimpleApp(object):
 
     def display_result_detail(self, headers, n=''):
         n = int(n)
-        receipt, client_info, results = self.results_list[n]
+        receipt, client_info, results = self.db_get_result_info(n)
 
         timestamp = format_timestamp(receipt['time'])
         
@@ -319,7 +313,7 @@ Build steps:
         
     def inspect(self, headers, n=''):
         n = int(n)
-        receipt, client_info, results = self.results_list[n]
+        receipt, client_info, results = self.db_get_result_info(n)
 
         def repr_dict(d):
             return dict([ (k, repr(d[k])) for k in d ])
@@ -361,3 +355,15 @@ Client info:
 
         html = Template(page).render(locals())
         return 200, ["Content-type: text/html"], html
+
+    def db_get_result_info(self, result_id):
+        return self.results_list[int(result_id)]
+
+    def db_add_result(self, client_ip, client_info, results):
+        next_key = str(len(self.results_list))
+        if self.db is not None:
+            self.db[next_key] = (receipt, client_info, results)
+            self.db.sync()
+            
+        self.results_list.append((receipt, client_info, results))
+        return next_key
