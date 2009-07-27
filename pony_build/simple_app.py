@@ -4,7 +4,6 @@ from wsgiref.headers import Headers
 from urlparse import urlparse
 import cgi
 import traceback
-import urllib
 import time
 import datetime
 from jinja2 import Template

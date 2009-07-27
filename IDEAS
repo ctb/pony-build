@@ -9,9 +9,9 @@ ship with tests that report back
 
 build in a proper database abstraction
 
+how do you urlencode??
+
 BUGS:
 
-
 TOOLS:
-  Template: Genshi or Jinja
   Web: bobo or  web.py
