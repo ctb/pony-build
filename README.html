@@ -292,6 +292,11 @@ ul.auto-toc {
 <body>
 <div class="document" id="pony-build">
 <h1 class="title">pony-build</h1>
+<p>pony-build is a simple continuous integration package that lets you
+run a server to display client build results.  It consists of two
+components, a server (which is run in some central &amp; accessible
+location), and one or more clients (which must be able to contact the
+server via HTTP).</p>
 <div class="section">
 <h1><a id="pony-build-server" name="pony-build-server">pony-build server</a></h1>
 <p>The command:</p>
@@ -301,9 +306,12 @@ python bin/run-server &lt;shelve filename&gt; &lt;port&gt;
 <p>will run the pony-build server on the given port, reading &amp; writing from the
 shelve database in 'filename'.</p>
 <p>For example,</p>
-<blockquote>
-python bin/run-server test.db 8080</blockquote>
-<p>will run a server that can be accessed on <a class="reference" href="http://localhost:8080/">http://localhost:8080/</a>.</p>
+<pre class="literal-block">
+python bin/run-server test.db 8080
+</pre>
+<p>will run a server that can be accessed on <a class="reference" href="http://localhost:8080/">http://localhost:8080/</a>.  This
+server will report on whatever results are sent to it by the client (see
+below), based on the package name ('name', below).</p>
 </div>
 <div class="section">
 <h1><a id="pony-build-client-scripts" name="pony-build-client-scripts">pony-build client scripts</a></h1>
@@ -321,6 +329,10 @@ commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='step 1'),
 results = do('package_name', commands)
 send('http://localhost:8080/xmlrpc', results)
 </pre>
+<p>Client results are communicated to the server by XML-RPC, so the client
+must be able to reach the server via the HTTP protocol.</p>
+<p>--</p>
+<p>CTB 7/27/09</p>
 </div>
 </div>
 </body>
