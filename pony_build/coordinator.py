@@ -54,3 +54,37 @@ class PonyBuildCoordinator(object):
             
         self.results_list.append((receipt, client_info, results))
         return next_key
+
+    def get_all_packages(self):
+        k = self._packages.keys()
+        k.sort()
+        return k
+
+    def get_last_result_for_package(self, package):
+        x = self._packages.get(package)
+        if x:
+            return x[-1]
+        return None
+
+    def get_all_archs(self):
+        k = self._archs.keys()
+        k.sort()
+        return k
+
+    def get_last_result_for_arch(self, arch):
+        x = self._archs.get(arch)
+        if x:
+            return x[-1]
+        return None
+    
+
+    def get_all_hosts(self):
+        k = self._hosts.keys()
+        k.sort()
+        return k
+
+    def get_last_result_for_host(self, host):
+        x = self._hosts.get(host)
+        if x:
+            return x[-1]
+        return None

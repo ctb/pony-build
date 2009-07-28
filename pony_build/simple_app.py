@@ -5,6 +5,7 @@ import cgi
 import traceback
 import datetime
 from jinja2 import Template
+from urllib import quote_plus
 
 def format_timestamp(t):
     dt = datetime.datetime.fromtimestamp(t)
@@ -83,13 +84,15 @@ class SimpleApp(object):
     def index(self, headers):
         x = []
 
-        results_list = self.coord.results_list
+        is_empty = True
+        if self.coord.get_all_packages():
+            is_empty = False
 
         page = """\
 <title>pony-build main</title>
 <h2>pony-build main</h2>
 
-{% if not results_list %}
+{% if is_empty %}
    No results yet.
 {% else %}
    Last build:<br>
@@ -130,16 +133,16 @@ class SimpleApp(object):
         return 200, ["Content-type: text/html"], html
 
     def packages(self, headers):
-        packages = self.coord._packages.keys()
-        packages.sort()
+        packages = self.coord.get_all_packages()
 
+        qp = quote_plus
         page = """\
 <title>Package list</title>
 <h2>Package list</h2>
 
 <ul>
 {% for package in packages %}
-<li> {{ package }} - <a href='view_package?package={{ package }}'>view latest result</a>
+<li> {{ package }} - <a href='view_package?package={{ qp(package) }}'>view latest result</a>
 {% endfor %}
 </ul>
 """
@@ -147,16 +150,16 @@ class SimpleApp(object):
         return 200, ["Content-type: text/html"], t.render(locals())
 
     def hosts(self, headers):
-        hosts = self.coord._hosts.keys()
-        hosts.sort()
+        hosts = self.coord.get_all_hosts()
 
+        qp = quote_plus
         page = """\
 <title>Host list</title>
 <h2>Host list</h2>
 
 <ul>
 {% for host in hosts %}
-<li> {{ host }} - <a href='view_host?host={{ host }}'>view latest result</a>
+<li> {{ host }} - <a href='view_host?host={{ qp(host) }}'>view latest result</a>
 {% endfor %}
 </ul>
 """
@@ -164,17 +167,16 @@ class SimpleApp(object):
         return 200, ["Content-type: text/html"], t.render(locals())
 
     def archs(self, headers):
+        archs = self.coord.get_all_archs()
 
-        archs = self.coord._archs.keys()
-        archs.sort()
-
+        qp = quote_plus
         page = """\
 <title>Architecture list</title>
 <h2>Architecture list</h2>
 
 <ul>
 {% for arch in archs %}
-<li> {{ arch }} - <a href='view_arch?arch={{ arch }}'>view latest result</a>
+<li> {{ arch }} - <a href='view_arch?arch={{ qp(arch) }}'>view latest result</a>
 {% endfor %}
 </ul>
 """
@@ -182,24 +184,24 @@ class SimpleApp(object):
         return 200, ["Content-type: text/html"], t.render(locals())
 
     def view_arch(self, headers, arch=''):
-        if not len(self.coord._archs.get(arch, [])):
+        latest = self.coord.get_last_result_for_arch(arch)
+        if latest is None:
             return 200, ["Content-type: text/html"], "no such arch"
         
-        latest = self.coord._archs[arch][-1]
         return self.display_result_detail(headers, n=latest)
 
     def view_host(self, headers, host=''):
-        if not len(self.coord._hosts.get(host, [])):
+        latest = self.coord.get_last_result_for_host(host)
+        if latest is None:
             return 200, ["Content-type: text/html"], "no such host"
         
-        latest = self.coord._hosts[host][-1]
         return self.display_result_detail(headers, n=latest)
 
     def view_package(self, headers, package=''):
-        if not len(self.coord._packages.get(package, [])):
+        latest = self.coord.get_last_result_for_package(package)
+        if latest is None:
             return 200, ["Content-type: text/html"], "no such package"
         
-        latest = self.coord._packages[package][-1]
         return self.display_result_detail(headers, n=latest)
 
     def display_result_detail(self, headers, n=''):
