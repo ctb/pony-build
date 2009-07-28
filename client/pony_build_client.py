@@ -134,13 +134,14 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
         
     return (client_info, reslist)
 
-def send(server, x, hostname=None):
+def send(server, x, hostname=None, tags=()):
     client_info, reslist = x
     if hostname is None:
         import socket
         hostname = socket.gethostname()
 
     client_info['host'] = hostname
+    client_info['tags'] = tags
     _send(server, client_info, reslist)
 
 if __name__ == '__main__':
