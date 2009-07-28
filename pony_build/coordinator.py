@@ -1,3 +1,10 @@
+"""
+The XML-RPC & internal API for pony-build.
+
+You can get the current coordinator object by calling
+pony_build.server.get_coordinator().
+"""
+
 import time
 
 class PonyBuildCoordinator(object):

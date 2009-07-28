@@ -1,3 +1,10 @@
+"""
+The default WSGI app for displaying pony-build results via the Web.
+
+This default can be replaced by passing a different WSGI app into the
+pony_build.server.create(...) function.
+"""
+
 from BaseHTTPServer import BaseHTTPRequestHandler
 
 from urlparse import urlparse
