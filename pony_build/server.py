@@ -3,7 +3,6 @@ from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
      ServerHandler
 
-
 client_ip = None
 _app = None
 def add_results(client_info, results):
