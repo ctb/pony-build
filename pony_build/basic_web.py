@@ -18,7 +18,7 @@ def format_timestamp(t):
     dt = datetime.datetime.fromtimestamp(t)
     return dt.strftime("%A, %d %B %Y, %I:%M%p")
 
-class SimpleApp(object):
+class BasicWebApp(object):
     pages = { '' : 'index',
               'archs' : 'archs',
               'packages' : 'packages',
