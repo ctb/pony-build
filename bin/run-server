@@ -12,12 +12,13 @@ try:
 except IOError:
     dbfile = shelve.open(sys.argv[1], 'c')
 
-app = simple_app.SimpleApp(db=dbfile)
+pbs_app = simple_app.PonyBuildCoordinator(db=dbfile)
+web_app = simple_app.SimpleApp(pbs_app)
 
-server = server.create(HOST, PORT, app)
+the_server = server.create(HOST, PORT, pbs_app, web_app.wsgi_interface)
 
 try:
-    print 'serving on http://%s:%d/xmlrpc' % (HOST, PORT)
-    server.serve_forever()
+    print 'serving on host %s, port %d, path /xmlrpc' % (HOST, PORT)
+    the_server.serve_forever()
 except KeyboardInterrupt:
     print 'exiting'

@@ -12,6 +12,61 @@ def format_timestamp(t):
     dt = datetime.datetime.fromtimestamp(t)
     return dt.strftime("%A, %d %B %Y, %I:%M%p")
 
+class PonyBuildCoordinator(object):
+    def __init__(self, db=None):
+        self.results_list = []
+        self.db = db
+
+        if db is not None:
+            keys = [ (int(k), k) for k in db.keys() ]
+            keys.sort()
+            self.results_list = [ db[k] for (_, k) in keys ]
+            self._process_results()
+
+    def add_results(self, client_ip, client_info, results):
+        print client_ip
+        print client_info
+        print results
+        print '---'
+        receipt = dict(time=time.time(), client_ip=client_ip)
+
+        key = self.db_add_result(receipt, client_ip, client_info, results)
+        self._process_results()
+
+    def _process_results(self):
+        self._hosts = hosts = {}
+        self._archs = archs = {}
+        self._packages = packages = {}
+
+        for n, (receipt, client_info, results_list) in enumerate(self.results_list):
+            host = client_info['host']
+            arch = client_info['arch']
+            pkg = client_info['package_name']
+
+            l = hosts.get(host, [])
+            l.append(n)
+            hosts[host] = l
+
+            l = archs.get(arch, [])
+            l.append(n)
+            archs[arch] = l
+
+            l = packages.get(pkg, [])
+            l.append(n)
+            packages[pkg] = l
+
+    def db_get_result_info(self, result_id):
+        return self.results_list[int(result_id)]
+
+    def db_add_result(self, receipt, client_ip, client_info, results):
+        next_key = str(len(self.results_list))
+        if self.db is not None:
+            self.db[next_key] = (receipt, client_info, results)
+            self.db.sync()
+            
+        self.results_list.append((receipt, client_info, results))
+        return next_key
+    
 class SimpleApp(object):
     pages = { '' : 'index',
               'archs' : 'archs',
@@ -23,17 +78,10 @@ class SimpleApp(object):
               'display_result_detail' : 'display_result_detail',
               'inspect' : 'inspect'
               }
+
+    def __init__(self, coord):
+        self.coord = coord            # PonyBuildCoordinator w/results etc.
     
-    def __init__(self, db=None):
-        self.results_list = []
-        self.db = db
-
-        if db is not None:
-            keys = [ (int(k), k) for k in db.keys() ]
-            keys.sort()
-            self.results_list = [ db[k] for (_, k) in keys ]
-            self._process_results()
-
     def handle(self, environ):
         path = environ['PATH_INFO']
         query_string = environ['QUERY_STRING']
@@ -89,40 +137,10 @@ class SimpleApp(object):
         start_response(status_str, response_headers)
         return [str(data)]
 
-    def add_results(self, client_ip, client_info, results):
-        print client_ip
-        print client_info
-        print results
-        print '---'
-        receipt = dict(time=time.time(), client_ip=client_ip)
-
-        key = self.db_add_result(client_ip, client_info, results)
-        self._process_results()
-
-    def _process_results(self):
-        self._hosts = hosts = {}
-        self._archs = archs = {}
-        self._packages = packages = {}
-
-        for n, (receipt, client_info, results_list) in enumerate(self.results_list):
-            host = client_info['host']
-            arch = client_info['arch']
-            pkg = client_info['package_name']
-
-            l = hosts.get(host, [])
-            l.append(n)
-            hosts[host] = l
-
-            l = archs.get(arch, [])
-            l.append(n)
-            archs[arch] = l
-
-            l = packages.get(pkg, [])
-            l.append(n)
-            packages[pkg] = l
-
     def index(self, headers):
         x = []
+
+        results_list = self.coord.results_list
 
         page = """\
 <title>pony-build main</title>
@@ -152,14 +170,16 @@ class SimpleApp(object):
 <a href='archs'>List architectures</a>
 <p>
 """
-        results_list = self.results_list
-        if results_list:
-            receipt, client_info, results = self.db_get_result_info(-1)
+        try:
+            receipt, client_info, results = self.coord.db_get_result_info(-1)
+            
             last_status = client_info['success']
             last_timestamp = format_timestamp(receipt['time'])
             last_host = client_info['host']
             last_arch = client_info['arch']
             last_package = client_info['package_name']
+        except IndexError:
+            pass
 
         t = Template(page)
         html = t.render(locals())
@@ -167,7 +187,7 @@ class SimpleApp(object):
         return 200, ["Content-type: text/html"], html
 
     def packages(self, headers):
-        packages = self._packages.keys()
+        packages = self.coord._packages.keys()
         packages.sort()
 
         page = """\
@@ -184,7 +204,7 @@ class SimpleApp(object):
         return 200, ["Content-type: text/html"], t.render(locals())
 
     def hosts(self, headers):
-        hosts = self._hosts.keys()
+        hosts = self.coord._hosts.keys()
         hosts.sort()
 
         page = """\
@@ -202,7 +222,7 @@ class SimpleApp(object):
 
     def archs(self, headers):
 
-        archs = self._archs.keys()
+        archs = self.coord._archs.keys()
         archs.sort()
 
         page = """\
@@ -219,29 +239,29 @@ class SimpleApp(object):
         return 200, ["Content-type: text/html"], t.render(locals())
 
     def view_arch(self, headers, arch=''):
-        if not len(self._archs.get(arch, [])):
+        if not len(self.coord._archs.get(arch, [])):
             return 200, ["Content-type: text/html"], "no such arch"
         
-        latest = self._archs[arch][-1]
+        latest = self.coord._archs[arch][-1]
         return self.display_result_detail(headers, n=latest)
 
     def view_host(self, headers, host=''):
-        if not len(self._hosts.get(host, [])):
+        if not len(self.coord._hosts.get(host, [])):
             return 200, ["Content-type: text/html"], "no such host"
         
-        latest = self._hosts[host][-1]
+        latest = self.coord._hosts[host][-1]
         return self.display_result_detail(headers, n=latest)
 
     def view_package(self, headers, package=''):
-        if not len(self._packages.get(package, [])):
+        if not len(self.coord._packages.get(package, [])):
             return 200, ["Content-type: text/html"], "no such package"
         
-        latest = self._packages[package][-1]
+        latest = self.coord._packages[package][-1]
         return self.display_result_detail(headers, n=latest)
 
     def display_result_detail(self, headers, n=''):
         n = int(n)
-        receipt, client_info, results = self.db_get_result_info(n)
+        receipt, client_info, results = self.coord.db_get_result_info(n)
 
         timestamp = format_timestamp(receipt['time'])
         
@@ -313,7 +333,7 @@ Build steps:
         
     def inspect(self, headers, n=''):
         n = int(n)
-        receipt, client_info, results = self.db_get_result_info(n)
+        receipt, client_info, results = self.coord.db_get_result_info(n)
 
         def repr_dict(d):
             return dict([ (k, repr(d[k])) for k in d ])
@@ -355,15 +375,3 @@ Client info:
 
         html = Template(page).render(locals())
         return 200, ["Content-type: text/html"], html
-
-    def db_get_result_info(self, result_id):
-        return self.results_list[int(result_id)]
-
-    def db_add_result(self, client_ip, client_info, results):
-        next_key = str(len(self.results_list))
-        if self.db is not None:
-            self.db[next_key] = (receipt, client_info, results)
-            self.db.sync()
-            
-        self.results_list.append((receipt, client_info, results))
-        return next_key

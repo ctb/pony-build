@@ -1,17 +1,21 @@
-build virtualenv in?
+build virtualenv in as command
 record time to run 
 TAGS
+"custom" views showing sets of packages/tags
+xmlrpc api + examples
 
-dependency chains?
-different commands for same package/arch/etc?
+---
+
+dependency chains?  example.
 integration with unittest, etc.
 ship with tests that report back
 
-build in a proper database abstraction
+build in a proper database abstraction!
 
-how do you urlencode??
+tests!!
+
+---
+
+how do you urlencode in jinja2??
 
 BUGS:
-
-TOOLS:
-  Web: bobo or  web.py

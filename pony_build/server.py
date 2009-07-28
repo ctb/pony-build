@@ -1,10 +1,11 @@
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
      SimpleXMLRPCDispatcher
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
-     make_server, ServerHandler, demo_app
+     ServerHandler
 
 
 client_ip = None
+_app = None
 def add_results(client_info, results):
     # client_info is a dictionary of client information
     # results is a list of dictionaries, each dict containing build/test info
@@ -22,7 +23,7 @@ def add_results(client_info, results):
 
 _app = None
 
-class Server(WSGIServer, SimpleXMLRPCDispatcher):
+class PonyBuildServer(WSGIServer, SimpleXMLRPCDispatcher):
     def __init__(self, *args, **kwargs):
         WSGIServer.__init__(self, *args, **kwargs)
         SimpleXMLRPCDispatcher.__init__(self, False, None)
@@ -48,16 +49,15 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         handler.request_handler = self      # backpointer for logging
         handler.run(self.server.get_app())
 
-def create(interface, port, app):
+def create(interface, port, pbs_app, wsgi_app):
     global _app
     
     # Create server
-    server = make_server(interface, port, app.wsgi_interface,
-                         server_class=Server,
-                         handler_class=RequestHandler)
-
+    server = PonyBuildServer((interface, port), RequestHandler)
+    
+    server.set_app(wsgi_app)
+    _app = pbs_app
+    
     server.register_function(add_results)
     
-    _app = app
-
     return server
