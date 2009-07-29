@@ -57,7 +57,8 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             return SimpleXMLRPCRequestHandler.do_POST(self)
 
         handler = ServerHandler(
-            self.rfile, self.wfile, self.get_stderr(), self.get_environ()
+            self.rfile, self.wfile, self.get_stderr(), self.get_environ(),
+            multithread=False, multiprocess=False
         )
         handler.request_handler = self      # backpointer for logging
         handler.run(self.server.get_app())
