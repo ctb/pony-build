@@ -1,8 +1,10 @@
 build virtualenv in as command
-record time to run 
 TAGS
 "custom" views showing sets of packages/tags
 xmlrpc api + examples
+
+record time to run
+package_name => package
 
 ---
 
@@ -17,3 +19,4 @@ tests!!
 ---
 
 BUGS:
+

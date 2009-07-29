@@ -131,6 +131,8 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
     client_info = dict(package_name=name, arch=arch, success=success)
     if context:
         context.update_client_info(client_info)
+
+    print client_info
         
     return (client_info, reslist)
 

@@ -95,3 +95,15 @@ class PonyBuildCoordinator(object):
         if x:
             return x[-1]
         return None
+
+    def get_latest_arch_result_for_package(self, package):
+        d = {}
+        for arch, l in self._archs.iteritems():
+            for n in l:
+                print n
+                receipt, client_info, results = self.results_list[n]
+                if client_info['package_name'] == package:
+                    d[arch] = (receipt, client_info, results)
+
+        return d
+        
