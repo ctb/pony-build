@@ -315,17 +315,20 @@ For the Quixote Web UI, Quixote 2.6 (also easy_installable).</dd>
 <h1><a id="pony-build-server" name="pony-build-server">pony-build server</a></h1>
 <p>The command:</p>
 <pre class="literal-block">
-python bin/run-server &lt;shelve filename&gt; &lt;port&gt;
+python bin/run-qx-server &lt;shelve filename&gt; &lt;port&gt;
 </pre>
-<p>will run the default 'simple' pony-build server on the given port,
+<p>will run the Quixote-baesd pony-build Web app on the given port,
 reading &amp; writing from the shelve database in 'filename'.</p>
 <p>For example,</p>
 <pre class="literal-block">
-python bin/run-server test.db 8080
+python bin/run-qx-server test.db 8080
 </pre>
 <p>will run a server that can be accessed on <a class="reference" href="http://localhost:8080/">http://localhost:8080/</a>.  This
 server will report on whatever results are sent to it by the client (see
 below), based on the package name ('name', below).</p>
+<p>You can also run a more basic server, 'bin/run-server', if you want;
+it's serves as a good example of how to swap Web UIs around within
+pony-build, but otherwise it's crappy and out of date ;).</p>
 <p>See 'architecture, and extending pony-build', below.</p>
 </div>
 <div class="section">
