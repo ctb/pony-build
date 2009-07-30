@@ -8,6 +8,22 @@ components, a server (which is run in some central & accessible
 location), and one or more clients (which must be able to contact the
 server via HTTP).
 
+Philosophy statement: good development tools for Python should be easy
+to install, easy to hack, and not overly constraining.  Two out of
+three ain't bad ;).
+
+Also see `buildbot <http://buildbot.sf.net/>`__.
+
+Requirements
+============
+
+Server side:
+  Jinja2 (easy_installable).
+  For the Quixote Web UI, Quixote 2.6 (also easy_installable).
+
+Client side:
+  Python.  Should work down to Python 2.4.  Developed with 2.5.
+
 pony-build server
 =================
 
@@ -93,6 +109,13 @@ Some medium-term ideas
 
 One an initial release is out & any obvious bugs are cleaned up, here
 are some ideas for the next release.
+
+A flexible view builder-and-saver would be nice; maybe in Django?
+Think, "separate results on this tag, etc; sort by time received;
+expect these results to be shown or give an error."
+
+It would be nice to be able to say "I *expect* a result from this
+buildhost, where is it!?"
 
 The build client 'subprocess' calls should be able to mimic 'tee',
 that is, give real-time output of the build.

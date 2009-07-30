@@ -297,6 +297,20 @@ run a server to display client build results.  It consists of two
 components, a server (which is run in some central &amp; accessible
 location), and one or more clients (which must be able to contact the
 server via HTTP).</p>
+<p>Philosophy statement: good development tools for Python should be easy
+to install, easy to hack, and not overly constraining.  Two out of
+three ain't bad ;).</p>
+<p>Also see <a class="reference" href="http://buildbot.sf.net/">buildbot</a>.</p>
+<div class="section">
+<h1><a id="requirements" name="requirements">Requirements</a></h1>
+<dl class="docutils">
+<dt>Server side:</dt>
+<dd>Jinja2 (easy_installable).
+For the Quixote Web UI, Quixote 2.6 (also easy_installable).</dd>
+<dt>Client side:</dt>
+<dd>Python.  Should work down to Python 2.4.  Developed with 2.5.</dd>
+</dl>
+</div>
 <div class="section">
 <h1><a id="pony-build-server" name="pony-build-server">pony-build server</a></h1>
 <p>The command:</p>
@@ -372,6 +386,11 @@ The 'tags' associated value is a list of strings.</p>
 <h1><a id="some-medium-term-ideas" name="some-medium-term-ideas">Some medium-term ideas</a></h1>
 <p>One an initial release is out &amp; any obvious bugs are cleaned up, here
 are some ideas for the next release.</p>
+<p>A flexible view builder-and-saver would be nice; maybe in Django?
+Think, &quot;separate results on this tag, etc; sort by time received;
+expect these results to be shown or give an error.&quot;</p>
+<p>It would be nice to be able to say &quot;I <em>expect</em> a result from this
+buildhost, where is it!?&quot;</p>
 <p>The build client 'subprocess' calls should be able to mimic 'tee',
 that is, give real-time output of the build.</p>
 <p>Some form of authentication from build clients.  Josh Williams

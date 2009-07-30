@@ -1,15 +1,12 @@
 build virtualenv in as command
-TAGS
-"custom" views showing sets of packages/tags
 xmlrpc api + examples
+setup.py
 
 record time to run
 package_name => package
-buildslave/client name??
+qx/display individual results + inspect
 
-do we allow through the web configuration of views?  what kind of views?
-  what's a good default for a package?  separate on all tags, or what?
-  SEPARATE ON ALL TAGS
+buildslave/client name??
 
 BUGS:
 
