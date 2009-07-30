@@ -21,11 +21,11 @@ def format_timestamp(t):
 
     diff = now - dt
     if diff < hour_diff:
-        return dt.strftime("less than an hour ago (%I:%M%p)")
+        return dt.strftime("less than an hour ago (%I:%M %p)")
     elif diff < day_diff:
-        return dt.strftime("less than a day ago (%I:%M%p)")
+        return dt.strftime("less than a day ago (%I:%M %p)")
     
-    return dt.strftime("%A, %d %B %Y, %I:%M%p")
+    return dt.strftime("%A, %d %B %Y, %I:%M %p")
 
 class QuixoteWebApp(Directory):
     _q_exports = [ '' ]
@@ -64,7 +64,7 @@ def create_publisher(coordinator):
 ###
 
 class PackageInfo(Directory):
-    _q_exports = [ '', 'show_latest', 'show_all' ]
+    _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail' ]
     
     def __init__(self, coord, package):
         self.coord = coord
@@ -87,6 +87,10 @@ class PackageInfo(Directory):
             t = receipt['time']
             return format_timestamp(t)
 
+        def get_result_key(arch):
+            receipt, _, _ = d[arch]
+            return receipt['result_key']
+
         def sort_by_timestamp(a, b):
             print a
             ta = a[1][0]['time']
@@ -98,7 +102,7 @@ class PackageInfo(Directory):
         arch_list = [ k for (k, v) in it ]
 
         html = """
-<title>Build summary for '{{ packge }}'</title>
+<title>Build summary for '{{ package }}'</title>
 <h2>Package '{{ package }}'</h2>
 Build summary:<p>
 {% if d %}
@@ -109,7 +113,7 @@ Build summary:<p>
         <td>{{ arch }}</td>
         <td>{{ calc_status(arch) }}</td>
         <td>{{ calc_time(arch) }}</td>
-      </tr>
+        <td><a href='detail?result_key={{ get_result_key(arch) }}'>view details</a></td>      </tr>
    {% endfor %}
    </table>
    <p>
@@ -146,6 +150,9 @@ Build summary:<p>
         def get_arch(tagset):
             return d[tagset][1]['arch']
 
+        def get_result_key(tagset):
+            return quote_plus(d[tagset][0]['result_key'])
+
         def nicetagset(tagset):
             tagset = sorted([ x for x in list(tagset) if not x.startswith('__')])
             return ", ".join(tagset)
@@ -173,6 +180,7 @@ Build summary:<p>
         <td>{{ get_arch(tagset)}}</td>
         <td>{{ calc_status(tagset) }}</td>
         <td>{{ calc_time(tagset) }}</td>
+        <td><a href='detail?result_key={{ get_result_key(tagset) }}'>view details</a></td>
       </tr>
    {% endfor %}
    </table>
@@ -191,6 +199,8 @@ Build summary:<p>
     def show_all(self):
         package = self.package
         all_results = self.coord.get_all_results_for_package(package)
+
+        qp = quote_plus
         
         def calc_status(status):
             print 'STATUS:', status
@@ -220,7 +230,7 @@ All build information:<p>
         <td>{{ calc_status(client_info['success']) }}</td>
         <td>{{ nicetagset(client_info['tags']) }}</td>
         <td>{{ calc_time(receipt['time']) }}</td>
-      </tr>
+        <td><a href='detail?result_key={{ qp(receipt['result_key']) }}'>view details</a></td>      </tr>
    {% endfor %}
    </table>
 
@@ -234,3 +244,127 @@ All build information:<p>
 """
 
         return Template(html).render(locals())
+
+    def detail(self):
+        request = quixote.get_request()
+        key = request.form['result_key']
+        receipt, client_info, results = self.coord.db_get_result_info(key)
+
+        if self.package != client_info['package_name']:
+            raise Exception
+
+        qp = quote_plus
+
+        timestamp = format_timestamp(receipt['time'])
+        
+        page = """
+<title>Result view</title>
+<h2>Result detail</h2>
+
+Package: {{ client_info['package_name'] }}<br>
+Host: {{ client_info['host'] }} ({{ receipt['client_ip'] }})<br>
+Architecture: {{client_info['arch'] }}<br>
+
+<p>
+
+<b>
+ {% if client_info['success'] -%}
+   <font color='green'>SUCCESS</font>
+ {% else %}
+   <font color='red'>FAILURE</font>
+ {% endif %}
+</b>
+
+<p>
+Timestamp: {{ timestamp }}
+<p>
+
+Build steps:
+<ol>
+{% for r in results %}
+   <li> <a href='#{{ loop.index0 }}'>{{ r['type'] }}; {{ r['name'] }};
+   {% if r['status'] == 0 %}
+      <font color="green">success</font>
+   {% else %}
+      <font color="red">failure ({{ r['status'] }})</font>
+   {% endif %}
+   </a>
+{% endfor %}
+</ol>
+
+<h2>Details</h2>
+<ul>
+{% for r in results %}
+   <hr>
+   <li> <a name='{{ loop.index0 }}'>
+   <b>{{ r['name'] }}</b> {{ r['type'] }} -
+   {% if r['status'] == 0 %}
+      <font color="green">success</font>
+   {% else %}
+      <font color="red">failure ({{ r['status'] }})</font>
+   {% endif %}
+
+   <p>
+   
+   <b>command line:</b>{{ r['command'] }}
+   <p>
+   <b>stdout:</b><pre>{{ r['output'] }}</pre>
+   
+   {% if r['errout'].strip() %}
+   <b>stderr:</b><pre>{{ r['errout'] }}</pre>
+   {% else %}
+   <i>no stderr</i>
+   {% endif %}
+   <p>
+{% endfor %}
+</ul>
+<hr><a href='inspect?result_key={{ qp(key) }}'>inspect raw record</a>
+"""
+        return Template(page).render(locals())
+        
+    def inspect(self):
+        request = quixote.get_request()
+        key = request.form['result_key']
+        receipt, client_info, results = self.coord.db_get_result_info(key)
+
+        if self.package != client_info['package_name']:
+            raise Exception
+
+        def repr_dict(d):
+            return dict([ (k, repr(d[k])) for k in d ])
+
+        receipt = repr_dict(receipt)
+        client_info = repr_dict(client_info)
+        results = [ repr_dict(d) for d in results ]
+
+        page = """\
+<title>Inspector for record {{ n }}</title>
+<h2>Inspector for record {{ n }}</h2>
+
+Receipt info:
+<pre>
+{% for k, v in receipt.items() -%}
+   {{ k }}: {{ v }}
+{% endfor -%}
+</pre>
+
+Client info:
+<pre>
+{% for k, v in client_info.items() -%}
+   {{ k }}: {{ v }}
+{% endfor -%}
+</pre>
+
+<b>Results:</b>
+<ul>
+{% for result_d in results -%}
+   <li>Result {{ loop.index }}:<br>
+   <pre>
+   {% for k, v in result_d.items() -%}
+      {{ k }}: {{ v }}
+   {% endfor -%}
+   </pre>
+{% endfor %}
+</ul>
+"""
+        return Template(page).render(locals())

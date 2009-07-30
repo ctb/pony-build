@@ -104,6 +104,8 @@ simple ways to extend things are to add new k/v pairs for specific
 purposes, and/or to use the 'tags' key in the client_info dict.
 The 'tags' associated value is a list of strings.
 
+receipt['result_key'] is the internal key used to store the result.
+
 Some medium-term ideas
 ======================
 

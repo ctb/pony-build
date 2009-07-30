@@ -10,8 +10,9 @@ commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='David'),
              TestCommand(['/bin/echo', 'this is a test'], name='Bill')
              ]
 
-tags = ['tag1', 'tag2']
+tags = ['tag1', 'tag2', 'tag3']
 
 context = TempDirectoryContext()
-results = do(name, commands, context=context, stop_if_failure=False, arch='test2')
+results = do(name, commands, context=context, stop_if_failure=False)
+#, arch='test2')
 send(server_url, results, hostname='laptop', tags=tags)

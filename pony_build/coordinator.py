@@ -56,6 +56,8 @@ class PonyBuildCoordinator(object):
 
     def db_add_result(self, receipt, client_ip, client_info, results):
         next_key = str(len(self.results_list))
+        receipt['result_key'] = next_key
+        
         if self.db is not None:
             self.db[next_key] = (receipt, client_info, results)
             self.db.sync()
