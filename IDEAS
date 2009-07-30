@@ -5,18 +5,11 @@ xmlrpc api + examples
 
 record time to run
 package_name => package
+buildslave/client name??
 
----
-
-dependency chains?  example.
-integration with unittest, etc.
-ship with tests that report back
-
-build in a proper database abstraction!
-
-tests!!
-
----
+do we allow through the web configuration of views?  what kind of views?
+  what's a good default for a package?  separate on all tags, or what?
+  SEPARATE ON ALL TAGS
 
 BUGS:
 

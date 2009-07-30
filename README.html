@@ -303,8 +303,8 @@ server via HTTP).</p>
 <pre class="literal-block">
 python bin/run-server &lt;shelve filename&gt; &lt;port&gt;
 </pre>
-<p>will run the pony-build server on the given port, reading &amp; writing from the
-shelve database in 'filename'.</p>
+<p>will run the default 'simple' pony-build server on the given port,
+reading &amp; writing from the shelve database in 'filename'.</p>
 <p>For example,</p>
 <pre class="literal-block">
 python bin/run-server test.db 8080
@@ -312,6 +312,7 @@ python bin/run-server test.db 8080
 <p>will run a server that can be accessed on <a class="reference" href="http://localhost:8080/">http://localhost:8080/</a>.  This
 server will report on whatever results are sent to it by the client (see
 below), based on the package name ('name', below).</p>
+<p>See 'architecture, and extending pony-build', below.</p>
 </div>
 <div class="section">
 <h1><a id="pony-build-client-scripts" name="pony-build-client-scripts">pony-build client scripts</a></h1>
@@ -331,8 +332,126 @@ send('http://localhost:8080/xmlrpc', results)
 </pre>
 <p>Client results are communicated to the server by XML-RPC, so the client
 must be able to reach the server via the HTTP protocol.</p>
+</div>
+<div class="section">
+<h1><a id="architecture-and-extending-pony-build" name="architecture-and-extending-pony-build">Architecture, and extending pony-build</a></h1>
+<p>The pony-build server is basically a storage receptacle for &quot;bags&quot; of
+key-value pairs.  It's easiest point of extension is in the Web
+interface, where you can substitute any WSGI app object to serve Web
+pages; see 'bin/run-server', and the function call to
+'server.create(...)' (aka pony_build.server.create(...)'.</p>
+<p>To write a new Web UI, you will need access to the stored pony-build
+server data.  You should work through the 'PonyBuildCoordinator'
+interface in 'pony_build.coordinator'; you can get a handle to the
+current coordinator object with 'pony_build.server.get_coordinator()'.
+<strong>The coordinator API is will be stable and public</strong>, after suitable
+evolution.</p>
+<div class="section">
+<h2><a id="client-to-server-communication" name="client-to-server-communication">Client-to-server communication</a></h2>
+<p>Each client sends two bags of information: the first, 'client_info',
+contains information global to the build client, such as package name,
+host name, architecture, and a list of tags.  The second,
+'results_list', is an ordered list of dictionaries, each one
+representing a build step.  (The default contents of these dictionaries
+are pretty obvious: status, stderr, stdout, etc.)  Upon receipt of
+this info, the pony-build server creates a third object, a dictionary,
+containing information such as the server time at which the result
+was received,</p>
+<p>These three bags of info -- 'receipt', 'client_info', and
+'results_list' -- are it.  The coordinator functions give you ways to
+slice and dice which results set you want (e.g. latest for a
+particular package), and then usually return one or more triples of
+(receipt, client_info, results_list).</p>
+<p>Clients can send arbitrary key/value pairs in their &quot;bags&quot;; two
+simple ways to extend things are to add new k/v pairs for specific
+purposes, and/or to use the 'tags' key in the client_info dict.
+The 'tags' associated value is a list of strings.</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="some-medium-term-ideas" name="some-medium-term-ideas">Some medium-term ideas</a></h1>
+<p>One an initial release is out &amp; any obvious bugs are cleaned up, here
+are some ideas for the next release.</p>
+<p>The build client 'subprocess' calls should be able to mimic 'tee',
+that is, give real-time output of the build.</p>
+<p>Some form of authentication from build clients.  Josh Williams
+suggests an approved client list (server side info about what clients
+can conenect); I'd been thinking about a buildbot-style password setup,
+where build clients shared a secret with the server.  Both ideas are
+good, I think.</p>
+<p>In combination with authentication, we should put a default cap on the
+total amount of data that can be dumped by an unauthenticated client.
+Otherwise warez sites will be hosted inside of pony-build ;)</p>
+</div>
+<div class="section">
+<h1><a id="design-and-ideas-for-the-future" name="design-and-ideas-for-the-future">Design and Ideas for the Future</a></h1>
+<div class="section">
+<h2><a id="ideas-that-are-easy-to-implement" name="ideas-that-are-easy-to-implement">Ideas that are easy to implement</a></h2>
+<p>Build virtualenv in on the client side (as a Context?)</p>
+<p>Dependency chains example on client side.</p>
+<p>Integration with unittest, nose, py.test -&gt; ship results back to
+central server.</p>
+</div>
+<div class="section">
+<h2><a id="cleanup" name="cleanup">Cleanup</a></h2>
+<p>Figure out a proper database abstraction, maybe?</p>
+<p>Tests, duh.</p>
+</div>
+<div class="section">
+<h2><a id="things-i-don-t-know-how-to-do" name="things-i-don-t-know-how-to-do">Things I don't know how to do...</a></h2>
+<p>...and don't want to spend time learning ;)</p>
+<p>Josh Williams suggests supporting something other than a wsgiref
+server.  I'm not sure this is really needed -- you can run whatever
+WSGI app you want inside the server -- but I can see that it would
+make things more flexible for people with existing Web server setups.
+I think the way to do this is to make pony-build's (XML-RPC + WSGI
+app) interace look like its own WSGI app, rather than hacking
+SimpleXMLRPCServer and wsgiref together in an unholy union.  Ping me
+for details if you dare.</p>
+<p>Seriously, check out both pony_build.server.PonyBuildServer and
+pony_build.server.RequestHandler (the latter is the most interesting).</p>
+</div>
+<div class="section">
+<h2><a id="some-general-design-principles" name="some-general-design-principles">Some general design principles</a></h2>
+<p>Titus says: A number of people are interested in pony-build, and I've
+gotten many suggestions already.  This has basically forced me to
+articulate a number of my design principles, including some that were
+made un- or subconsciously, and/or just enshrined in my prototype
+code.  I may change some of these decisions for v2, but I'd just as
+soon let buildbot pick up the higher-end ideas if they're game, too.</p>
+<blockquote>
+<ul>
+<li><p class="first">All client/server interactions should be via RPC, and hence
+transactional.  No always-on connections, no real-time control by
+the central server.</p>
+<p>This is a major simplification and makes it possible to keep the
+code base small and simple.  Yay.</p>
+</li>
+<li><p class="first">No partial results.  Doug Phillips ('dgou') suggested that we allow
+build clients to &quot;push&quot; individual results as they happen, rather
+than all at once at the end.  I can't think of a good, simple way
+to do that, and it's part of the 20% that I don't yet need myself.</p>
+</li>
+</ul>
+</blockquote>
+</div>
+<div class="section">
+<h2><a id="acks" name="acks">Acks</a></h2>
+<p>Titus says: Jesse Noller, Doug Phillips, and Josh Williams discussed
+things with me and are, collectively, entirely responsible for any bad
+design decisions; the good ones are all mine.</p>
+<p>Seriously, I appreciate the suggestions and comments from these fine
+people.</p>
+<p>Eric Henry built what I would consider 'pony-build prototype 1',
+project-builder-pie.</p>
+<p>You can also read this discussion starting here,</p>
+<blockquote>
+<a class="reference" href="http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html">http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html</a></blockquote>
+<p>where Kumar suggests that I just use Hudson for chrissakes.  He's
+probably right.</p>
 <p>--</p>
 <p>CTB 7/27/09</p>
+</div>
 </div>
 </div>
 </body>
