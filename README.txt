@@ -194,11 +194,23 @@ soon let buildbot pick up the higher-end ideas if they're game, too.
    build clients to "push" individual results as they happen, rather
    than all at once at the end.  I can't think of a good, simple way
    to do that, and it's part of the 20% that I don't yet need myself.
+
+   Here's a proposal that I think would work, from Doug: ::
+
+     send "create new record, marked unfinished"
+     receive "record marker, update token"
+     send "first results, authenticate with update token"
+     receive "ack"
+     send "2nd results, authenticate with update token"
+     receive "ack"
+     ...
+     send "final results, authenticate with update token"
+     receive "ack"
    
 Acks
 ----
 
-Titus says: Jesse Noller, Doug Phillips, and Josh Williams discussed
+Titus says: Jesse Noller, Doug Philips, and Josh Williams discussed
 things with me and are, collectively, entirely responsible for any bad
 design decisions; the good ones are all mine.
 

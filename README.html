@@ -454,13 +454,25 @@ code base small and simple.  Yay.</p>
 build clients to &quot;push&quot; individual results as they happen, rather
 than all at once at the end.  I can't think of a good, simple way
 to do that, and it's part of the 20% that I don't yet need myself.</p>
+<p>Here's a proposal that I think would work, from Doug:</p>
+<pre class="literal-block">
+send &quot;create new record, marked unfinished&quot;
+receive &quot;record marker, update token&quot;
+send &quot;first results, authenticate with update token&quot;
+receive &quot;ack&quot;
+send &quot;2nd results, authenticate with update token&quot;
+receive &quot;ack&quot;
+...
+send &quot;final results, authenticate with update token&quot;
+receive &quot;ack&quot;
+</pre>
 </li>
 </ul>
 </blockquote>
 </div>
 <div class="section">
 <h2><a id="acks" name="acks">Acks</a></h2>
-<p>Titus says: Jesse Noller, Doug Phillips, and Josh Williams discussed
+<p>Titus says: Jesse Noller, Doug Philips, and Josh Williams discussed
 things with me and are, collectively, entirely responsible for any bad
 design decisions; the good ones are all mine.</p>
 <p>Seriously, I appreciate the suggestions and comments from these fine
