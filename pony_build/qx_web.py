@@ -250,7 +250,7 @@ All build information:<p>
         key = request.form['result_key']
         receipt, client_info, results = self.coord.db_get_result_info(key)
 
-        if self.package != client_info['package_name']:
+        if self.package != client_info['package']:
             raise Exception
 
         qp = quote_plus
@@ -261,7 +261,7 @@ All build information:<p>
 <title>Result view</title>
 <h2>Result detail</h2>
 
-Package: {{ client_info['package_name'] }}<br>
+Package: {{ client_info['package'] }}<br>
 Host: {{ client_info['host'] }} ({{ receipt['client_ip'] }})<br>
 Architecture: {{client_info['arch'] }}<br>
 
@@ -327,7 +327,7 @@ Build steps:
         key = request.form['result_key']
         receipt, client_info, results = self.coord.db_get_result_info(key)
 
-        if self.package != client_info['package_name']:
+        if self.package != client_info['package']:
             raise Exception
 
         def repr_dict(d):

@@ -344,7 +344,7 @@ commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='step 1'),
              TestCommand(['/bin/echo', 'this is a test'], name='step 2')
              ]
 
-results = do('package_name', commands)
+results = do('package', commands)
 send('http://localhost:8080/xmlrpc', results)
 </pre>
 <p>Client results are communicated to the server by XML-RPC, so the client

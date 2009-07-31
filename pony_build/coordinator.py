@@ -37,7 +37,7 @@ class PonyBuildCoordinator(object):
         for n, (receipt, client_info, results_list) in enumerate(self.results_list):
             host = client_info['host']
             arch = client_info['arch']
-            pkg = client_info['package_name']
+            pkg = client_info['package']
 
             l = hosts.get(host, [])
             l.append(n)
@@ -111,7 +111,7 @@ class PonyBuildCoordinator(object):
             for n in l:
                 print n
                 receipt, client_info, results = self.results_list[n]
-                if client_info['package_name'] == package:
+                if client_info['package'] == package:
                     d[arch] = (receipt, client_info, results)
 
         return d

@@ -128,7 +128,7 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
 
     success = all([ c.success() for c in commands ])
 
-    client_info = dict(package_name=name, arch=arch, success=success)
+    client_info = dict(package=name, arch=arch, success=success)
     if context:
         context.update_client_info(client_info)
 

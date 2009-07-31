@@ -3,8 +3,6 @@ xmlrpc api + examples
 setup.py
 
 record time to run
-package_name => package
-qx/display individual results + inspect
 
 buildslave/client name??
 

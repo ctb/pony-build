@@ -62,7 +62,7 @@ Clients are just scripts that set up & run a list of commands: ::
                TestCommand(['/bin/echo', 'this is a test'], name='step 2')
                ]
 
-  results = do('package_name', commands)
+  results = do('package', commands)
   send('http://localhost:8080/xmlrpc', results)
 
 Client results are communicated to the server by XML-RPC, so the client

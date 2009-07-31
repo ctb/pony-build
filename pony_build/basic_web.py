@@ -130,7 +130,7 @@ class BasicWebApp(object):
             last_timestamp = format_timestamp(receipt['time'])
             last_host = client_info['host']
             last_arch = client_info['arch']
-            last_package = client_info['package_name']
+            last_package = client_info['package']
         except IndexError:
             pass
 
@@ -221,7 +221,7 @@ class BasicWebApp(object):
 <title>Result view</title>
 <h2>Result detail</h2>
 
-Package: {{ client_info['package_name'] }}<br>
+Package: {{ client_info['package'] }}<br>
 Host: {{ client_info['host'] }} ({{ receipt['client_ip'] }})<br>
 Architecture: {{client_info['arch'] }}<br>
 
