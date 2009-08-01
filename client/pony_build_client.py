@@ -102,6 +102,18 @@ class BuildCommand(BaseCommand):
 class TestCommand(BaseCommand):
     command_type = 'test'
 
+###
+
+def get_hostname():
+    import socket
+    return socket.gethostname()
+
+def get_arch():
+    import distutils.util
+    return distutils.util.get_platform()
+
+###
+
 def _send(server, info, results):
     print 'connecting to', server
     s = xmlrpclib.ServerProxy(server)
@@ -136,8 +148,7 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
         context.finish()
 
     if arch is None:
-        import sys
-        arch = sys.platform
+        arch = get_arch()
 
     success = all([ c.success() for c in commands ])
 
@@ -161,11 +172,11 @@ def send(server, x, hostname=None, tags=()):
 
 def check(name, server, tags=(), hostname=None, arch=None):
     if hostname is None:
-        import socket
+        hostname = get_hostname()
         hostname = socket.gethostname()
+        
     if arch is None:
-        import sys
-        arch = sys.platform
+        arch = get_arch()
         
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     s = xmlrpclib.ServerProxy(server)
