@@ -3,6 +3,7 @@ import xmlrpclib
 import tempfile
 import shutil
 import os
+import time
 
 def _run_command(command_list, cwd):
     p = subprocess.Popen(command_list, shell=False, cwd=cwd,
@@ -16,12 +17,13 @@ def _run_command(command_list, cwd):
 class Context(object):
     def __init__(self):
         self.history = []
+        self.start = self.end = None
         
     def initialize(self):
-        pass
+        self.start = time.time()
 
     def finish(self):
-        pass
+        self.end = time.time()
         
     def start_command(self, command):
         pass
@@ -30,7 +32,7 @@ class Context(object):
         self.history.append(command)
 
     def update_client_info(self, info):
-        pass
+        info['duration'] = self.end - self.start
 
 class TempDirectoryContext(Context):
     def __init__(self, always_cleanup=True):
@@ -38,6 +40,7 @@ class TempDirectoryContext(Context):
         self.always_cleanup = always_cleanup
 
     def initialize(self):
+        Context.initialize(self)
         self.tempdir = tempfile.mkdtemp()
         self.cwd = os.getcwd()
         
@@ -45,6 +48,8 @@ class TempDirectoryContext(Context):
         os.chdir(self.tempdir)
 
     def finish(self):
+        Context.finish(self)
+        
         if self.always_cleanup:
             do_cleanup = self.always_cleanup
         else:
@@ -60,6 +65,7 @@ class TempDirectoryContext(Context):
         os.chdir(self.cwd)
 
     def update_client_info(self, info):
+        Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
 
 class BaseCommand(object):
@@ -71,12 +77,18 @@ class BaseCommand(object):
         self.status = None
         self.output = None
         self.errout = None
+        self.duration = None
         
     def run(self, context):
+        start = time.time()
         (ret, out, err) = _run_command(self.command_list, self.run_cwd)
+        
         self.status = ret
         self.output = out
         self.errout = err
+        end = time.time()
+
+        self.duration = end - start
 
     def success(self):
         return self.status == 0
@@ -113,7 +125,8 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
                        errout=c.errout,
                        command=str(c.command_list),
                        type=c.command_type,
-                       name=c.command_name)
+                       name=c.command_name,
+                       duration=c.duration)
         reslist.append(results)
 
         if stop_if_failure and not c.success():

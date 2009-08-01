@@ -2,9 +2,5 @@ build virtualenv in as command
 xmlrpc api + examples
 setup.py
 
-record time to run
-
-buildslave/client name??
-
 BUGS:
 
