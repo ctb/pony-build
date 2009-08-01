@@ -19,3 +19,7 @@ everything else can be "within last month"
 organize reports with FAILURES at top (unless marked otherwise)
 
 organize git clone/copy etc, hg clone/copy, svn clone/copy.
+
+concatenated output, etc? for GitClone?
+
+make __host= and __package=

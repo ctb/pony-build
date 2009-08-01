@@ -2,10 +2,11 @@ import subprocess
 import xmlrpclib
 import tempfile
 import shutil
-import os
+import os, os.path
 import time
+import urlparse
 
-def _run_command(command_list, cwd):
+def _run_command(command_list, cwd=None):
     p = subprocess.Popen(command_list, shell=False, cwd=cwd,
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -102,6 +103,49 @@ class BuildCommand(BaseCommand):
 class TestCommand(BaseCommand):
     command_type = 'test'
 
+class GitClone(SetupCommand):
+    def __init__(self, repository, branch='master', cache_dir=None, **kwargs):
+        SetupCommand.__init__(self, [], **kwargs)
+        self.repository = repository
+        self.branch = branch
+        self.cache_dir = cache_dir
+        self.duration = -1
+        
+    def run(self, context):
+        # first, guess the co dir name
+        p = urlparse.urlparse(self.repository) # what about Windows path names?
+        path = p.path
+
+        dirname = path.split('/')[-1]
+        if dirname.endswith('.git'):
+            dirname = dirname[:-4]
+
+        print 'git checkout dirname guessed as: %s' % (dirname,)
+
+        ##
+
+        # now, do a clone.
+        cmdlist = ['git', 'clone', self.repository]
+        (ret, out, err) = _run_command(cmdlist)
+        if ret != 0:
+            self.status = ret
+            self.output = out
+            self.errout = err
+
+            return
+
+        if not os.path.exists(dirname) and os.path.isdir(dirname):
+            self.status = -1
+            self.output = ''
+            self.errout = 'pony-build-client cannot find expected git dir: %s' % (dirname,)
+            
+            print 'wrong guess; %s does not exist.  whoops' % (dirname,)
+            return
+
+        self.status = 0                 # success
+        self.output = ''
+        self.errout = ''
+
 ###
 
 def get_hostname():
@@ -168,12 +212,15 @@ def send(server, x, hostname=None, tags=()):
 
     client_info['host'] = hostname
     client_info['tags'] = tags
+
+    print client_info
+    print reslist
+    
     _send(server, client_info, reslist)
 
 def check(name, server, tags=(), hostname=None, arch=None):
     if hostname is None:
         hostname = get_hostname()
-        hostname = socket.gethostname()
         
     if arch is None:
         arch = get_arch()
