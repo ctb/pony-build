@@ -74,6 +74,12 @@ class PonyBuildCoordinator(object):
                 build = True
             else:
                 print 'last build was %s ago; too recent to build' % (diff,)
+
+            # was it successful?
+            success = last_build[tagset][1]['success']
+            if not success:
+                print 'last build was unsuccessful; go!'
+                build = True
         else:
             # tagset not in last_build
             print 'NO BUILD recorded for %s; build!' % (tagset,)
