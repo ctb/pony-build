@@ -14,13 +14,16 @@ import datetime
 
 day_diff = datetime.timedelta(1)
 hour_diff = datetime.timedelta(0, 3600)
+min_diff = datetime.timedelta(0, 60)
 
 def format_timestamp(t):
     dt = datetime.datetime.fromtimestamp(t)
     now = datetime.datetime.now()
 
     diff = now - dt
-    if diff < hour_diff:
+    if diff < min_diff:
+        return dt.strftime("less than a minute ago (%I:%M %p)")
+    elif diff < hour_diff:
         return dt.strftime("less than an hour ago (%I:%M %p)")
     elif diff < day_diff:
         return dt.strftime("less than a day ago (%I:%M %p)")
@@ -38,6 +41,7 @@ class QuixoteWebApp(Directory):
 
         qp = quote_plus
         page = """
+<title>pony-build main</title>
 {% if packages %}
    We have build information for:
    <ul>
@@ -46,7 +50,7 @@ class QuixoteWebApp(Directory):
    {% endfor %}
    </ul>
 {% else %}
-   No package information received yet.
+   No build information received yet.
 {% endif %}
 """
         return Template(page).render(locals())
@@ -64,7 +68,8 @@ def create_publisher(coordinator):
 ###
 
 class PackageInfo(Directory):
-    _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail' ]
+    _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail',
+                   'force_build']
     
     def __init__(self, coord, package):
         self.coord = coord
@@ -180,7 +185,8 @@ Build summary:<p>
         <td>{{ get_arch(tagset)}}</td>
         <td>{{ calc_status(tagset) }}</td>
         <td>{{ calc_time(tagset) }}</td>
-        <td><a href='detail?result_key={{ get_result_key(tagset) }}'>view details</a></td>
+        <td><a href='detail?result_key={{ get_result_key(tagset) }}'>view details</a> | 
+<a href='force_build?result_key={{ get_result_key(tagset) }}'>force build</a></td>
       </tr>
    {% endfor %}
    </table>
@@ -368,3 +374,12 @@ Client info:
 </ul>
 """
         return Template(page).render(locals())
+
+    def force_build(self):
+        request = quixote.get_request()
+        key = request.form['result_key']
+        receipt, client_info, results = self.coord.db_get_result_info(key)
+
+        self.coord.set_force_build(client_info, True)
+
+        return quixote.redirect('./')

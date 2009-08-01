@@ -31,6 +31,9 @@ def add_results(client_info, results):
     _coordinator.add_results(client_ip, client_info, results)
 
     return 1
+
+def check_should_build(client_info):
+    return _coordinator.check_should_build(client_info)
     
 # Restrict to a particular path.
 
@@ -77,5 +80,6 @@ def create(interface, port, pbs_coordinator, wsgi_app):
     _coordinator = pbs_coordinator
     
     server.register_function(add_results)
+    server.register_function(check_should_build)
     
     return server

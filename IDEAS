@@ -2,5 +2,7 @@ build virtualenv in as command
 xmlrpc api + examples
 setup.py
 
+clean up client stuff!
+
 BUGS:
 

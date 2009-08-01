@@ -7,6 +7,23 @@ pony_build.server.get_coordinator().
 
 import time
 import sets
+from datetime import datetime, timedelta
+
+def build_tagset(client_info, no_arch=False, no_host=False):
+    arch = client_info['arch']
+    host = client_info['host']
+    package = client_info['package']
+
+    tags = list(client_info['tags'])
+
+    tags.append('__' + package)
+    if not no_arch:
+        tags.append('__' + arch)
+    if not no_host:
+        tags.append('__' + host)
+
+    tagset = sets.ImmutableSet(tags)
+    return tagset
 
 class PonyBuildCoordinator(object):
     def __init__(self, db=None):
@@ -19,6 +36,8 @@ class PonyBuildCoordinator(object):
             self.results_list = [ db[k] for (_, k) in keys ]
             self._process_results()
 
+        self.force_build = {}
+
     def add_results(self, client_ip, client_info, results):
         print client_ip
         print client_info
@@ -28,6 +47,39 @@ class PonyBuildCoordinator(object):
 
         key = self.db_add_result(receipt, client_ip, client_info, results)
         self._process_results()
+
+    def set_force_build(self, client_info, value):
+        tagset = build_tagset(client_info)
+        self.force_build[tagset] = value
+
+    def check_should_build(self, client_info):
+        package = client_info['package']
+        tagset = build_tagset(client_info)
+        print 'CHECK TAGSET', tagset
+        
+        last_build = self.get_unique_tagset_for_package(package)
+        print 'LAST BUILD', last_build.keys()
+
+        build = False
+        if tagset in self.force_build:
+            del self.force_build[tagset]
+            build = True
+        elif tagset in last_build:
+            last_t = last_build[tagset][0]['time']
+            last_t = datetime.fromtimestamp(last_t)
+            
+            now = datetime.now()
+            diff = now - last_t
+            if diff >= timedelta(1): # 1 day, default
+                build = True
+            else:
+                print 'last build was %s ago; too recent to build' % (diff,)
+        else:
+            # tagset not in last_build
+            print 'NO BUILD recorded for %s; build!' % (tagset,)
+            build = True
+
+        return build
 
     def _process_results(self):
         self._hosts = hosts = {}
@@ -138,17 +190,8 @@ class PonyBuildCoordinator(object):
         d = {}
         for n in result_indices:
             receipt, client_info, results_list = self.results_list[n]
-            arch = client_info['arch']
-            host = client_info['host']
-
-            tags = list(client_info['tags'])
-            if not no_arch:
-                tags.append('__' + arch)
-            if not no_host:
-                tags.append('__' + host)
-                
-            key = sets.ImmutableSet(tags)
-
+            key = build_tagset(client_info, no_host=no_host, no_arch=no_arch)
+            
             # check if already stored
             if key in d:
                 receipt2, _, _ = d[key]

@@ -159,6 +159,18 @@ def send(server, x, hostname=None, tags=()):
     client_info['tags'] = tags
     _send(server, client_info, reslist)
 
+def check(name, server, tags=(), hostname=None, arch=None):
+    if hostname is None:
+        import socket
+        hostname = socket.gethostname()
+    if arch is None:
+        import sys
+        arch = sys.platform
+        
+    client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
+    s = xmlrpclib.ServerProxy(server)
+    return s.check_should_build(client_info)
+
 if __name__ == '__main__':
     import sys
     
