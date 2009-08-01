@@ -2,7 +2,20 @@ build virtualenv in as command
 xmlrpc api + examples
 setup.py
 
+retrieve package name from setup.py for Python packages
+
 clean up client stuff!
 
-BUGS:
+tagset documentation
 
+one super-client that can detect setup.py, run tests/communicate results, etc.
+
+datastore stuff/archival:
+ - get all tagsets
+ - get all updates by tagset
+
+everything else can be "within last month"
+
+organize reports with FAILURES at top (unless marked otherwise)
+
+organize git clone/copy etc, hg clone/copy, svn clone/copy.
