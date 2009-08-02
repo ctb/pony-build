@@ -124,22 +124,65 @@ class GitClone(SetupCommand):
 
         ##
 
+        if self.cache_dir:
+            cwd = os.getcwd()
+            os.chdir(self.cache_dir)
+            branchspec = '%s:%s' % (self.branch, self.branch)
+            cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
+            (ret, out, err) = _run_command(cmdlist)
+            if ret != 0:
+                self.command_list = cmdlist
+                self.status = ret
+                self.output = out
+                self.errout = err
+                return
+
+            os.chdir(cwd)
+
+        ##
+
+        print cmdlist, out
+
         # now, do a clone.
+        location = self.repository
+        if self.cache_dir:
+            location = self.cache_dir
+            
         cmdlist = ['git', 'clone', self.repository]
         (ret, out, err) = _run_command(cmdlist)
         if ret != 0:
+            self.command_list = cmdlist
             self.status = ret
             self.output = out
             self.errout = err
 
             return
 
+        print cmdlist, out
+
         if not os.path.exists(dirname) and os.path.isdir(dirname):
+            self.command_list = cmdlist
             self.status = -1
             self.output = ''
             self.errout = 'pony-build-client cannot find expected git dir: %s' % (dirname,)
             
             print 'wrong guess; %s does not exist.  whoops' % (dirname,)
+            return
+
+        ##
+
+        # check out the right branch
+        cmdlist = ['git', 'checkout', self.branch]
+        (ret, out, err) = _run_command(cmdlist, dirname)
+
+        print cmdlist, out
+
+        if ret != 0:
+            self.command_list = cmdlist
+            self.status = ret
+            self.output = out
+            self.errout = err
+            
             return
 
         self.status = 0                 # success
