@@ -36,7 +36,7 @@ class PonyBuildCoordinator(object):
             self.results_list = [ db[k] for (_, k) in keys ]
             self._process_results()
 
-        self.force_build = {}
+        self.request_build = {}
 
     def add_results(self, client_ip, client_info, results):
         print client_ip
@@ -48,9 +48,9 @@ class PonyBuildCoordinator(object):
         key = self.db_add_result(receipt, client_ip, client_info, results)
         self._process_results()
 
-    def set_force_build(self, client_info, value):
+    def set_request_build(self, client_info, value):
         tagset = build_tagset(client_info)
-        self.force_build[tagset] = value
+        self.request_build[tagset] = value
 
     def check_should_build(self, client_info):
         package = client_info['package']
@@ -61,8 +61,8 @@ class PonyBuildCoordinator(object):
         print 'LAST BUILD', last_build.keys()
 
         build = False
-        if tagset in self.force_build:
-            del self.force_build[tagset]
+        if tagset in self.request_build:
+            del self.request_build[tagset]
             build = True
         elif tagset in last_build:
             last_t = last_build[tagset][0]['time']

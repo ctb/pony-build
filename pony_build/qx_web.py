@@ -69,7 +69,7 @@ def create_publisher(coordinator):
 
 class PackageInfo(Directory):
     _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail',
-                   'force_build']
+                   'request_build']
     
     def __init__(self, coord, package):
         self.coord = coord
@@ -186,7 +186,7 @@ Build summary:<p>
         <td>{{ calc_status(tagset) }}</td>
         <td>{{ calc_time(tagset) }}</td>
         <td><a href='detail?result_key={{ get_result_key(tagset) }}'>view details</a> | 
-<a href='force_build?result_key={{ get_result_key(tagset) }}'>request build</a></td>
+<a href='request_build?result_key={{ get_result_key(tagset) }}'>request build</a></td>
       </tr>
    {% endfor %}
    </table>
@@ -380,6 +380,6 @@ Client info:
         key = request.form['result_key']
         receipt, client_info, results = self.coord.db_get_result_info(key)
 
-        self.coord.set_force_build(client_info, True)
+        self.coord.set_request_build(client_info, True)
 
         return quixote.redirect('./')
