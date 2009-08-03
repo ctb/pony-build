@@ -16,11 +16,11 @@ def build_tagset(client_info, no_arch=False, no_host=False):
 
     tags = list(client_info['tags'])
 
-    tags.append('__' + package)
+    tags.append('__package=' + package)
     if not no_arch:
-        tags.append('__' + arch)
+        tags.append('__arch=' + arch)
     if not no_host:
-        tags.append('__' + host)
+        tags.append('__host=' + host)
 
     tagset = sets.ImmutableSet(tags)
     return tagset
