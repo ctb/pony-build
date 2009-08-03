@@ -130,7 +130,7 @@ Build summary:<p>
 {% endif %}
 """
 
-        return Template(html).render(locals())
+        return Template(html).render(locals()).encode('latin-1', 'replace')
 
     def _q_index(self):
         package = self.package
@@ -200,7 +200,7 @@ Build summary:<p>
 {% endif %}
 """
 
-        return Template(html).render(locals())
+        return Template(html).render(locals()).encode('latin-1', 'replace')
 
     def show_all(self):
         package = self.package
@@ -249,7 +249,7 @@ All build information:<p>
 {% endif %}
 """
 
-        return Template(html).render(locals())
+        return Template(html).render(locals()).encode('latin-1', 'replace')
 
     def detail(self):
         request = quixote.get_request()
@@ -326,7 +326,7 @@ Build steps:
 </ul>
 <hr><a href='inspect?result_key={{ qp(key) }}'>inspect raw record</a>
 """
-        return Template(page).render(locals())
+        return Template(page).render(locals()).encode('latin-1', 'replace')
         
     def inspect(self):
         request = quixote.get_request()
@@ -373,7 +373,7 @@ Client info:
 {% endfor %}
 </ul>
 """
-        return Template(page).render(locals())
+        return Template(page).render(locals()).encode('latin-1', 'replace')
 
     def force_build(self):
         request = quixote.get_request()

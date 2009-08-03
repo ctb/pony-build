@@ -1,6 +1,5 @@
 build virtualenv in as command
 xmlrpc api + examples
-setup.py
 
 retrieve package name from setup.py for Python packages
 
@@ -22,4 +21,12 @@ organize git clone/copy etc, hg clone/copy, svn clone/copy.
 
 concatenated output, etc? for GitClone?
 
+a conf.d?
+
+some sort of history ("8 of last 8 succeeded") + flush history
+
+client logfile that's communicated back to server @ end.
+
+fix unicode
 make __host= and __package=
+setup.py

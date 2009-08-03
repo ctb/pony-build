@@ -1,0 +1,4 @@
+s = u'pygr/seqfmt.c: In function \u2018__pyx'
+s.encode('latin-1')
+---
+
