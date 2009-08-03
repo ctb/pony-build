@@ -186,7 +186,7 @@ Build summary:<p>
         <td>{{ calc_status(tagset) }}</td>
         <td>{{ calc_time(tagset) }}</td>
         <td><a href='detail?result_key={{ get_result_key(tagset) }}'>view details</a> | 
-<a href='force_build?result_key={{ get_result_key(tagset) }}'>force build</a></td>
+<a href='force_build?result_key={{ get_result_key(tagset) }}'>request build</a></td>
       </tr>
    {% endfor %}
    </table>
@@ -375,7 +375,7 @@ Client info:
 """
         return Template(page).render(locals()).encode('latin-1', 'replace')
 
-    def force_build(self):
+    def request_build(self):
         request = quixote.get_request()
         key = request.form['result_key']
         receipt, client_info, results = self.coord.db_get_result_info(key)

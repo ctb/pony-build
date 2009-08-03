@@ -26,5 +26,3 @@ a conf.d?
 some sort of history ("8 of last 8 succeeded") + flush history
 
 client logfile that's communicated back to server @ end.
-
-setup.py
