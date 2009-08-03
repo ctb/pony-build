@@ -1,3 +1,6 @@
 *~
 *.pyc
 results.pickle
+build
+dist
+pony_build.egg-info
