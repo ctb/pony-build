@@ -1,0 +1,18 @@
+#! /usr/bin/env python
+from pony_build_client import BuildCommand, TestCommand, do, send, \
+     TempDirectoryContext
+
+name = 'build-example'
+server_url = 'http://localhost:8080/xmlrpc'
+
+commands = [ BuildCommand(['/bin/zzzecho', 'hello, world'], name='David'),
+#             BuildCommand(['/bin/ls', '/blahblah'], name='Stephanie'),
+             TestCommand(['/bin/echo', 'this is a test'], name='Bill')
+             ]
+
+tags = ['tag1', 'tag2', 'tag3']
+
+context = TempDirectoryContext()
+results = do(name, commands, context=context, stop_if_failure=False)
+#, arch='test2')
+send(server_url, results, hostname='laptop', tags=tags)

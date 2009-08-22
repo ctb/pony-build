@@ -5,13 +5,19 @@ import shutil
 import os, os.path
 import time
 import urlparse
+import traceback
 
 def _run_command(command_list, cwd=None):
-    p = subprocess.Popen(command_list, shell=False, cwd=cwd,
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        p = subprocess.Popen(command_list, shell=False, cwd=cwd,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    out, err = p.communicate()
-    ret = p.returncode
+        out, err = p.communicate()
+        ret = p.returncode
+    except:
+        out = ''
+        err = traceback.format_exc()
+        ret = -1
 
     return (ret, out, err)
 
