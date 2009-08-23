@@ -14,6 +14,7 @@ from urllib import quote_plus
 import datetime
 
 from .util import env, templatesdir
+from ..coordinator import build_tagset
 
 day_diff = datetime.timedelta(1)
 hour_diff = datetime.timedelta(0, 3600)
@@ -149,7 +150,8 @@ class PackageInfo(Directory):
         qp = quote_plus
         timestamp = format_timestamp(receipt['time'])
         package = self.package
-        
+        tags = ", ".join(client_info['tags'])
+
         template = env.get_template('package_detail.html')
         return template.render(locals()).encode('latin-1', 'replace')
         
@@ -166,9 +168,10 @@ class PackageInfo(Directory):
 
         package = self.package
         receipt = repr_dict(receipt)
+        tagset = list(build_tagset(client_info))
         client_info = repr_dict(client_info)
         results = [ repr_dict(d) for d in results ]
-
+        
         qp = quote_plus
 
         template = env.get_template('package_inspect.html')
