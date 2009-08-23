@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "package_base.html" %}
 
 {% block title %} Build summary for '{{ package }}' {% endblock %}
 
@@ -21,11 +21,6 @@ Build summary:<p>
       </tr>
    {% endfor %}
    </table>
-
-   <p>
-   <a href='./show_latest'>show latest results, by architecture</a>
-   <p>
-   <a href='./show_all'>show all results</a>
 {% else %}
  No results for this package!
 {% endif %}

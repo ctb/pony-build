@@ -73,40 +73,6 @@ class PackageInfo(Directory):
         self.coord = coord
         self.package = package
         
-    def show_latest(self):
-        package = self.package
-        d = self.coord.get_latest_arch_result_for_package(package)
-
-        def calc_status(arch):
-            _, client_info, _ = d[arch]
-            status = client_info['success']
-            if status:
-                return "<font color='green'>SUCCESS</font>"
-            else:
-                return "<font color='red'>FAILURE</font>"
-
-        def calc_time(arch):
-            receipt, _, _ = d[arch]
-            t = receipt['time']
-            return format_timestamp(t)
-
-        def get_result_key(arch):
-            receipt, _, _ = d[arch]
-            return receipt['result_key']
-
-        def sort_by_timestamp(a, b):
-            print a
-            ta = a[1][0]['time']
-            tb = b[1][0]['time']
-            return -cmp(ta, tb)
-
-        it = d.items()
-        it.sort(sort_by_timestamp)
-        arch_list = [ k for (k, v) in it ]
-
-        template = env.get_template('package_latest.html')
-        return template.render(locals()).encode('latin-1', 'replace')
-
     def _q_index(self):
         package = self.package
         d = self.coord.get_unique_tagset_for_package(package)
