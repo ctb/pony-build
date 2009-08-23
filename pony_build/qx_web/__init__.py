@@ -1,6 +1,7 @@
 """
 A Quixote-based Web UI for pony-build.
 """
+import os.path
 
 import pkg_resources
 pkg_resources.require('Quixote>=2.6')
@@ -11,6 +12,8 @@ from quixote.publish import Publisher
 from jinja2 import Template
 from urllib import quote_plus
 import datetime
+
+from .util import env, templatesdir
 
 day_diff = datetime.timedelta(1)
 hour_diff = datetime.timedelta(0, 3600)
@@ -31,7 +34,7 @@ def format_timestamp(t):
     return dt.strftime("%A, %d %B %Y, %I:%M %p")
 
 class QuixoteWebApp(Directory):
-    _q_exports = [ '' ]
+    _q_exports = [ '', 'css' ]
     
     def __init__(self, coord):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
@@ -40,20 +43,15 @@ class QuixoteWebApp(Directory):
         packages = self.coord.get_all_packages()
 
         qp = quote_plus
-        page = """
-<title>pony-build main</title>
-{% if packages %}
-   We have build information for:
-   <ul>
-   {% for p in packages %}
-      <li> <a href='./{{ qp(p) }}/'>{{ p }}</a
-   {% endfor %}
-   </ul>
-{% else %}
-   No build information received yet.
-{% endif %}
-"""
-        return Template(page).render(locals())
+        template = env.get_template('top_index.html')
+        return template.render(locals())
+
+    def css(self):
+        cssfile = os.path.join(templatesdir, 'thin_green_line.css')
+        
+        response = quixote.get_response()
+        response.set_content_type('text/css')
+        return open(cssfile).read()
 
     def _q_lookup(self, component):
         return PackageInfo(self.coord, component)
@@ -106,31 +104,8 @@ class PackageInfo(Directory):
         it.sort(sort_by_timestamp)
         arch_list = [ k for (k, v) in it ]
 
-        html = """
-<title>Build summary for '{{ package }}'</title>
-<h2>Package '{{ package }}'</h2>
-Build summary:<p>
-{% if d %}
-   <table border='1'>
-      <tr><th>Architecture</th><th>Status</th><th>last report</th></tr>
-   {% for arch in arch_list %}
-      <tr>
-        <td>{{ arch }}</td>
-        <td>{{ calc_status(arch) }}</td>
-        <td>{{ calc_time(arch) }}</td>
-        <td><a href='detail?result_key={{ get_result_key(arch) }}'>view details</a></td>      </tr>
-   {% endfor %}
-   </table>
-   <p>
-   <a href='./'>show default report</a>
-   <p>
-   <a href='./show_all'>show all results</a>
-{% else %}
- No results for this package!
-{% endif %}
-"""
-
-        return Template(html).render(locals()).encode('latin-1', 'replace')
+        template = env.get_template('package_latest.html')
+        return template.render(locals()).encode('latin-1', 'replace')
 
     def _q_index(self):
         package = self.package
@@ -171,36 +146,8 @@ Build summary:<p>
         it.sort(sort_by_timestamp)
         tagset_list = [ k for (k, v) in it ]
 
-        html = """
-<title>Build summary for `{{ package }}`</title>
-<h2>Package '{{ package }}'</h2>
-Build summary:<p>
-{% if d %}
-   <table border='1'>
-      <tr><th>Tags</th><th>Host</th><th>Arch</th><th>Status</th><th>last report</th></tr>
-   {% for tagset in tagset_list %}
-      <tr>
-        <td>{{ nicetagset(tagset) }}</td>
-        <td>{{ get_host(tagset)}}</td>
-        <td>{{ get_arch(tagset)}}</td>
-        <td>{{ calc_status(tagset) }}</td>
-        <td>{{ calc_time(tagset) }}</td>
-        <td><a href='detail?result_key={{ get_result_key(tagset) }}'>view details</a> | 
-<a href='request_build?result_key={{ get_result_key(tagset) }}'>request build</a></td>
-      </tr>
-   {% endfor %}
-   </table>
-
-   <p>
-   <a href='./show_latest'>show latest results, by architecture</a>
-   <p>
-   <a href='./show_all'>show all results</a>
-{% else %}
- No results for this package!
-{% endif %}
-"""
-
-        return Template(html).render(locals()).encode('latin-1', 'replace')
+        template = env.get_template('package_summary.html')
+        return template.render(locals()).encode('latin-1', 'replace')
 
     def show_all(self):
         package = self.package
@@ -222,34 +169,8 @@ Build summary:<p>
             tagset = sorted([ x for x in tagset if not x.startswith('__')])
             return ", ".join(tagset)
 
-        html = """
-<title>All build results for `{{ package }}`</title>
-<h2>Package '{{ package }}'</h2>
-All build information:<p>
-{% if all_results %}
-   <table border='1'>
-      <tr><th>Host</th><th>Arch</th><th>Status</th><th>Tags</th><th>Time</th></tr>
-   {% for (receipt, client_info, results_list) in all_results %}
-      <tr>
-        <td>{{ client_info['host'] }}</td>
-        <td>{{ client_info['arch'] }}</td>
-        <td>{{ calc_status(client_info['success']) }}</td>
-        <td>{{ nicetagset(client_info['tags']) }}</td>
-        <td>{{ calc_time(receipt['time']) }}</td>
-        <td><a href='detail?result_key={{ qp(receipt['result_key']) }}'>view details</a></td>      </tr>
-   {% endfor %}
-   </table>
-
-   <p>
-   <a href='./'>show default report</a>
-   <p>
-   <a href='./show_latest'>show latest results, by architecture</a>
-{% else %}
- No results for this package!
-{% endif %}
-"""
-
-        return Template(html).render(locals()).encode('latin-1', 'replace')
+        template = env.get_template('package_all.html')
+        return template.render(locals()).encode('latin-1', 'replace')
 
     def detail(self):
         request = quixote.get_request()
@@ -263,70 +184,8 @@ All build information:<p>
 
         timestamp = format_timestamp(receipt['time'])
         
-        page = """
-<title>Result view</title>
-<h2>Result detail</h2>
-
-Package: {{ client_info['package'] }}<br>
-Host: {{ client_info['host'] }} ({{ receipt['client_ip'] }})<br>
-Architecture: {{client_info['arch'] }}<br>
-
-<p>
-
-<b>
- {% if client_info['success'] -%}
-   <font color='green'>SUCCESS</font>
- {% else %}
-   <font color='red'>FAILURE</font>
- {% endif %}
-</b>
-
-<p>
-Timestamp: {{ timestamp }}
-<p>
-
-Build steps:
-<ol>
-{% for r in results %}
-   <li> <a href='#{{ loop.index0 }}'>{{ r['type'] }}; {{ r['name'] }};
-   {% if r['status'] == 0 %}
-      <font color="green">success</font>
-   {% else %}
-      <font color="red">failure ({{ r['status'] }})</font>
-   {% endif %}
-   </a>
-{% endfor %}
-</ol>
-
-<h2>Details</h2>
-<ul>
-{% for r in results %}
-   <hr>
-   <li> <a name='{{ loop.index0 }}'>
-   <b>{{ r['name'] }}</b> {{ r['type'] }} -
-   {% if r['status'] == 0 %}
-      <font color="green">success</font>
-   {% else %}
-      <font color="red">failure ({{ r['status'] }})</font>
-   {% endif %}
-
-   <p>
-   
-   <b>command line:</b>{{ r['command'] }}
-   <p>
-   <b>stdout:</b><pre>{{ r['output'] }}</pre>
-   
-   {% if r['errout'].strip() %}
-   <b>stderr:</b><pre>{{ r['errout'] }}</pre>
-   {% else %}
-   <i>no stderr</i>
-   {% endif %}
-   <p>
-{% endfor %}
-</ul>
-<hr><a href='inspect?result_key={{ qp(key) }}'>inspect raw record</a>
-"""
-        return Template(page).render(locals()).encode('latin-1', 'replace')
+        template = env.get_template('package_detail.html')
+        return template.render(locals()).encode('latin-1', 'replace')
         
     def inspect(self):
         request = quixote.get_request()
@@ -343,37 +202,10 @@ Build steps:
         client_info = repr_dict(client_info)
         results = [ repr_dict(d) for d in results ]
 
-        page = """\
-<title>Inspector for record {{ n }}</title>
-<h2>Inspector for record {{ n }}</h2>
+        qp = quote_plus
 
-Receipt info:
-<pre>
-{% for k, v in receipt.items() -%}
-   {{ k }}: {{ v }}
-{% endfor -%}
-</pre>
-
-Client info:
-<pre>
-{% for k, v in client_info.items() -%}
-   {{ k }}: {{ v }}
-{% endfor -%}
-</pre>
-
-<b>Results:</b>
-<ul>
-{% for result_d in results -%}
-   <li>Result {{ loop.index }}:<br>
-   <pre>
-   {% for k, v in result_d.items() -%}
-      {{ k }}: {{ v }}
-   {% endfor -%}
-   </pre>
-{% endfor %}
-</ul>
-"""
-        return Template(page).render(locals()).encode('latin-1', 'replace')
+        template = env.get_template('package_inspect.html')
+        return template.render(locals()).encode('latin-1', 'replace')
 
     def request_build(self):
         request = quixote.get_request()

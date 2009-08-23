@@ -1,0 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    {% block head %}
+    <link rel="stylesheet" href="/css" />
+    <title>{% block title %}{% endblock %} - willow</title>
+    {% endblock %}
+</head>
+<body>
+    <div id="sidebar">{% block sidebar %}{% endblock %}</div>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">
+Template design by <a href="http://www.sixshootermedia.com">Six Shooter Media</a>.<br />
+    {% block footer %}
+<p>
+    willow is a <b>pre-publication</b> product of
+the <a href='http://ged.msu.edu/'>GED lab</a>
+<br>
+&copy Michigan State University
+    {% endblock %}
+    </div>
+</body>

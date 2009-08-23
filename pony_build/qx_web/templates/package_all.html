@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %} Build summary for '{{ package }}' {% endblock %}
+
+{% block content %}
+
+<title>All build results for `{{ package }}`</title>
+<h2>Package '{{ package }}'</h2>
+All build information:<p>
+{% if all_results %}
+   <table border='1'>
+      <tr><th>Host</th><th>Arch</th><th>Status</th><th>Tags</th><th>Time</th></tr>
+   {% for (receipt, client_info, results_list) in all_results %}
+      <tr>
+        <td>{{ client_info['host'] }}</td>
+        <td>{{ client_info['arch'] }}</td>
+        <td>{{ calc_status(client_info['success']) }}</td>
+        <td>{{ nicetagset(client_info['tags']) }}</td>
+        <td>{{ calc_time(receipt['time']) }}</td>
+        <td><a href='detail?result_key={{ qp(receipt['result_key']) }}'>view details</a></td>      </tr>
+   {% endfor %}
+   </table>
+
+   <p>
+   <a href='./'>show default report</a>
+   <p>
+   <a href='./show_latest'>show latest results, by architecture</a>
+{% else %}
+ No results for this package!
+{% endif %}
+
+{% endblock %}

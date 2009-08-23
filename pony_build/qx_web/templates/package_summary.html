@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %} Build summary for '{{ package }}' {% endblock %}
+
+{% block content %}
+
+<h2>Package '{{ package }}'</h2>
+Build summary:<p>
+{% if d %}
+   <table border='1'>
+      <tr><th>Tags</th><th>Host</th><th>Arch</th><th>Status</th><th>last report</th></tr>
+   {% for tagset in tagset_list %}
+      <tr>
+        <td>{{ nicetagset(tagset) }}</td>
+        <td>{{ get_host(tagset)}}</td>
+        <td>{{ get_arch(tagset)}}</td>
+        <td>{{ calc_status(tagset) }}</td>
+        <td>{{ calc_time(tagset) }}</td>
+        <td><a href='detail?result_key={{ get_result_key(tagset) }}'>view details</a> | 
+<a href='request_build?result_key={{ get_result_key(tagset) }}'>request build</a></td>
+      </tr>
+   {% endfor %}
+   </table>
+
+   <p>
+   <a href='./show_latest'>show latest results, by architecture</a>
+   <p>
+   <a href='./show_all'>show all results</a>
+{% else %}
+ No results for this package!
+{% endif %}
+
+{% endblock %}

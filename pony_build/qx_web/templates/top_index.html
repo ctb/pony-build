@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %} pony-build main {% endblock %}
+
+{% block content %}
+
+{% if packages %}
+   We have build information for:
+   <ul>
+   {% for p in packages %}
+      <li> <a href='./{{ qp(p) }}/'>{{ p }}</a
+   {% endfor %}
+   </ul>
+{% else %}
+   No build information received yet.
+{% endif %}
+
+{% endblock %}

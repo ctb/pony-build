@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %} Build summary for '{{ package }}' {% endblock %}
+
+{% block content %}
+
+<title>Inspector for record {{ n }}</title>
+<h2>Inspector for record {{ n }}</h2>
+
+Receipt info:
+<pre>
+{% for k, v in receipt.items() -%}
+   {{ k }}: {{ v }}
+{% endfor -%}
+</pre>
+
+Client info:
+<pre>
+{% for k, v in client_info.items() -%}
+   {{ k }}: {{ v }}
+{% endfor -%}
+</pre>
+
+<b>Results:</b>
+<ul>
+{% for result_d in results -%}
+   <li>Result {{ loop.index }}:<br>
+   <pre>
+   {% for k, v in result_d.items() -%}
+      {{ k }}: {{ v }}
+   {% endfor -%}
+   </pre>
+{% endfor %}
+</ul>
+
+{% endblock %}
