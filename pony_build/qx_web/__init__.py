@@ -147,8 +147,8 @@ class PackageInfo(Directory):
             raise Exception
 
         qp = quote_plus
-
         timestamp = format_timestamp(receipt['time'])
+        package = self.package
         
         template = env.get_template('package_detail.html')
         return template.render(locals()).encode('latin-1', 'replace')
@@ -164,6 +164,7 @@ class PackageInfo(Directory):
         def repr_dict(d):
             return dict([ (k, repr(d[k])) for k in d ])
 
+        package = self.package
         receipt = repr_dict(receipt)
         client_info = repr_dict(client_info)
         results = [ repr_dict(d) for d in results ]

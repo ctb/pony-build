@@ -1,11 +1,14 @@
 {% extends "package_base.html" %}
 
-{% block title %} Build summary for '{{ package }}' {% endblock %}
+{% block title %} Result detail / '{{ package }}' {% endblock %}
 
 {% block content %}
 
-<title>Result view</title>
 <h2>Result detail</h2>
+
+<i><a href='inspect?result_key={{ qp(key) }}'>inspect raw record</a></i>
+
+<p>
 
 Package: {{ client_info['package'] }}<br>
 Host: {{ client_info['host'] }} ({{ receipt['client_ip'] }})<br>
@@ -14,6 +17,7 @@ Architecture: {{client_info['arch'] }}<br>
 <p>
 
 <b>
+Status: 
  {% if client_info['success'] -%}
    <font color='green'>SUCCESS</font>
  {% else %}
@@ -28,7 +32,7 @@ Timestamp: {{ timestamp }}
 Build steps:
 <ol>
 {% for r in results %}
-   <li> <a href='#{{ loop.index0 }}'>{{ r['type'] }}; {{ r['name'] }};
+   <li> <a href='#{{ loop.index0 }}'>{{ loop.index }}. {{ r['type'] }}; {{ r['name'] }};
    {% if r['status'] == 0 %}
       <font color="green">success</font>
    {% else %}
@@ -42,7 +46,7 @@ Build steps:
 <ul>
 {% for r in results %}
    <hr>
-   <li> <a name='{{ loop.index0 }}'>
+   <li> <a name='{{ loop.index0 }}'>{{ loop.index }}. 
    <b>{{ r['name'] }}</b> {{ r['type'] }} -
    {% if r['status'] == 0 %}
       <font color="green">success</font>
@@ -54,16 +58,15 @@ Build steps:
    
    <b>command line:</b>{{ r['command'] }}
    <p>
-   <b>stdout:</b><pre>{{ r['output'] }}</pre>
+   <b>stdout:</b><blockquote><pre>{{ r['output'] }}</pre></blockquote>
    
    {% if r['errout'].strip() %}
-   <b>stderr:</b><pre>{{ r['errout'] }}</pre>
+   <b>stderr:</b><pre><blockquote>{{ r['errout'] }}</pre></blockquote>
    {% else %}
    <i>no stderr</i>
    {% endif %}
    <p>
 {% endfor %}
 </ul>
-<hr><a href='inspect?result_key={{ qp(key) }}'>inspect raw record</a>
 
 {% endblock %}

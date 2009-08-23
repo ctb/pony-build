@@ -1,10 +1,9 @@
 {% extends "package_base.html" %}
 
-{% block title %} Build summary for '{{ package }}' {% endblock %}
+{% block title %} All build results for '{{ package }}' {% endblock %}
 
 {% block content %}
 
-<title>All build results for `{{ package }}`</title>
 <h2>Package '{{ package }}'</h2>
 All build information:<p>
 {% if all_results %}
