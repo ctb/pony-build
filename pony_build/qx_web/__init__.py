@@ -1,7 +1,7 @@
 """
 A Quixote-based Web UI for pony-build.
 """
-import os.path
+import os, os.path
 
 import pkg_resources
 pkg_resources.require('Quixote>=2.6')
@@ -35,10 +35,13 @@ def format_timestamp(t):
     return dt.strftime("%A, %d %B %Y, %I:%M %p")
 
 class QuixoteWebApp(Directory):
-    _q_exports = [ '', 'css' ]
+    _q_exports = [ '', 'css', 'exit' ]
     
     def __init__(self, coord):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
+
+    def exit(self):
+        os._exit(0)
 
     def _q_index(self):
         packages = self.coord.get_all_packages()

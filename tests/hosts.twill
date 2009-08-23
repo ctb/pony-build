@@ -1,5 +1,0 @@
-go /
-code 200
-
-follow "List hosts"
-code 200
