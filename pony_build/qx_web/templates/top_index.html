@@ -2,15 +2,19 @@
 
 {% block title %} pony-build main {% endblock %}
 
+{% block header %}
+<h1>pony-build report server</h1>
+{% endblock %}
+
 {% block content %}
 
 {% if packages %}
-   We have build information for:
-   <ul>
+   <h3 class="top_main_heading">Build information</h3>
+   <p>
+   We have build information for:<br>
    {% for p in packages %}
-      <li> <a href='./{{ qp(p) }}/'>{{ p }}</a
+      <a href='./{{ qp(p) }}/'>{{ loop.index }}. {{ p }}</a<br>
    {% endfor %}
-   </ul>
 {% else %}
    No build information received yet.
 {% endif %}

@@ -2,15 +2,19 @@
 
 {% block sidebar %}
 
-<a href='../'>package index</a>
-
 <p>
 
 <h3>{{ package }}</h3>
 
+<p class="news">
+<a href='./'>latest builds</a><br>
+<a href='./show_all'>all builds</a>
+</p>
+<br>
 <p>
-<a href='./'>view summary</a>
-<p>
-<a href='./show_all'>show all results</a>
+<a href='../'>../index</a>
 
+{% endblock %}
+
+{% block footer %}
 {% endblock %}

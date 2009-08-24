@@ -51,7 +51,7 @@ class QuixoteWebApp(Directory):
         return template.render(locals())
 
     def css(self):
-        cssfile = os.path.join(templatesdir, 'thin_green_line.css')
+        cssfile = os.path.join(templatesdir, 'style.css')
         
         response = quixote.get_response()
         response.set_content_type('text/css')

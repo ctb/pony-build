@@ -5,7 +5,8 @@
 {% block content %}
 
 <h2>Package '{{ package }}'</h2>
-Build summary:<p>
+<h4><i>Summary view of results</i></h4>
+<br>
 {% if d %}
    <table border='1'>
       <tr><th>Tags</th><th>Host</th><th>Arch</th><th>Status</th><th>last report</th></tr>
@@ -24,5 +25,6 @@ Build summary:<p>
 {% else %}
  No results for this package!
 {% endif %}
+</p>
 
 {% endblock %}

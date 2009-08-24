@@ -5,7 +5,8 @@
 {% block content %}
 
 <h2>Package '{{ package }}'</h2>
-All build information:<p>
+<h4><i>All build information</i></h4>
+<br>
 {% if all_results %}
    <table border='1'>
       <tr><th>Host</th><th>Arch</th><th>Status</th><th>Tags</th><th>Time</th></tr>
@@ -19,8 +20,6 @@ All build information:<p>
         <td><a href='detail?result_key={{ qp(receipt['result_key']) }}'>view details</a></td>      </tr>
    {% endfor %}
    </table>
-
-   <p>
 {% else %}
  No results for this package!
 {% endif %}
