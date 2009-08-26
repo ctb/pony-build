@@ -9,14 +9,19 @@ addr = sys.argv[3]
 
 ###
 
-def notify(addr, *x):
+def notify(addr, package, tagset, *x):
     print 'NOTIFYING SOMEONE ABOUT FAILURE: %s' % (addr,)
+    print tagset
 
 ###
 
 s = xmlrpclib.ServerProxy(server_url)
-x = s.get_last_result_for_package(package)
-if x:
-    (receipt, client_info, results_list) = x
-    if not client_info['success']:
-        notify(addr, package, receipt, client_info, results_list)
+x = s.get_tagsets_for_package(package)
+
+for tagset in x:
+    z = s.get_last_result_for_tagset(package, tagset)
+    if z:
+        (receipt, client_info, results_list) = z
+    
+        if not client_info['success'] or 1:
+            notify(addr, package, tagset, receipt, client_info, results_list)

@@ -42,7 +42,13 @@ def get_last_result_for_package(package):
         (receipt, client_info, results) = x
         return (receipt, client_info, results)
     return 0
-    
+
+def get_tagsets_for_package(package):
+    return [ list(x) for x in _coordinator.get_tagsets_for_package(package) ]
+
+def get_last_result_for_tagset(package, tagset):
+    return _coordinator.get_last_result_for_tagset(package, tagset)
+
 # Restrict to a particular path.
 
 _coordinator = None
@@ -90,5 +96,7 @@ def create(interface, port, pbs_coordinator, wsgi_app):
     server.register_function(add_results)
     server.register_function(check_should_build)
     server.register_function(get_last_result_for_package)
+    server.register_function(get_tagsets_for_package)
+    server.register_function(get_last_result_for_tagset)
     
     return server

@@ -226,7 +226,7 @@ things with me and are, collectively, entirely responsible for any bad
 design decisions; the good ones are all mine.
 
 Seriously, I appreciate the suggestions and comments from these fine
-people.
+people, even though Doug has been a jerk to me since then.
 
 Eric Henry built what I would consider 'pony-build prototype 1',
 project-builder-pie.
@@ -240,4 +240,4 @@ probably right.
 
 --
 
-CTB 7/27/09
+CTB 8/24/09

@@ -208,3 +208,32 @@ class PonyBuildCoordinator(object):
                 d[key] = receipt, client_info, results_list
 
         return d
+
+    def get_tagsets_for_package(self, package, no_host=False, no_arch=False):
+        result_indices = self._packages.get(package)
+        if not result_indices:
+            return []
+
+        x = set()
+        for n in result_indices:
+            receipt, client_info, results_list = self.results_list[n]
+            key = build_tagset(client_info, no_host=no_host, no_arch=no_arch)
+
+            x.add(key)
+
+        return list(x)
+
+    def get_last_result_for_tagset(self, package, tagset):
+        result_indices = self._packages.get(package)
+        if not result_indices:
+            return 0
+
+        result_indices.reverse()
+        for n in result_indices:
+            receipt, client_info, results_list = self.results_list[n]
+            key = build_tagset(client_info)
+
+            if set(tagset) == set(key):
+                return (receipt, client_info, results_list)
+
+        return 0
