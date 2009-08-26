@@ -12,6 +12,8 @@ one super-client that can detect setup.py, run tests/communicate results, etc.
 datastore stuff/archival:
  - get all tagsets
  - get all updates by tagset
+ - flush failures should flush everything, yah?  or should it just be
+   'flush tagset'?
 
 everything else can be "within last month"
 
