@@ -34,8 +34,8 @@ class PonyBuildCoordinator(object):
             keys = [ (int(k), k) for k in db.keys() ]
             keys.sort()
             self.results_list = [ db[k] for (_, k) in keys ]
-            self._process_results()
-
+            
+        self._process_results()
         self.request_build = {}
 
     def add_results(self, client_ip, client_info, results):
