@@ -19,6 +19,7 @@ Requirements
 
 Server side:
   Jinja2 (easy_installable).
+
   For the Quixote Web UI, Quixote 2.6 (also easy_installable).
 
 Client side:
@@ -51,7 +52,10 @@ See 'architecture, and extending pony-build', below.
 pony-build client scripts
 =========================
 
-Clients are just scripts that set up & run a list of commands: ::
+Build scripts
+--------------
+
+Client build scripts are just scripts that set up & run a list of commands: ::
 
   from pony_build_client import BuildCommand, TestCommand, do, send
 
@@ -67,6 +71,13 @@ Clients are just scripts that set up & run a list of commands: ::
 
 Client results are communicated to the server by XML-RPC, so the client
 must be able to reach the server via the HTTP protocol.
+
+Client query scripts
+--------------------
+
+Client query scripts request information from the server.  For example,
+see 'bin/notify-failure-email', which checks the status of the last build
+of a particular package and sends an e-mail.
 
 Architecture, and extending pony-build
 ======================================

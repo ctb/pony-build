@@ -1,0 +1,22 @@
+#! /usr/bin/env python
+import _mypath
+import sys
+import xmlrpclib
+
+server_url = sys.argv[1]
+package = sys.argv[2]
+addr = sys.argv[3]
+
+###
+
+def notify(addr, *x):
+    print 'NOTIFYING SOMEONE ABOUT FAILURE: %s' % (addr,)
+
+###
+
+s = xmlrpclib.ServerProxy(server_url)
+x = s.get_last_result_for_package(package)
+if x:
+    (receipt, client_info, results_list) = x
+    if not client_info['success']:
+        notify(addr, package, receipt, client_info, results_list)

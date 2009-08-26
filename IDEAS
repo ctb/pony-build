@@ -29,12 +29,18 @@ some sort of history ("8 of last 8 succeeded") + flush history
 
 client logfile that's communicated back to server @ end.
 
-e-mail notification based on server polling
-
-how to stop builds > 5 min from running IF build is checked every 5 min?
-
 file upload/download?
 
 integrate TAP?
 
 explain tagsets
+
+anti-DoS: set a default limit on upload size; and/or require package/password.
+
+probably want an rpc query to get distinct tagsets for a particular package...
+
+---
+
+how to stop builds > 5 min from running IF build is checked every 5 min?
+
+build receipts?

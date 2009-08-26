@@ -34,6 +34,14 @@ def add_results(client_info, results):
 
 def check_should_build(client_info):
     return _coordinator.check_should_build(client_info)
+
+def get_last_result_for_package(package):
+    result_id = _coordinator.get_last_result_for_package(package)
+    x = _coordinator.db_get_result_info(result_id)
+    if x:
+        (receipt, client_info, results) = x
+        return (receipt, client_info, results)
+    return 0
     
 # Restrict to a particular path.
 
@@ -81,5 +89,6 @@ def create(interface, port, pbs_coordinator, wsgi_app):
     
     server.register_function(add_results)
     server.register_function(check_should_build)
+    server.register_function(get_last_result_for_package)
     
     return server
