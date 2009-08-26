@@ -174,7 +174,7 @@ class PonyBuildCoordinator(object):
 
         return d
 
-    def get_unique_tagset_for_package(self, package,
+    def get_unique_tagsets_for_package(self, package,
                                       no_host=False, no_arch=False):
         """
         Get the 'unique' set of latest results for the given package,

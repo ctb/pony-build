@@ -79,7 +79,7 @@ class PackageInfo(Directory):
         
     def _q_index(self):
         package = self.package
-        d = self.coord.get_unique_tagset_for_package(package)
+        d = self.coord.get_unique_tagsets_for_package(package)
 
         def calc_status(tagset):
             _, client_info, _ = d[tagset]
