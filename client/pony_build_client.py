@@ -278,6 +278,10 @@ def check(name, server, tags=(), hostname=None, arch=None):
     s = xmlrpclib.ServerProxy(server)
     return s.check_should_build(client_info)
 
+def get_tagsets_for_package(server, package):
+    s = xmlrpclib.ServerProxy(server)
+    return s.get_tagsets_for_package(package)
+
 if __name__ == '__main__':
     import sys
     

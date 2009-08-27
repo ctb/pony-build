@@ -58,5 +58,11 @@ def test_send_fn():
     client_info = dict(package='test-underway2', arch='fooarch2',
                        success=True)
     results = (client_info, [])
+
+    x = pbc.get_tagsets_for_package(rpc_url, 'test-underway2')
+    assert len(x) == 0
     
-    pbc.send(rpc_url, results, hostname='testhost2', tags=('b_tag'))
+    pbc.send(rpc_url, results, hostname='testhost2', tags=('b_tag',))
+
+    x = pbc.get_tagsets_for_package(rpc_url, 'test-underway2')
+    assert len(x) == 1
