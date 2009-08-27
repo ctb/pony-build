@@ -27,13 +27,13 @@ def build_tagset(client_info, no_arch=False, no_host=False):
 
 class PonyBuildCoordinator(object):
     def __init__(self, db=None):
-        self.results_list = []
+        self.results_list = {}
         self.db = db
 
         if db is not None:
             keys = [ (int(k), k) for k in db.keys() ]
             keys.sort()
-            self.results_list = [ db[k] for (_, k) in keys ]
+            self.results_list = dict([ (k, db[k]) for (_, k) in keys ])
             
         self._process_results()
         self.request_build = {}
@@ -92,35 +92,48 @@ class PonyBuildCoordinator(object):
         self._archs = archs = {}
         self._packages = packages = {}
 
-        for n, (receipt, client_info, results_list) in enumerate(self.results_list):
+        keys = self.results_list.keys()
+
+        def sort_int(a, b):
+            return cmp(int(a), int(b))
+        keys.sort(sort_int)
+
+        for k in keys:
+            (receipt, client_info, results_list) = self.results_list[k]
+
             host = client_info['host']
             arch = client_info['arch']
             pkg = client_info['package']
 
             l = hosts.get(host, [])
-            l.append(n)
+            l.append(k)
             hosts[host] = l
 
             l = archs.get(arch, [])
-            l.append(n)
+            l.append(k)
             archs[arch] = l
 
             l = packages.get(pkg, [])
-            l.append(n)
+            l.append(k)
             packages[pkg] = l
 
     def db_get_result_info(self, result_id):
         return self.results_list[int(result_id)]
 
     def db_add_result(self, receipt, client_ip, client_info, results):
-        next_key = str(len(self.results_list))
+        next_key = 0
+        if self.results_list:
+            next_key = max([ int(x) for x in self.results_list.keys()]) + 1
+
+        next_key = str(next_key)
+        
         receipt['result_key'] = next_key
         
         if self.db is not None:
             self.db[next_key] = (receipt, client_info, results)
             self.db.sync()
             
-        self.results_list.append((receipt, client_info, results))
+        self.results_list[int(next_key)] = (receipt, client_info, results)
         return next_key
 
     def get_all_packages(self):

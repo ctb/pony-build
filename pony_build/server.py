@@ -12,6 +12,7 @@ the RPC functionality and data handling is in the PonyBuildCoordinator
 class (see 'coordinator.py') you can just write a new Web UI around
 that internal interface.
 """
+import traceback
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
      SimpleXMLRPCDispatcher
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
@@ -28,7 +29,11 @@ def add_results(client_info, results):
     for d in results:
         d.keys()
 
-    _coordinator.add_results(client_ip, client_info, results)
+    try:
+        _coordinator.add_results(client_ip, client_info, results)
+    except:
+        traceback.print_exc()
+        raise
 
     return 1
 
