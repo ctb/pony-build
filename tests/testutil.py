@@ -3,6 +3,8 @@ import sys
 import subprocess
 import urllib
 
+_server_url = None
+
 def run_server(DB_FILE, PORT=None):
     """
     Run a Quixote simple_server on localhost:PORT with subprocess.

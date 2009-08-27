@@ -57,7 +57,7 @@ class PonyBuildCoordinator(object):
         tagset = build_tagset(client_info)
         print 'CHECK TAGSET', tagset
         
-        last_build = self.get_unique_tagset_for_package(package)
+        last_build = self.get_unique_tagsets_for_package(package)
         print 'LAST BUILD', last_build.keys()
 
         build = False
