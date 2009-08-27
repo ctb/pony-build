@@ -33,7 +33,7 @@ class PonyBuildCoordinator(object):
         if db is not None:
             keys = [ (int(k), k) for k in db.keys() ]
             keys.sort()
-            self.results_list = dict([ (k, db[k]) for (_, k) in keys ])
+            self.results_list = dict([ (k, db[str(k)]) for (k, _) in keys ])
             
         self._process_results()
         self.request_build = {}
