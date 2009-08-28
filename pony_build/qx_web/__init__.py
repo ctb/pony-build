@@ -159,6 +159,7 @@ class PackageInfo(Directory):
         return template.render(locals()).encode('latin-1', 'replace')
         
     def inspect(self):
+
         request = quixote.get_request()
         key = request.form['result_key']
         receipt, client_info, results = self.coord.db_get_result_info(key)

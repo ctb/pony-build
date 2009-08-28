@@ -12,6 +12,8 @@ try:
 except IOError:
     dbfile = shelve.open(sys.argv[1], 'c')
 
+dbfile = coordinator.IntDictWrapper(dbfile)
+
 pbs_app = coordinator.PonyBuildCoordinator(db=dbfile)
 wsgi_app = qx_web.create_publisher(pbs_app)
 

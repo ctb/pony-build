@@ -14,6 +14,7 @@ def make_db(filename=DB_TEST_FILE):
         pass
 
     db = shelve.open(filename, 'c')
+    db = coordinator.IntDictWrapper(db)
     coord = coordinator.PonyBuildCoordinator(db)
 
     client_info = dict(success=True,
@@ -44,9 +45,17 @@ def test_index():
 
 def test_package_index():
     go(testutil._server_url)
+    code(200)
+    
     go('./test-underway/')
-
     title('Build summary for')
     code(200)
+    show()
+    
+    follow('view details')
+    code(200)
+    show()
 
+    follow('inspect raw record')
+    code(200)
     show()

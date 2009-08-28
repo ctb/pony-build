@@ -2,7 +2,8 @@ from pony_build import coordinator
 
 class Test_Coordinator_API(object):
     def setup(self):
-        self.coord = coordinator.PonyBuildCoordinator()
+        db = coordinator.IntDictWrapper({})
+        self.coord = coordinator.PonyBuildCoordinator(db)
 
     def load_results(self):
         client_info = dict(success=True,

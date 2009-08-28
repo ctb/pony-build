@@ -19,6 +19,7 @@ def make_db(filename=DB_TEST_FILE):
         pass
 
     db = shelve.open(filename, 'c')
+    db = coordinator.IntDictWrapper(db)
     coord = coordinator.PonyBuildCoordinator(db)
 
     client_info = dict(success=True,

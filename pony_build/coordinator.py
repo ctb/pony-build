@@ -8,6 +8,30 @@ pony_build.server.get_coordinator().
 import time
 import sets
 from datetime import datetime, timedelta
+import UserDict
+
+class IntDictWrapper(object, UserDict.DictMixin):
+    def __init__(self, d):
+        self.d = d
+
+    def __getitem__(self, k):
+        k = str(int(k))
+        return self.d[k]
+
+    def __setitem__(self, k, v):
+        k = str(int(k))
+        self.d[k] = v
+
+    def keys(self):
+        return [ int(x) for x in self.d.keys() ]
+
+    def sync(self):
+        if hasattr(self.d, 'sync'):
+            self.d.sync()
+
+    def close(self):
+        if hasattr(self.d, 'close'):
+            self.d.close()
 
 def build_tagset(client_info, no_arch=False, no_host=False):
     arch = client_info['arch']
