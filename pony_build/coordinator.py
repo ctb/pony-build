@@ -63,10 +63,10 @@ class PonyBuildCoordinator(object):
         self.request_build = {}
 
     def add_results(self, client_ip, client_info, results):
-        print client_ip
-        print client_info
-        print results
-        print '---'
+#        print client_ip
+#        print client_info
+#        print results
+#        print '---'
         receipt = dict(time=time.time(), client_ip=client_ip)
 
         key = self.db_add_result(receipt, client_ip, client_info, results)
@@ -79,10 +79,8 @@ class PonyBuildCoordinator(object):
     def check_should_build(self, client_info):
         package = client_info['package']
         tagset = build_tagset(client_info)
-        print 'CHECK TAGSET', tagset
         
         last_build = self.get_unique_tagsets_for_package(package)
-        print 'LAST BUILD', last_build.keys()
 
         build = False
         if tagset in self.request_build:
@@ -96,7 +94,6 @@ class PonyBuildCoordinator(object):
             diff = now - last_t
             if diff >= timedelta(1): # 1 day, default
                 build = True
-            else:
                 print 'last build was %s ago; too recent to build' % (diff,)
 
             # was it successful?
@@ -202,7 +199,6 @@ class PonyBuildCoordinator(object):
         d = {}
         for arch, l in self._archs.iteritems():
             for n in l:
-                print n
                 receipt, client_info, results = self.results_list[n]
                 if client_info['package'] == package:
                     d[arch] = (receipt, client_info, results)
