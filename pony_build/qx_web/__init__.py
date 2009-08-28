@@ -101,7 +101,7 @@ class PackageInfo(Directory):
             return d[tagset][1]['arch']
 
         def get_result_key(tagset):
-            return quote_plus(d[tagset][0]['result_key'])
+            return quote_plus(str(d[tagset][0]['result_key']))
 
         def nicetagset(tagset):
             tagset = sorted([ x for x in list(tagset) if not x.startswith('__')])
