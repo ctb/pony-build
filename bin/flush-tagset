@@ -6,26 +6,25 @@ from pony_build import coordinator
 
 package = sys.argv[1]
 dbfile = shelve.open(sys.argv[2])
+dbfile = coordinator.IntDictWrapper(dbfile)
+
 arch = sys.argv[3]
 tags = sys.argv[4]
 tagset = set(tags.split(','))
 
 d = dict([ (str(i), k) for (i, k) in enumerate(dbfile.keys()) ])
 
-coord = coordinator.PonyBuildCoordinator(db=dbfile)
-
 flush = []
-for i, (receipt, client_info, results_list) in coord.results_list.iteritems():
+for k, (receipt, client_info, results_list) in dbfile.iteritems():
     if client_info['package'] == package and \
        set(client_info['tags']) == tagset and client_info['arch'] == arch:
-        flush.append(i)
+        flush.append(k)
     else:
        if client_info['package'] == package and client_info['arch'] == arch:
            print client_info['tags'], tagset
 
 print flush
 for k in flush:
-    print d[str(k)], k
     del dbfile[str(k)]
 
 dbfile.close()

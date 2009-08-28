@@ -22,6 +22,10 @@ class IntDictWrapper(object, UserDict.DictMixin):
         k = str(int(k))
         self.d[k] = v
 
+    def __delitem__(self, k):
+        k = str(int(k))
+        self.d.__delitem__(k)
+
     def keys(self):
         return [ int(x) for x in self.d.keys() ]
 
