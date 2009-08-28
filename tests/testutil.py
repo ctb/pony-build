@@ -5,6 +5,8 @@ import urllib
 
 _server_url = None
 
+DEFAULT_PORT=8912
+
 def run_server(DB_FILE, PORT=None):
     """
     Run a Quixote simple_server on localhost:PORT with subprocess.
@@ -16,7 +18,7 @@ def run_server(DB_FILE, PORT=None):
     global _server_url
 
     if PORT is None:
-        PORT = int(os.environ.get('TWILL_TEST_PORT', '8080'))
+        PORT = int(os.environ.get('TWILL_TEST_PORT', DEFAULT_PORT))
 
     outfd = tempfile.mkstemp('twilltst')[0]
 
