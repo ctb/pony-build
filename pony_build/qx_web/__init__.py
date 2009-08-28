@@ -123,7 +123,8 @@ class PackageInfo(Directory):
         package = self.package
         all_results = self.coord.get_all_results_for_package(package)
 
-        qp = quote_plus
+        def qp(x):
+            return quote_plus(str(x))
         
         def calc_status(status):
             print 'STATUS:', status
