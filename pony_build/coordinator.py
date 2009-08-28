@@ -113,11 +113,7 @@ class PonyBuildCoordinator(object):
         self._archs = archs = {}
         self._packages = packages = {}
 
-        keys = self.results_list.keys()
-
-        def sort_int(a, b):
-            return cmp(int(a), int(b))
-        keys.sort(sort_int)
+        keys = sorted(self.results_list.keys())
 
         for k in keys:
             (receipt, client_info, results_list) = self.results_list[k]
@@ -144,7 +140,7 @@ class PonyBuildCoordinator(object):
     def db_add_result(self, receipt, client_ip, client_info, results):
         next_key = 0
         if self.results_list:
-            next_key = max([ int(x) for x in self.results_list.keys()]) + 1
+            next_key = max(self.results_list.keys()) + 1
 
         receipt['result_key'] = str(next_key)
                 
