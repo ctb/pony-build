@@ -267,7 +267,7 @@ def send(server, x, hostname=None, tags=()):
     
     _send(server, client_info, reslist)
 
-def check(name, server, tags=(), hostname=None, arch=None):
+def check(name, server, tags=(), hostname=None, arch=None, reserve_time=0):
     if hostname is None:
         hostname = get_hostname()
         
@@ -276,7 +276,7 @@ def check(name, server, tags=(), hostname=None, arch=None):
         
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     s = xmlrpclib.ServerProxy(server)
-    return s.check_should_build(client_info)[0]
+    return s.check_should_build(client_info, True, reserve_time)[0]
 
 def get_tagsets_for_package(server, package):
     s = xmlrpclib.ServerProxy(server)

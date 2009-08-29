@@ -10,7 +10,11 @@ import sets
 from datetime import datetime, timedelta
 import UserDict
 
+# default duration allocated to a build
 DEFAULT_BUILD_DURATION=60*60            # in seconds <== 1 hr
+
+# the maximum request for a build allowance
+MAX_BUILD_ALLOWANCE=4*60*60               # in seconds <== 1 hr
 
 class IntDictWrapper(object, UserDict.DictMixin):
     def __init__(self, d):
@@ -66,9 +70,9 @@ class PonyBuildCoordinator(object):
         self.request_build = {}
         self.is_building = {}
 
-    def notify_build(self, package, client_info):
+    def notify_build(self, package, client_info, requested_allowance=None):
         tagset = build_tagset(client_info)
-        self.is_building[tagset] = time.time()
+        self.is_building[tagset] = (time.time(), requested_allowance)
 
     def add_results(self, client_ip, client_info, results):
 #        print client_ip
@@ -99,21 +103,24 @@ class PonyBuildCoordinator(object):
                 return True, 'build requested'
         
         if tagset in self.is_building:
-            last_t = self.is_building[tagset]
+            (last_t, requested) = self.is_building[tagset]
             last_t = datetime.fromtimestamp(last_t)
-
+            
             now = datetime.now()
             diff = now - last_t
 
-            last_duration = DEFAULT_BUILD_DURATION
-            if tagset in last_build:
-                try:
-                    last_duration = last_build[tagset][1]['duration']
-                except KeyError:
-                    pass
-            last_duration = timedelta(0, last_duration) # seconds
+            if not requested:
+                last_duration = DEFAULT_BUILD_DURATION
+                if tagset in last_build:
+                    try:
+                        last_duration = last_build[tagset][1]['duration']
+                    except KeyError:
+                        pass
+                requested = last_duration
+                print 'rEQEUSTED:', requested
+            requested = timedelta(0, requested) # seconds
 
-            if diff < last_duration:
+            if diff < requested:
                 return False, 'may be in build now'
                 
         if tagset in last_build:

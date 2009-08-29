@@ -146,3 +146,34 @@ class Test_Coordinator_API(object):
         time.sleep(0.2)
         do_build = self.coord.check_should_build(self.some_client_info)
         assert do_build[0]
+
+    def test_check_should_build_is_building_but_requested(self):
+        # first, set up a forced 'old' result
+        k = self.load_results()
+        receipt, client_info, results = self.coord.db[k]
+        receipt['time'] = 0
+        self.coord.db[k] = receipt, client_info, results
+
+        # notify of building, and request 0.5 seconds...
+        self.coord.notify_build('package1', self.some_client_info, 0.5)
+
+        # ...and wait for longer than it took to build the last time,
+        # but less than requested.
+        time.sleep(0.2)
+        do_build = self.coord.check_should_build(self.some_client_info)
+        assert not do_build[0]
+
+    def test_check_should_build_is_building_but_longer_than_requested(self):
+        # first, set up a forced 'old' result
+        k = self.load_results()
+        receipt, client_info, results = self.coord.db[k]
+        receipt['time'] = 0
+        self.coord.db[k] = receipt, client_info, results
+
+        # notify of building, and request 0.1 seconds...
+        self.coord.notify_build('package1', self.some_client_info, 0.1)
+
+        # ...but wait for longer than requested.
+        time.sleep(0.2)
+        do_build = self.coord.check_should_build(self.some_client_info)
+        assert do_build[0]

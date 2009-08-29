@@ -43,7 +43,7 @@ def add_results(client_info, results):
 
     return 1
 
-def check_should_build(client_info):
+def check_should_build(client_info, reserve_build=True, build_allowance=0):
     """
     Should a client build, according to the server?
 
@@ -54,7 +54,14 @@ def check_should_build(client_info):
     result for this tagset, a stale build result (server
     configurable), or a request to force-build.
     """
-    return _coordinator.check_should_build(client_info)
+    flag, reason = _coordinator.check_should_build(client_info)
+    if flag:
+        if reserve_build:
+            print 'RESERVING BUILD'
+            _coordinator.notify_build(client_info['package'],
+                                      client_info, build_allowance)
+        return True, reason
+    return False, reason
 
 def get_tagsets_for_package(package):
     """
