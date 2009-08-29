@@ -19,9 +19,6 @@ import shelve
 
 error = sqlite3.DatabaseError
 
-first = itemgetter(0)
-both = itemgetter(0, 1)
-
 class SQLhash(object, DictMixin):
     def __init__(self, filename=':memory:', flags='r', mode=None,
                  tablename='shelf'):
@@ -62,15 +59,15 @@ class SQLhash(object, DictMixin):
 
     def iterkeys(self):
         GET_KEYS = 'SELECT key FROM %s ORDER BY ROWID' % self.tablename
-        return iter(map(first, self.conn.cursor().execute(GET_KEYS)))
+        return iter(SQLHashIterator(self.conn, GET_KEYS, (0,)))
 
     def itervalues(self):
         GET_VALUES = 'SELECT value FROM %s ORDER BY ROWID' % self.tablename
-        return iter(map(first, self.conn.cursor().execute(GET_VALUES)))
+        return iter(SQLHashIterator(self.conn, GET_VALUES, (0,)))
 
     def iteritems(self):
         GET_ITEMS = 'SELECT key, value FROM %s ORDER BY ROWID' % self.tablename
-        return iter(map(both, self.conn.cursor().execute(GET_ITEMS)))
+        return iter(SQLHashIterator(self.conn, GET_ITEMS, (0, 1)))
 
     def __contains__(self, key):
         HAS_ITEM = 'SELECT 1 FROM %s WHERE key = ?' % self.tablename
@@ -136,6 +133,20 @@ def open(file=None, *args):
 def open_shelf(file=None, *args):
     _db = open(file, *args)
     return shelve.Shelf(_db)
+
+class SQLHashIterator(object):
+    def __init__(self, conn, stmt, indices):
+        c = conn.cursor()
+        c.execute(stmt)
+        
+        self.iter = iter(c)
+        self.getter = itemgetter(*indices)
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.getter(self.iter.next())
 
 if __name__ in '__main___':
     for d in SQLhash(), SQLhash('example'):
