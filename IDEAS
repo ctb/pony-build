@@ -41,19 +41,13 @@ authentication ^^^ for results submission
 
 separate? authentication for thru-Web configuration
 
-sqlite-based configuration; pickling iface download?
+sqlite-based db?
 
 persistent conn?
 
 FIX client_ip nonsense
 
 is_building, request_build => persist
-
----
-
-how to stop builds > 5 min from running IF build is checked every 5 min?
-
-build receipts?
 
 ---
 
