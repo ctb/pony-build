@@ -80,14 +80,21 @@ class PackageInfo(Directory):
     def _q_index(self):
         package = self.package
         d = self.coord.get_unique_tagsets_for_package(package)
+        stale_exists = {}
 
         def calc_status(tagset):
             _, client_info, _ = d[tagset]
             status = client_info['success']
             if status:
-                return "<font color='green'>SUCCESS</font>"
+                s = "<font color='green'>SUCCESS</font>"
+                flag, reason = self.coord.check_should_build(client_info)
+                if flag:
+                    s += "<font color='red'>*</font>"
+                    stale_exists['foo'] = True
             else:
-                return "<font color='red'>FAILURE</font>"
+                s = "<font color='red'>FAILURE</font>"
+
+            return s
 
         def calc_time(tagset):
             receipt, _, _ = d[tagset]

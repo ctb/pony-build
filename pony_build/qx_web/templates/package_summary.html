@@ -22,6 +22,10 @@
       </tr>
    {% endfor %}
    </table>
+   {% if stale_exists %}
+     <font color='red'>*</font> This build is stale.
+   {% endif %}
+
 {% else %}
  No results for this package!
 {% endif %}
