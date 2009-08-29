@@ -4,7 +4,7 @@ import shelve
 import testutil
 from twill.commands import *
 
-from pony_build import coordinator
+from pony_build import coordinator, dbsqlite
 
 DB_TEST_FILE='tests/tests.db'
 def make_db(filename=DB_TEST_FILE):
@@ -13,7 +13,7 @@ def make_db(filename=DB_TEST_FILE):
     except OSError:
         pass
 
-    db = shelve.open(filename, 'c')
+    db = dbsqlite.open_shelf(filename, 'c')
     db = coordinator.IntDictWrapper(db)
     coord = coordinator.PonyBuildCoordinator(db)
 

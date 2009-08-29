@@ -1,9 +1,11 @@
-from pony_build import coordinator
+import os
+from pony_build import coordinator, dbsqlite
 import time
 
 class Test_Coordinator_API(object):
     def setup(self):
-        db = coordinator.IntDictWrapper({})
+        _db = dbsqlite.open_shelf()
+        db = coordinator.IntDictWrapper(_db)
         self.coord = coordinator.PonyBuildCoordinator(db)
         
         self.some_client_info = dict(success=True,
