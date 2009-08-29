@@ -12,8 +12,7 @@ one super-client that can detect setup.py, run tests/communicate results, etc.
 datastore stuff/archival:
  - get all tagsets
  - get all updates by tagset
- - flush failures should flush everything, yah?  or should it just be
-   'flush tagset'?
+ - 'flush tagset'?
 
 everything else can be "within last month"
 
@@ -26,6 +25,7 @@ concatenated output, etc? for GitClone?
 a conf.d?
 
 some sort of history ("8 of last 8 succeeded") + flush history
+  - keep (configurable) 1 month on display?
 
 client logfile that's communicated back to server @ end.
 
@@ -37,10 +37,30 @@ explain tagsets
 
 anti-DoS: set a default limit on upload size; and/or require package/password.
 
-probably want an rpc query to get distinct tagsets for a particular package...
+authentication ^^^ for results submission
+
+separate? authentication for thru-Web configuration
+
+sqlite-based configuration; pickling iface download?
+
+persistent conn?
+
+FIX client_ip nonsense
 
 ---
 
 how to stop builds > 5 min from running IF build is checked every 5 min?
 
 build receipts?
+
+---
+
+url download/install
+pypi/setup.py integration
+django
+cpython
+
+ + need hg, svn
+ + virtualenv integration
+ + coverage info
+ + unittest (junitxml?)
