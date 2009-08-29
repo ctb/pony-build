@@ -18,13 +18,19 @@ from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
      ServerHandler
 
+### public XML-RPC API.
+
 client_ip = None
 _coordinator = None
 def add_results(client_info, results):
-    # client_info is a dictionary of client information
-    # results is a list of dictionaries, each dict containing build/test info
+    """
+    Add build results to the server.
 
-    # basically assert that they have the right methods ;)
+    'client_info' is a dictionary of client information; 'results' is
+    a list of dictionaries, with each dict containing build/test info
+    for a single step.
+    """
+    # assert that they have the right methods ;)
     client_info.keys()
     for d in results:
         d.keys()
@@ -38,23 +44,28 @@ def add_results(client_info, results):
     return 1
 
 def check_should_build(client_info):
+    """
+    Should a client build, according to the server?
+
+    A 'yes' (True) could be for several reasons, including no build
+    result for this tagset, a stale build result (server
+    configurable), or a request to force-build.
+    """
     return _coordinator.check_should_build(client_info)
 
-def get_last_result_for_package(package):
-    result_id = _coordinator.get_last_result_for_package(package)
-    x = _coordinator.db_get_result_info(result_id)
-    if x:
-        (receipt, client_info, results) = x
-        return (receipt, client_info, results)
-    return 0
-
 def get_tagsets_for_package(package):
+    """
+    Get the list of tagsets containing build results for the given package.
+    """
     return [ list(x) for x in _coordinator.get_tagsets_for_package(package) ]
 
 def get_last_result_for_tagset(package, tagset):
+    """
+    Get the most recent result for the given package/tagset combination.
+    """
     return _coordinator.get_last_result_for_tagset(package, tagset)
 
-# Restrict to a particular path.
+###
 
 _coordinator = None
 
@@ -100,7 +111,6 @@ def create(interface, port, pbs_coordinator, wsgi_app):
     
     server.register_function(add_results)
     server.register_function(check_should_build)
-    server.register_function(get_last_result_for_package)
     server.register_function(get_tagsets_for_package)
     server.register_function(get_last_result_for_tagset)
     
