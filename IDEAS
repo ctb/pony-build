@@ -47,6 +47,8 @@ persistent conn?
 
 FIX client_ip nonsense
 
+is_building, request_build => persist
+
 ---
 
 how to stop builds > 5 min from running IF build is checked every 5 min?

@@ -47,6 +47,9 @@ def check_should_build(client_info):
     """
     Should a client build, according to the server?
 
+    Returns a tuple (flag, reason).  'flag' is bool; 'reason' is a
+    human-readable string.
+
     A 'yes' (True) could be for several reasons, including no build
     result for this tagset, a stale build result (server
     configurable), or a request to force-build.

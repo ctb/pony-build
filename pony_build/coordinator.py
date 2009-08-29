@@ -10,6 +10,8 @@ import sets
 from datetime import datetime, timedelta
 import UserDict
 
+DEFAULT_BUILD_DURATION=60*60            # in seconds <== 1 hr
+
 class IntDictWrapper(object, UserDict.DictMixin):
     def __init__(self, d):
         self.d = d
@@ -62,6 +64,11 @@ class PonyBuildCoordinator(object):
 
         self._process_results()
         self.request_build = {}
+        self.is_building = {}
+
+    def notify_build(self, package, client_info):
+        tagset = build_tagset(client_info)
+        self.is_building[tagset] = time.time()
 
     def add_results(self, client_ip, client_info, results):
 #        print client_ip
@@ -72,42 +79,61 @@ class PonyBuildCoordinator(object):
 
         key = self.db_add_result(receipt, client_ip, client_info, results)
         self._process_results()
+        return key
 
     def set_request_build(self, client_info, value):
+        # note: setting value=False is a way to override value=True.
         tagset = build_tagset(client_info)
         self.request_build[tagset] = value
 
     def check_should_build(self, client_info):
+        """
+        Returns tuple: ('should_build_flag, reason')
+        """
         package = client_info['package']
         tagset = build_tagset(client_info)
         
         last_build = self.get_unique_tagsets_for_package(package)
 
-        build = False
-        if tagset in self.request_build:
-            del self.request_build[tagset]
-            build = True
-        elif tagset in last_build:
+        if self.request_build.pop(tagset, False):
+                return True, 'build requested'
+        
+        if tagset in self.is_building:
+            last_t = self.is_building[tagset]
+            last_t = datetime.fromtimestamp(last_t)
+
+            now = datetime.now()
+            diff = now - last_t
+
+            last_duration = DEFAULT_BUILD_DURATION
+            if tagset in last_build:
+                try:
+                    last_duration = last_build[tagset][1]['duration']
+                except KeyError:
+                    pass
+            last_duration = timedelta(0, last_duration) # seconds
+
+            if diff < last_duration:
+                return False, 'may be in build now'
+                
+        if tagset in last_build:
             last_t = last_build[tagset][0]['time']
             last_t = datetime.fromtimestamp(last_t)
             
             now = datetime.now()
             diff = now - last_t
             if diff >= timedelta(1): # 1 day, default
-                build = True
-                print 'last build was %s ago; too recent to build' % (diff,)
+                return True, 'last build was %s ago; do build!' % (diff,)
 
             # was it successful?
             success = last_build[tagset][1]['success']
             if not success:
-                print 'last build was unsuccessful; go!'
-                build = True
+                return True, 'last build was unsuccessful; go!'
         else:
             # tagset not in last_build
-            print 'NO BUILD recorded for %s; build!' % (tagset,)
-            build = True
+            return True, 'no build recorded for %s; build!' % (tagset,)
 
-        return build
+        return False, "build up to date"
 
     def _process_results(self):
         self._hosts = hosts = {}
@@ -147,7 +173,7 @@ class PonyBuildCoordinator(object):
                 
         self.db[next_key] = (receipt, client_info, results)
         self.db.sync()
-            
+
         return next_key
 
     def get_all_packages(self):

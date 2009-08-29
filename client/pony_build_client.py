@@ -276,7 +276,7 @@ def check(name, server, tags=(), hostname=None, arch=None):
         
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     s = xmlrpclib.ServerProxy(server)
-    return s.check_should_build(client_info)
+    return s.check_should_build(client_info)[0]
 
 def get_tagsets_for_package(server, package):
     s = xmlrpclib.ServerProxy(server)
