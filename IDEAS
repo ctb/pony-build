@@ -49,6 +49,8 @@ FIX client_ip nonsense
 
 is_building, request_build => persist
 
+craching client still needs to report, esp with is_building
+
 ---
 
 url download/install
