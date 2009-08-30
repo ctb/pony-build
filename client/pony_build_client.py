@@ -75,6 +75,47 @@ class TempDirectoryContext(Context):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
 
+class VirtualenvContext(Context):
+    """
+    @CTB unfinished
+    """
+    
+    def __init__(self, always_cleanup=True):
+        Context.__init__(self)
+        self.always_cleanup = always_cleanup
+
+    def initialize(self):
+        Context.initialize(self)
+        self.tempdir = tempfile.mkdtemp()
+        self.cwd = os.getcwd()
+        
+        print 'changing to temp directory:', self.tempdir
+        os.chdir(self.tempdir)
+
+    def finish(self):
+        Context.finish(self)
+        
+        if self.always_cleanup:
+            do_cleanup = self.always_cleanup
+        else:
+            success = [ c.success() for c in self.history ]
+            if all(success):
+                print 'all commands succeeded; setting cleanup=True'
+                do_cleanup = True
+
+        if do_cleanup:
+            print 'removing', self.tempdir
+            shutil.rmtree(self.tempdir)
+
+        os.chdir(self.cwd)
+
+        print 'bar'
+
+    def update_client_info(self, info):
+        Context.update_client_info(self, info)
+        info['tempdir'] = self.tempdir
+        info['virtualenv'] = True
+
 class BaseCommand(object):
     def __init__(self, command_list, name='', run_cwd=None):
         self.command_list = command_list
@@ -284,7 +325,7 @@ def get_tagsets_for_package(server, package):
 
 if __name__ == '__main__':
     import sys
-    
+
     c = BuildCommand(['/bin/echo', 'build output'])
     t = TestCommand(['/bin/echo', 'test output'])
 
