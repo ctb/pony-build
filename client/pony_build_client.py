@@ -56,7 +56,8 @@ class TempDirectoryContext(Context):
 
     def finish(self):
         Context.finish(self)
-        
+
+        do_cleanup = False
         if self.always_cleanup:
             do_cleanup = self.always_cleanup
         else:
@@ -163,7 +164,7 @@ class GitClone(SetupCommand):
         p = urlparse.urlparse(self.repository) # what about Windows path names?
         path = p.path
 
-        dirname = path.split('/')[-1]
+        dirname = path.rstrip('/').split('/')[-1]
         if dirname.endswith('.git'):
             dirname = dirname[:-4]
 
@@ -231,6 +232,67 @@ class GitClone(SetupCommand):
             self.errout = err
             
             return
+
+        self.status = 0                 # success
+        self.output = ''
+        self.errout = ''
+
+class SvnClone(SetupCommand):
+    def __init__(self, dirname, repository, cache_dir=None, **kwargs):
+        SetupCommand.__init__(self, [], **kwargs)
+        self.repository = repository
+        self.cache_dir = cache_dir
+        self.duration = -1
+        self.dirname = dirname
+        
+    def run(self, context):
+        dirname = self.dirname
+
+        ##
+
+        if self.cache_dir:
+            print 'updating cache dir:', self.cache_dir
+            cwd = os.getcwd()
+            os.chdir(self.cache_dir)
+            cmdlist = ['svn', 'update']
+            (ret, out, err) = _run_command(cmdlist)
+            if ret != 0:
+                self.command_list = cmdlist
+                self.status = ret
+                self.output = out
+                self.errout = err
+                return
+
+            subdir = os.path.join(cwd, dirname)
+            shutil.copytree(self.cache_dir, subdir)
+
+            os.chdir(subdir)
+        else:
+            cmdlist = ['svn', 'co', self.repository, dirname]
+
+            (ret, out, err) = _run_command(cmdlist)
+            if ret != 0:
+                self.command_list = cmdlist
+                self.status = ret
+                self.output = out
+                self.errout = err
+
+                return
+
+            print cmdlist, out
+
+            if not os.path.exists(dirname) and os.path.isdir(dirname):
+                self.command_list = cmdlist
+                self.status = -1
+                self.output = ''
+                self.errout = 'pony-build-client cannot find expected svn dir: %s' % (dirname,)
+            
+                print 'wrong guess; %s does not exist.  whoops' % (dirname,)
+                return
+
+            os.chdir(dirname)
+
+        ##
 
         self.status = 0                 # success
         self.output = ''
@@ -317,7 +379,9 @@ def check(name, server, tags=(), hostname=None, arch=None, reserve_time=0):
         
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     s = xmlrpclib.ServerProxy(server)
-    return s.check_should_build(client_info, True, reserve_time)[0]
+    (flag, reason) = s.check_should_build(client_info, True, reserve_time)
+    print reason
+    return flag
 
 def get_tagsets_for_package(server, package):
     s = xmlrpclib.ServerProxy(server)
