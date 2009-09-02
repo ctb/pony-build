@@ -87,7 +87,8 @@ class PackageInfo(Directory):
             status = client_info['success']
             if status:
                 s = "<font color='green'>SUCCESS</font>"
-                flag, reason = self.coord.check_should_build(client_info)
+                flag, reason = self.coord.check_should_build(client_info,
+                                                             True)
                 if flag:
                     s += "<font color='red'>*</font>"
                     stale_exists['foo'] = True

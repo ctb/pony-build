@@ -90,7 +90,7 @@ class PonyBuildCoordinator(object):
         tagset = build_tagset(client_info)
         self.request_build[tagset] = value
 
-    def check_should_build(self, client_info):
+    def check_should_build(self, client_info, keep_request=False):
         """
         Returns tuple: ('should_build_flag, reason')
         """
@@ -99,8 +99,10 @@ class PonyBuildCoordinator(object):
         
         last_build = self.get_unique_tagsets_for_package(package)
 
-        if self.request_build.pop(tagset, False):
-                return True, 'build requested'
+        if self.request_build.get(tagset, False):
+            if not keep_request:
+                self.request_build.pop(tagset)
+            return True, 'build requested'
         
         if tagset in self.is_building:
             (last_t, requested) = self.is_building[tagset]
