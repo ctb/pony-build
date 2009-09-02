@@ -14,7 +14,7 @@ name = 'pygr'
 #server_url = 'http://localhost:8080/xmlrpc'
 server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
 
-if not check(name, server_url, tags=tags) and 0:
+if not check(name, server_url, tags=tags):
     print 'check build says no need to build; bye'
     sys.exit(0)
 
