@@ -49,7 +49,16 @@ FIX client_ip nonsense
 
 is_building, request_build => persist
 
-craching client still needs to report, esp with is_building
+crashing client still needs to report, esp with is_building
+
+nose plugin to report?  + setup.py test and nose config => users.
+
+test client code!
+
+periodic breakage => tests get rerun ever hour until it works:
+  masks stochastic errors...
+
+move check code into client.
 
 ---
 
@@ -58,7 +67,7 @@ pypi/setup.py integration
 django
 cpython
 
- + need hg, svn
+ + need hg
  + virtualenv integration
  + coverage info
  + unittest (junitxml?)
