@@ -55,6 +55,7 @@ def check_should_build(client_info, reserve_build=True, build_allowance=0):
     configurable), or a request to force-build.
     """
     flag, reason = _coordinator.check_should_build(client_info)
+    print (flag, reason)
     if flag:
         if reserve_build:
             print 'RESERVING BUILD'
