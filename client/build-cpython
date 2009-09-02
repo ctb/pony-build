@@ -6,11 +6,10 @@ import os
 import tempfile
 import shutil
 
-python_exe = sys.argv[1]
-repo_url = 'http://twill.googlecode.com/svn/trunk/twill'
+repo_url = 'http://svn.python.org/projects/python/trunk'
 
-tags = [python_exe]
-name = 'twill'
+tags = ['python2.7']
+name = 'python'
 #server_url = 'http://localhost:8080/xmlrpc'
 server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
 
@@ -19,10 +18,10 @@ if not check(name, server_url, tags=tags) and 0:
     sys.exit(0)
 
 context = TempDirectoryContext(False)
-commands = [ SvnClone('twill', repo_url, name='checkout', cache_dir='/u/t/.pony-build/twill'),
-             BuildCommand([python_exe, 'setup.py', 'build'],
-                          name='compile'),
-             TestCommand(['nosetests'], name='run tests'),
+commands = [ SvnClone('python27', repo_url, name='checkout', cache_dir='/u/t/.pony-build/python27'),
+             BuildCommand(['configure'], name='configure'),
+             BuildCommand(['make'], name='make'),
+             TestCommand(['./python', 'Lib/test/regrtest.py'], name='regrtest')
              ]
 
 results = do(name, commands, context=context)

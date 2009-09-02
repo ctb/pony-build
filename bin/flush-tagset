@@ -2,15 +2,17 @@
 import sys
 import _mypath
 import shelve
-from pony_build import coordinator
+from pony_build import coordinator, dbsqlite
 
 package = sys.argv[1]
-dbfile = shelve.open(sys.argv[2])
+dbfile = dbsqlite.open_shelf(sys.argv[2])
 dbfile = coordinator.IntDictWrapper(dbfile)
 
 arch = sys.argv[3]
 tags = sys.argv[4]
 tagset = set(tags.split(','))
+
+print tagset
 
 d = dict([ (str(i), k) for (i, k) in enumerate(dbfile.keys()) ])
 
