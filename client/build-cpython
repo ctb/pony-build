@@ -18,10 +18,10 @@ if not check(name, server_url, tags=tags) and 0:
     sys.exit(0)
 
 context = TempDirectoryContext(False)
-commands = [ SvnClone('python27', repo_url, name='checkout', cache_dir='/tmp/python27'),
+commands = [ SvnClone('python27', repo_url, name='checkout', cache_dir='/u/t/.pony-build/python27'),
              BuildCommand(['configure'], name='configure'),
              BuildCommand(['make'], name='make'),
-#             TestCommand(['./python', 'Lib/regrtest.py'], name='regrtest')
+             TestCommand(['./python', 'Lib/test/regrtest.py'], name='regrtest')
              ]
 
 results = do(name, commands, context=context)
