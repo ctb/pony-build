@@ -220,19 +220,32 @@ class GitClone(SetupCommand):
         ##
 
         # check out the right branch
-        cmdlist = ['git', 'checkout', self.branch]
-        (ret, out, err) = _run_command(cmdlist, dirname)
+        if self.branch != 'master':
+            cmdlist = ['git', 'checkout', 'origin/'+self.branch]
+            (ret, out, err) = _run_command(cmdlist, dirname)
 
-        print cmdlist, out
+            print cmdlist, out
 
-        if ret != 0:
-            self.command_list = cmdlist
-            self.status = ret
-            self.output = out
-            self.errout = err
+            if ret != 0:
+                self.command_list = cmdlist
+                self.status = ret
+                self.output = out
+                self.errout = err
             
-            return
+                return
 
+            cmdlist = ['git', 'checkout', '-b', self.branch]
+
+            print cmdlist, out
+
+            if ret != 0:
+                self.command_list = cmdlist
+                self.status = ret
+                self.output = out
+                self.errout = err
+            
+                return
+            
         self.status = 0                 # success
         self.output = ''
         self.errout = ''
