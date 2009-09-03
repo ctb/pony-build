@@ -91,6 +91,8 @@ pygame inspired stuff (ilume):
  - send test results back to server from install runs
  - include tests in installed package, of course
 
+at what point does my stupid database model stop scaling? ;)
+
 ---
 
 url download/install
