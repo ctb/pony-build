@@ -76,7 +76,9 @@ a (hierarchical?) list of projects w/config info, e.g.
    python/cpython2-trunk - svn, co from here, run these commands
 
 so that you can refer via a nice name and not have to configure stuff
-yourself?
+yourself?  make it an SHA-signed, downloadable file...? or servered?
+make it a SEPARATE, or can-be-included, server from the straight
+pony-build server?
 
 subprocess incremental reporting.
 
@@ -100,6 +102,22 @@ auto remove stale builds after a certain amount of time?
 
 allow setting builds that SHOULD ALWAYS BE DISPLAYED, even if out of
    date/stale/no results/etc.
+
+quickstart guide
+architecture diagram
+
+svn/git/etc. version!
+
+relative times, or times in viewer timezone, or ...?
+
+importable client/API improvement (pbc)
+
+file upload API? maybe specify another server for upload via
+   ftp, etc?
+
+JSON format (both client output AND server output)
+
+"opinionated software"
 
 ---
 
