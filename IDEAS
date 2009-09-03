@@ -121,6 +121,12 @@ JSON format (both client output AND server output)
 
 sort on column in various summary views.
 
+database schema should include package name and time submitted.
+
+GPG-based leaderboard?
+
+revision info
+
 ---
 
 url download/install
