@@ -80,10 +80,16 @@ yourself?
 
 subprocess incremental reporting.
 
-test swarm!!
+test swarm!!  (jacob)
    http://ejohn.org/blog/test-swarm-alpha-open/
 
 "top builders" view.
+
+http://www.simile-widgets.org/timeline/  (grig)
+
+pygame inspired stuff (ilume):
+ - send test results back to server from install runs
+ - include tests in installed package, of course
 
 ---
 
