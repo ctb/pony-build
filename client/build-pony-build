@@ -31,7 +31,7 @@ if not options.force_build:
 commands = [ GitClone(repo_url, name='checkout', cache_dir='~/.pony-build/pony-build'),
              BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
                           name='build', run_cwd='pony-build'),
-             TestCommand(['nosetests', '-v'],
+             TestCommand([python_exe, 'setup.py', 'test'],
                          name='run tests', run_cwd='pony-build')
              ]
 
