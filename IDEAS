@@ -60,12 +60,31 @@ periodic breakage => tests get rerun ever hour until it works:
 
 move check code into client.
 
+hierarchical tree of reports, instead of list-of-lists?  (think git stuff)
+
+rename svnclone to svncheckout; have git clone and svncheckout create the
+cachedirectory if possible.
+
+client scripts should be much friendlier about one-script-for-multiple-machines.
+
+a directory of public pony-build master servers URLs built-in...? or
+retrievable via XML-RPC from my server? or available via a file?  with
+short names?
+
+a (hierarchical?) list of projects w/config info, e.g.
+
+   python/cpython2-trunk - svn, co from here, run these commands
+
+so that you can refer via a nice name and not have to configure stuff
+yourself?
+
+subprocess incremental reporting.
+
 ---
 
 url download/install
 pypi/setup.py integration
 django
-cpython
 
  + need hg
  + virtualenv integration
