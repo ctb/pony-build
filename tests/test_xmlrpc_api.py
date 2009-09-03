@@ -5,7 +5,15 @@ import testutil
 from twill.commands import *
 
 from pony_build import coordinator, dbsqlite
+
+###
+import sys
+clientlib = os.path.join(os.path.dirname(__file__), '../client')
+clientlib = os.path.abspath(clientlib)
+sys.path.insert(0, clientlib)
+
 import pony_build_client as pbc
+###
 
 rpc_url = None
 DB_TEST_FILE='tests/tests.db'
