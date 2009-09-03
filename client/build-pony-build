@@ -8,7 +8,7 @@ import shutil
 
 options, args = parse_cmdline()
 
-python_exe = 'python'
+python_exe = 'python2.5'
 if args:
     python_exe = args[0]
 
