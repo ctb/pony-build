@@ -6,6 +6,7 @@ import os, os.path
 import time
 import urlparse
 import traceback
+from optparse import OptionParser
 
 def _run_command(command_list, cwd=None):
     try:
@@ -368,8 +369,6 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
     if context:
         context.update_client_info(client_info)
 
-    print client_info
-        
     return (client_info, reslist)
 
 def send(server, x, hostname=None, tags=()):
@@ -402,6 +401,27 @@ def check(name, server, tags=(), hostname=None, arch=None, reserve_time=0):
 def get_tagsets_for_package(server, package):
     s = xmlrpclib.ServerProxy(server)
     return s.get_tagsets_for_package(package)
+
+###
+
+def parse_cmdline(argv=[]):
+    cmdline = OptionParser()
+    cmdline.add_option('-f', '--force-build', dest='force_build',
+                       action='store_true', default=False,
+                       help="run a build whether or not it's stale")
+    cmdline.add_option('-n', '--no-report', dest='report',
+                       action='store_false', default=True,
+                       help="do not report build results to server")
+
+    if not argv:
+        (options, args) = cmdline.parse_args()
+    else:
+        (options, args) = cmdline.parse_args(argv)
+
+    return options, args
+
+
+###
 
 if __name__ == '__main__':
     import sys
