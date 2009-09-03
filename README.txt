@@ -43,10 +43,6 @@ will run a server that can be accessed on http://localhost:8080/.  This
 server will report on whatever results are sent to it by the client (see
 below), based on the package name ('name', below).
 
-You can also run a more basic server, 'bin/run-server', if you want;
-it's serves as a good example of how to swap Web UIs around within
-pony-build, but otherwise it's crappy and out of date ;).
-
 See 'architecture, and extending pony-build', below.
 
 pony-build client scripts
@@ -71,6 +67,12 @@ Client build scripts are just scripts that set up & run a list of commands: ::
 
 Client results are communicated to the server by XML-RPC, so the client
 must be able to reach the server via the HTTP protocol.
+
+See ``client/build-cpython`` for an example of building a Subversion-based
+C project (checkout, configure, make, run tests).
+
+See ``client/build-pony-build`` for an example of building a Git-based
+Python project (clone, build, run tests).
 
 Client query scripts
 --------------------

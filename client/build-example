@@ -1,18 +1,44 @@
 #! /usr/bin/env python
-from pony_build_client import BuildCommand, TestCommand, do, send, \
-     TempDirectoryContext
+import sys
+from pony_build_client import BuildCommand, TestCommand, do, send, check, \
+     TempDirectoryContext, parse_cmdline
+
+options, args = parse_cmdline()
+if args:
+    print 'ignoring command line args: ', args
 
 name = 'build-example'
-server_url = 'http://localhost:8080/xmlrpc'
+#server_url = 'http://localhost:8080/xmlrpc'
+server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
+
+hostname = 'laptop'
+tags = ['tag1', 'tag2', 'tag3']
+
+if not options.force_build:
+    if not check(name, server_url, tags=tags, hostname=hostname):
+        print 'check build says no need to build; bye'
+        sys.exit(0)
 
 commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='David'),
-#             BuildCommand(['/bin/ls', '/blahblah'], name='Stephanie'),
              TestCommand(['/bin/echo', 'this is a test'], name='Bill')
              ]
 
-tags = ['tag1', 'tag2', 'tag3']
-
 context = TempDirectoryContext()
 results = do(name, commands, context=context, stop_if_failure=False)
-#, arch='test2')
-send(server_url, results, hostname='laptop', tags=tags)
+client_info, reslist = results
+
+if options.report:
+    print 'result: %s; sending' % (client_info['success'],)
+    send(server_url, results, hostname=hostname, tags=tags)
+else:
+
+    print 'build result:'
+
+    import pprint
+    pprint.pprint(client_info)
+    pprint.pprint(reslist)
+    
+    print '(NOT SENDING BUILD RESULT TO SERVER)'
+
+if not client_info['success']:
+    sys.exit(-1)
