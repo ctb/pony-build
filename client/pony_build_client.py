@@ -156,7 +156,7 @@ class GitClone(SetupCommand):
         SetupCommand.__init__(self, [], **kwargs)
         self.repository = repository
         self.branch = branch
-        self.cache_dir = cache_dir
+        self.cache_dir = os.path.expanduser(cache_dir)
         self.duration = -1
         
     def run(self, context):
@@ -254,7 +254,10 @@ class SvnClone(SetupCommand):
     def __init__(self, dirname, repository, cache_dir=None, **kwargs):
         SetupCommand.__init__(self, [], **kwargs)
         self.repository = repository
-        self.cache_dir = cache_dir
+
+        self.cache_dir = None
+        if cache_dir:
+            self.cache_dir = os.path.expanduser(cache_dir)
         self.duration = -1
         self.dirname = dirname
         
