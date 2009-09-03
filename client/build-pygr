@@ -1,25 +1,28 @@
 #! /usr/bin/env python
 import sys
 from pony_build_client import BuildCommand, TestCommand, do, send, \
-     TempDirectoryContext, SetupCommand, GitClone, check
-import os
-import tempfile
-import shutil
+     TempDirectoryContext, SetupCommand, GitClone, check, parse_cmdline
 
-python_exe = sys.argv[1]
+options, args = parse_cmdline()
+
+python_exe = 'python2.5'
+if args:
+    python_exe = args[0]
+
 repo_url = 'git://github.com/cjlee112/pygr.git'
 
 tags = [python_exe]
 name = 'pygr'
-#server_url = 'http://localhost:8080/xmlrpc'
+
 server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
 
-if not check(name, server_url, tags=tags):
-    print 'check build says no need to build; bye'
-    sys.exit(0)
+if not options.force_build:
+    if not check(name, server_url, tags=tags):
+        print 'check build says no need to build; bye'
+        sys.exit(0)
 
 context = TempDirectoryContext()
-commands = [ GitClone(repo_url, name='checkout', cache_dir='/u/t/.pony-build/pygr'),
+commands = [ GitClone(repo_url, name='checkout', cache_dir='~/.pony-build/pygr'),
              BuildCommand(['pyrexc', 'pygr/cdict.pyx', 'pygr/cnestedlist.pyx',
                            'pygr/seqfmt.pyx'], run_cwd='pygr'),
              BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
@@ -29,4 +32,21 @@ commands = [ GitClone(repo_url, name='checkout', cache_dir='/u/t/.pony-build/pyg
              ]
 
 results = do(name, commands, context=context)
-send(server_url, results, tags=tags)
+
+client_info, reslist = results
+
+if options.report:
+    print 'result: %s; sending' % (client_info['success'],)
+    send(server_url, results, tags=tags)
+else:
+
+    print 'build result:'
+
+    import pprint
+    pprint.pprint(client_info)
+    pprint.pprint(reslist)
+    
+    print '(NOT SENDING BUILD RESULT TO SERVER)'
+
+if not client_info['success']:
+    sys.exit(-1)
