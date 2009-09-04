@@ -43,9 +43,9 @@ class Context(object):
         info['duration'] = self.end - self.start
 
 class TempDirectoryContext(Context):
-    def __init__(self, always_cleanup=True):
+    def __init__(self, cleanup=True):
         Context.__init__(self)
-        self.always_cleanup = always_cleanup
+        self.cleanup = cleanup
 
     def initialize(self):
         Context.initialize(self)
@@ -56,20 +56,12 @@ class TempDirectoryContext(Context):
         os.chdir(self.tempdir)
 
     def finish(self):
-        Context.finish(self)
-
-        do_cleanup = False
-        if self.always_cleanup:
-            do_cleanup = self.always_cleanup
-        else:
-            success = [ c.success() for c in self.history ]
-            if all(success):
-                print 'all commands succeeded; setting cleanup=True'
-                do_cleanup = True
-
-        if do_cleanup:
-            print 'removing', self.tempdir
-            shutil.rmtree(self.tempdir)
+        try:
+            Context.finish(self)
+        finally:
+            if self.cleanup:
+                print 'removing', self.tempdir
+                shutil.rmtree(self.tempdir)
 
         os.chdir(self.cwd)
 
@@ -426,6 +418,9 @@ def parse_cmdline(argv=[]):
     cmdline.add_option('-n', '--no-report', dest='report',
                        action='store_false', default=True,
                        help="do not report build results to server")
+    cmdline.add_option('-N', '--no-clean-temp', dest='cleanup_temp',
+                       action='store_false', default=True,
+                       help='do not clean up the temp directory')
 
     if not argv:
         (options, args) = cmdline.parse_args()
