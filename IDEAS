@@ -127,6 +127,20 @@ GPG-based leaderboard?
 
 revision info
 
+switch to python3?
+
+look at http://codespeak.net:8099/summary
+
+http://blip.tv/file/2518623/
+
+http://build.chromium.org/buildbot/waterfall/console
+
+--
+
+tonite:
+ - cleanup temp dir flag
+ - svn info/git status
+
 ---
 
 url download/install
