@@ -111,8 +111,6 @@ class VirtualenvContext(Context):
 
         os.chdir(self.cwd)
 
-        print 'bar'
-
     def update_client_info(self, info):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
@@ -330,7 +328,6 @@ def get_arch():
 def _send(server, info, results):
     print 'connecting to', server
     s = xmlrpclib.ServerProxy(server)
-    print s.add_results(info, results)
 
 def do(name, commands, context=None, arch=None, stop_if_failure=True):
     reslist = []
@@ -380,9 +377,6 @@ def send(server, x, hostname=None, tags=()):
     client_info['host'] = hostname
     client_info['tags'] = tags
 
-    print client_info
-    print reslist
-    
     _send(server, client_info, reslist)
 
 def check(name, server, tags=(), hostname=None, arch=None, reserve_time=0):
@@ -395,7 +389,6 @@ def check(name, server, tags=(), hostname=None, arch=None, reserve_time=0):
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     s = xmlrpclib.ServerProxy(server)
     (flag, reason) = s.check_should_build(client_info, True, reserve_time)
-    print reason
     return flag
 
 def get_tagsets_for_package(server, package):
