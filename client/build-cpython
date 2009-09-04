@@ -2,7 +2,7 @@
 import sys
 import distutils
 from pony_build_client import BuildCommand, TestCommand, do, send, \
-     TempDirectoryContext, SetupCommand, SvnClone, check, parse_cmdline
+     TempDirectoryContext, SetupCommand, SvnUpdate, check, parse_cmdline
 
 options, args = parse_cmdline()
 if args:
@@ -29,7 +29,7 @@ if distutils.util.get_platform().startswith('macosx'):
     built_exe = './python.exe'
 
 context = TempDirectoryContext(False)
-commands = [ SvnClone('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
+commands = [ SvnUpdate('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
              BuildCommand(['./configure'], name='configure'),
              BuildCommand(['make'], name='make'),
              TestCommand([built_exe, 'Lib/test/regrtest.py'], name='regrtest')

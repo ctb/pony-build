@@ -249,7 +249,7 @@ class GitClone(SetupCommand):
         self.output = ''
         self.errout = ''
 
-class SvnClone(SetupCommand):
+class SvnUpdate(SetupCommand):
     def __init__(self, dirname, repository, cache_dir=None, **kwargs):
         SetupCommand.__init__(self, [], **kwargs)
         self.repository = repository
@@ -328,6 +328,7 @@ def get_arch():
 def _send(server, info, results):
     print 'connecting to', server
     s = xmlrpclib.ServerProxy(server)
+    s.add_results(info, results)
 
 def do(name, commands, context=None, arch=None, stop_if_failure=True):
     reslist = []
