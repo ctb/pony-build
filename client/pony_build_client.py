@@ -141,6 +141,16 @@ class BaseCommand(object):
     def success(self):
         return self.status == 0
 
+    def get_results(self):
+        results = dict(status=self.status,
+                       output=self.output,
+                       errout=self.errout,
+                       command=str(self.command_list),
+                       type=self.command_type,
+                       name=self.command_name,
+                       duration=self.duration)
+        return results
+
 class SetupCommand(BaseCommand):
     command_type = 'setup'
 
@@ -157,6 +167,9 @@ class GitClone(SetupCommand):
         self.branch = branch
         self.cache_dir = os.path.expanduser(cache_dir)
         self.duration = -1
+        self.version_info = ''
+
+        self.results_dict = {}
         
     def run(self, context):
         # first, guess the co dir name
@@ -177,11 +190,12 @@ class GitClone(SetupCommand):
             branchspec = '%s:%s' % (self.branch, self.branch)
             cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
             (ret, out, err) = _run_command(cmdlist)
+
+            self.results_dict['cache_update'] = \
+                     dict(status=ret, output=out, errout=err,
+                          command=str(cmdlist))
+            
             if ret != 0:
-                self.command_list = cmdlist
-                self.status = ret
-                self.output = out
-                self.errout = err
                 return
 
             os.chdir(cwd)
@@ -197,23 +211,18 @@ class GitClone(SetupCommand):
             
         cmdlist = ['git', 'clone', self.repository]
         (ret, out, err) = _run_command(cmdlist)
+        
+        self.results_dict['clone'] = \
+                 dict(status=ret, output=out, errout=err,
+                      command=str(cmdlist))
         if ret != 0:
-            self.command_list = cmdlist
-            self.status = ret
-            self.output = out
-            self.errout = err
-
             return
 
         print cmdlist, out
 
         if not os.path.exists(dirname) and os.path.isdir(dirname):
-            self.command_list = cmdlist
-            self.status = -1
-            self.output = ''
-            self.errout = 'pony-build-client cannot find expected git dir: %s' % (dirname,)
-            
             print 'wrong guess; %s does not exist.  whoops' % (dirname,)
+            self.status = -1
             return
 
         ##
@@ -225,30 +234,47 @@ class GitClone(SetupCommand):
 
             print cmdlist, out
 
+            self.results_dict['checkout+origin'] = \
+                    dict(status=ret, output=out, errout=err,
+                         command=str(cmdlist), branch=self.branch)
             if ret != 0:
-                self.command_list = cmdlist
-                self.status = ret
-                self.output = out
-                self.errout = err
-            
                 return
 
             cmdlist = ['git', 'checkout', '-b', self.branch]
 
             print cmdlist, out
 
+            (ret, out, err) = _run_command(cmdlist, dirname)
+            self.results_dict['checkout+-b'] = \
+                    dict(status=ret, output=out, errout=err,
+                         command=str(cmdlist), branch=self.branch)
             if ret != 0:
-                self.command_list = cmdlist
-                self.status = ret
-                self.output = out
-                self.errout = err
-            
                 return
-            
-        self.status = 0                 # success
-        self.output = ''
-        self.errout = ''
 
+        # get some info on what our HEAD is
+        cmdlist = ['git', 'log', '-1', '--pretty=oneline']
+        (ret, out, err) = _run_command(cmdlist, dirname)
+
+        assert ret == 0
+
+        self.version_info = out.strip()
+
+        self.status = 0
+
+    def get_results(self):
+        self.results_dict['out'] = self.results_dict['errout'] = ''
+        self.results_dict['command'] = 'GitClone(%s, %s)' % (self.repository,
+                                                             self.branch)
+        self.results_dict['status'] = self.status
+        self.results_dict['type'] = self.command_type
+        self.results_dict['name'] = self.command_name
+
+        self.results_dict['version_type'] = 'git'
+        if self.version_info:
+            self.results_dict['version_info'] = self.version_info
+        
+        return self.results_dict
+            
 class SvnUpdate(SetupCommand):
     def __init__(self, dirname, repository, cache_dir=None, **kwargs):
         SetupCommand.__init__(self, [], **kwargs)
@@ -343,14 +369,8 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
         c.run(context)
         if context:
             context.end_command(c)
-        results = dict(status=c.status,
-                       output=c.output,
-                       errout=c.errout,
-                       command=str(c.command_list),
-                       type=c.command_type,
-                       name=c.command_name,
-                       duration=c.duration)
-        reslist.append(results)
+
+        reslist.append(c.get_results())
 
         if stop_if_failure and not c.success():
             break
