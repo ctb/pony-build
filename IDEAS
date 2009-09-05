@@ -140,6 +140,8 @@ test pony build client on python2.3 and 2.2?  import for inclusion in software.
 refactor BaseCommand => ShellCommand for variable replacement, etc.
    maybe have groupcommand?
 
+command to report on versions of installed Python packages
+
 --
 
 tonite:
@@ -162,5 +164,9 @@ django
  + virtualenv integration
  + coverage info
  + unittest (junitxml?)
+
+client example & discussion
+
+screencast!!
 
 ---
