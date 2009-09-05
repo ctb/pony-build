@@ -12,6 +12,7 @@ from quixote.publish import Publisher
 from jinja2 import Template
 from urllib import quote_plus
 import datetime
+import pprint
 
 from .util import env, templatesdir
 from ..coordinator import build_tagset
@@ -177,7 +178,7 @@ class PackageInfo(Directory):
             raise Exception
 
         def repr_dict(d):
-            return dict([ (k, repr(d[k])) for k in d ])
+            return dict([ (k, pprint.pformat(d[k])) for k in d ])
 
         package = self.package
         receipt = repr_dict(receipt)
