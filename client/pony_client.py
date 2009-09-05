@@ -53,22 +53,24 @@ def _run_command(command_list, cwd=None, variables=None):
 class Context(object):
     def __init__(self):
         self.history = []
-        self.start = self.end = None
+        self.start_time = self.end_time = None
+        self.build_dir = None
         
     def initialize(self):
-        self.start = time.time()
+        self.start_time = time.time()
 
     def finish(self):
-        self.end = time.time()
+        self.end_time = time.time()
         
     def start_command(self, command):
-        pass
+        if self.build_dir:
+            os.chdir(self.build_dir)
 
     def end_command(self, command):
         self.history.append(command)
 
     def update_client_info(self, info):
-        info['duration'] = self.end - self.start
+        info['duration'] = self.end_time - self.start_time
 
 class TempDirectoryContext(Context):
     def __init__(self, cleanup=True):
@@ -286,6 +288,10 @@ class GitClone(SetupCommand):
         self.version_info = out.strip()
 
         self.status = 0
+
+        # set the build directory, too.
+        context.build_dir = os.path.join(os.getcwd(),
+                                         dirname)
 
     def get_results(self):
         self.results_dict['out'] = self.results_dict['errout'] = ''
@@ -509,11 +515,11 @@ recipes = {
     'pony-build' : (get_python_config,
                     [ GitClone('git://github.com/ctb/pony-build.git',
                                name='checkout',
-                              cache_dir='~/.pony-build/pony-build'),
+                               cache_dir='~/.pony-build/pony-build'),
                      BuildCommand([PYTHON_EXE, 'setup.py', 'build_ext', '-i'],
-                                  name='build', run_cwd='pony-build'),
+                                  name='build'),
                      TestCommand([PYTHON_EXE, 'setup.py', 'test'],
-                                 name='run tests', run_cwd='pony-build')
+                                 name='run tests')
              ]),
     'twill' : (get_python_config,
                [ SvnUpdate('twill', 'https://twill.googlecode.com/svn/branches/0.9.2-dev/twill', name='checkout', cache_dir='~/.pony-build/twill'),
@@ -561,4 +567,8 @@ if __name__ == '__main__':
         print '(NOT SENDING BUILD RESULT TO SERVER)'
 
     if not client_info['success']:
+        print 'build failed.'
         sys.exit(-1)
+        
+    print 'build succeeded.'
+    sys.exit(0)
