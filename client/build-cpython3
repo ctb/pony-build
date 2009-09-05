@@ -10,13 +10,12 @@ if args:
     
 ###
 
-repo_url = 'http://svn.python.org/projects/python/trunk'
+repo_url = 'http://svn.python.org/projects/python/branches/py3k'
 
-tags = ['python2.7']
+tags = ['py3k']
 name = 'python'
 
-#server_url = 'http://localhost:8080/xmlrpc'
-server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
+server_url = options.server_url
 
 if not options.force_build:
     if not check(name, server_url, tags=tags):
@@ -29,7 +28,7 @@ if distutils.util.get_platform().startswith('macosx'):
     built_exe = './python.exe'
 
 context = TempDirectoryContext(False)
-commands = [ SvnUpdate('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
+commands = [ SvnUpdate('python32', repo_url, name='checkout', cache_dir='~/.pony-build/python32'),
              BuildCommand(['./configure'], name='configure'),
              BuildCommand(['make'], name='make'),
              TestCommand([built_exe, 'Lib/test/regrtest.py'], name='regrtest')
