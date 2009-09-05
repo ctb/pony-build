@@ -12,7 +12,7 @@ clientlib = os.path.join(os.path.dirname(__file__), '../client')
 clientlib = os.path.abspath(clientlib)
 sys.path.insert(0, clientlib)
 
-import pony_build_client as pbc
+import pony_client as pbc
 ###
 
 rpc_url = None
