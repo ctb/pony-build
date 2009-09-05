@@ -135,11 +135,19 @@ http://blip.tv/file/2518623/
 
 http://build.chromium.org/buildbot/waterfall/console
 
+test pony build client on python2.3 and 2.2?
+
 --
 
 tonite:
  - cleanup temp dir flag
  - svn info/git status
+
+---
+
+before release:
+
+ - set a better default server url
 
 ---
 
@@ -151,3 +159,5 @@ django
  + virtualenv integration
  + coverage info
  + unittest (junitxml?)
+
+---
