@@ -8,6 +8,14 @@ import urlparse
 import traceback
 from optparse import OptionParser
 
+pb_servers = {
+    'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
+    'local' : 'http://localhost:8080/xmlrpc'
+    }
+pb_servers['default'] = 'pb-dev'
+
+###
+
 def _run_command(command_list, cwd=None):
     try:
         p = subprocess.Popen(command_list, shell=False, cwd=cwd,
@@ -381,7 +389,7 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
 
     return (client_info, reslist)
 
-def send(server, x, hostname=None, tags=()):
+def send(server_url, x, hostname=None, tags=()):
     client_info, reslist = x
     if hostname is None:
         import socket
@@ -390,9 +398,11 @@ def send(server, x, hostname=None, tags=()):
     client_info['host'] = hostname
     client_info['tags'] = tags
 
-    _send(server, client_info, reslist)
+    server_url = get_server_url(server_url)
+    print 'using server URL:', server_url
+    _send(server_url, client_info, reslist)
 
-def check(name, server, tags=(), hostname=None, arch=None, reserve_time=0):
+def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
     if hostname is None:
         hostname = get_hostname()
         
@@ -400,11 +410,22 @@ def check(name, server, tags=(), hostname=None, arch=None, reserve_time=0):
         arch = get_arch()
         
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
-    s = xmlrpclib.ServerProxy(server)
+    server_url = get_server_url(server_url)
+    s = xmlrpclib.ServerProxy(server_url)
     (flag, reason) = s.check_should_build(client_info, True, reserve_time)
     return flag
 
+def get_server_url(server_name):
+    try_url = urlparse.urlparse(server_name)
+    if try_url.scheme:
+        server_url = server_name
+    else:                               # not a URL?
+        server_url = pb_servers[server_name]
+
+    return server_url
+
 def get_tagsets_for_package(server, package):
+    server = get_server_url(server)
     s = xmlrpclib.ServerProxy(server)
     return s.get_tagsets_for_package(package)
 
@@ -415,12 +436,22 @@ def parse_cmdline(argv=[]):
     cmdline.add_option('-f', '--force-build', dest='force_build',
                        action='store_true', default=False,
                        help="run a build whether or not it's stale")
+    
     cmdline.add_option('-n', '--no-report', dest='report',
                        action='store_false', default=True,
                        help="do not report build results to server")
+    
     cmdline.add_option('-N', '--no-clean-temp', dest='cleanup_temp',
                        action='store_false', default=True,
                        help='do not clean up the temp directory')
+
+    cmdline.add_option('-s', '--server-url', dest='server_url',
+                       action='store', default='default',
+                       help='set pony-build server URL for reporting results')
+
+    cmdline.add_option('-v', '--verbose', dest='verbose',
+                       action='store_true', default=False,
+                       help='set verbose reporting')
 
     if not argv:
         (options, args) = cmdline.parse_args()

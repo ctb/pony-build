@@ -8,8 +8,7 @@ if args:
     print 'ignoring command line args: ', args
 
 name = 'build-example'
-#server_url = 'http://localhost:8080/xmlrpc'
-server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
+server_url = options.server_url
 
 hostname = 'laptop'
 tags = ['tag1', 'tag2', 'tag3']
