@@ -24,6 +24,16 @@ pb_servers['default'] = pb_servers['pb-dev']
 
 ###
 
+DEFAULT_CACHE_DIR='~/.pony-build'
+def guess_cache_dir(dirname):
+    parent = os.environ.get('PONY_BUILD_CACHE', DEFAULT_CACHE_DIR)
+    parent = os.path.expanduser(parent)
+    result = os.path.join(parent, dirname)
+
+    return result
+
+###
+
 def _replace_variables(cmd, variables_d):
     if cmd.startswith('PB:'):
         cmd = variables_d[cmd[3:]]
@@ -141,7 +151,8 @@ class VirtualenvContext(Context):
 class BaseCommand(object):
     def __init__(self, command_list, name='', run_cwd=None):
         self.command_list = command_list
-        self.command_name = name
+        if name:
+            self.command_name = name
         self.run_cwd = run_cwd
         
         self.status = None
@@ -181,19 +192,28 @@ class BaseCommand(object):
 
 class SetupCommand(BaseCommand):
     command_type = 'setup'
+    command_name = 'setup'
 
 class BuildCommand(BaseCommand):
     command_type = 'build'
+    command_name = 'build'
         
 class TestCommand(BaseCommand):
     command_type = 'test'
+    command_name = 'test'
 
 class GitClone(SetupCommand):
-    def __init__(self, repository, branch='master', cache_dir=None, **kwargs):
+    command_name = 'checkout'
+    
+    def __init__(self, repository, branch='master', cache_dir=None,
+                 use_cache=True, **kwargs):
         SetupCommand.__init__(self, [], **kwargs)
         self.repository = repository
         self.branch = branch
-        self.cache_dir = os.path.expanduser(cache_dir)
+
+        self.use_cache = use_cache
+        self.cache_dir = cache_dir
+
         self.duration = -1
         self.version_info = ''
 
@@ -210,11 +230,16 @@ class GitClone(SetupCommand):
 
         print 'git checkout dirname guessed as: %s' % (dirname,)
 
+        if self.use_cache:
+            cache_dir = self.cache_dir
+            if not cache_dir:
+                cache_dir = guess_cache_dir(dirname)
+                
         ##
 
-        if self.cache_dir:
+        if self.use_cache and cache_dir:
             cwd = os.getcwd()
-            os.chdir(self.cache_dir)
+            os.chdir(cache_dir)
             branchspec = '%s:%s' % (self.branch, self.branch)
             cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
             (ret, out, err) = _run_command(cmdlist)
@@ -232,10 +257,10 @@ class GitClone(SetupCommand):
 
         print cmdlist, out
 
-        # now, do a clone.
+        # now, do a clone, from either the parent OR the local cache
         location = self.repository
-        if self.cache_dir:
-            location = self.cache_dir
+        if cache_dir:
+            location = cache_dir
             
         cmdlist = ['git', 'clone', self.repository]
         (ret, out, err) = _run_command(cmdlist)
@@ -308,6 +333,8 @@ class GitClone(SetupCommand):
         return self.results_dict
             
 class SvnUpdate(SetupCommand):
+    command_name = 'checkout'
+
     def __init__(self, dirname, repository, cache_dir=None, **kwargs):
         SetupCommand.__init__(self, [], **kwargs)
         self.repository = repository
@@ -509,23 +536,23 @@ def get_python_config(options, args):
 
     return dict(python_exe=python_ver, tags=tags)
 
+# PYTHON: generic recipe elements
 PYTHON_EXE = 'PB:python_exe'
+
+PythonBuild = BuildCommand([PYTHON_EXE, 'setup.py', 'build'])
+PythonBuildInPlace = BuildCommand([PYTHON_EXE, 'setup.py', 'build_ext', '-i'])
+PythonTest = TestCommand([PYTHON_EXE, 'setup.py', 'test'])
 
 recipes = {
     'pony-build' : (get_python_config,
-                    [ GitClone('git://github.com/ctb/pony-build.git',
-                               name='checkout',
-                               cache_dir='~/.pony-build/pony-build'),
-                     BuildCommand([PYTHON_EXE, 'setup.py', 'build_ext', '-i'],
-                                  name='build'),
-                     TestCommand([PYTHON_EXE, 'setup.py', 'test'],
-                                 name='run tests')
+                    [ GitClone('git://github.com/ctb/pony-build.git'),
+                      PythonBuild,
+                      PythonTest
              ]),
     'twill' : (get_python_config,
-               [ SvnUpdate('twill', 'https://twill.googlecode.com/svn/branches/0.9.2-dev/twill', name='checkout', cache_dir='~/.pony-build/twill'),
-                 BuildCommand([PYTHON_EXE, 'setup.py', 'build'],
-                              name='compile'),
-                 TestCommand([PYTHON_EXE, 'setup.py', 'test'], name='run tests'),
+               [ SvnUpdate('twill', 'https://twill.googlecode.com/svn/branches/0.9.2-dev/twill', cache_dir='~/.pony-build/twill'),
+                 PythonBuild,
+                 PythonTest
              ]),
     }
 
