@@ -135,7 +135,10 @@ http://blip.tv/file/2518623/
 
 http://build.chromium.org/buildbot/waterfall/console
 
-test pony build client on python2.3 and 2.2?
+test pony build client on python2.3 and 2.2?  import for inclusion in software.
+
+refactor BaseCommand => ShellCommand for variable replacement, etc.
+   maybe have groupcommand?
 
 --
 

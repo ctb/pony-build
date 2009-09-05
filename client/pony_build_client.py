@@ -1,3 +1,10 @@
+"""
+Client library + simple command-line script for pony-build.
+
+See http://github.com/ctb/pony-build/.
+"""
+
+import sys
 import subprocess
 import xmlrpclib
 import tempfile
@@ -7,16 +14,29 @@ import time
 import urlparse
 import traceback
 from optparse import OptionParser
+import pprint
 
 pb_servers = {
     'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
-    'local' : 'http://localhost:8080/xmlrpc'
+    'local' : 'http://localhost:8000/xmlrpc'
     }
-pb_servers['default'] = 'pb-dev'
+pb_servers['default'] = pb_servers['pb-dev']
 
 ###
 
-def _run_command(command_list, cwd=None):
+def _replace_variables(cmd, variables_d):
+    if cmd.startswith('PB:'):
+        cmd = variables_d[cmd[3:]]
+    return cmd
+
+def _run_command(command_list, cwd=None, variables=None):
+    if variables:
+        x = []
+        for cmd in command_list:
+            cmd = _replace_variables(cmd, variables)
+            x.append(cmd)
+        command_list = x
+        
     try:
         p = subprocess.Popen(command_list, shell=False, cwd=cwd,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -126,10 +146,16 @@ class BaseCommand(object):
         self.output = None
         self.errout = None
         self.duration = None
+
+        self.variables = None
+
+    def set_variables(self, v):
+        self.variables = dict(v)
         
     def run(self, context):
         start = time.time()
-        (ret, out, err) = _run_command(self.command_list, self.run_cwd)
+        (ret, out, err) = _run_command(self.command_list, cwd=self.run_cwd,
+                                       variables=self.variables)
         
         self.status = ret
         self.output = out
@@ -255,7 +281,7 @@ class GitClone(SetupCommand):
         cmdlist = ['git', 'log', '-1', '--pretty=oneline']
         (ret, out, err) = _run_command(cmdlist, dirname)
 
-        assert ret == 0
+        assert ret == 0, (cmdlist, ret, out, err)
 
         self.version_info = out.strip()
 
@@ -463,13 +489,76 @@ def parse_cmdline(argv=[]):
 
 ###
 
+def get_python_config(options, args):
+    if not len(args):
+        python_ver = 'python2.5'
+    else:
+        python_ver = args[0]
+        print 'setting python version:', python_ver
+        
+    tags = [python_ver]
+
+    if len(args) > 1:
+        tags.extend(args[1:])
+
+    return dict(python_exe=python_ver, tags=tags)
+
+PYTHON_EXE = 'PB:python_exe'
+
+recipes = {
+    'pony-build' : (get_python_config,
+                    [ GitClone('git://github.com/ctb/pony-build.git',
+                               name='checkout',
+                              cache_dir='~/.pony-build/pony-build'),
+                     BuildCommand([PYTHON_EXE, 'setup.py', 'build_ext', '-i'],
+                                  name='build', run_cwd='pony-build'),
+                     TestCommand([PYTHON_EXE, 'setup.py', 'test'],
+                                 name='run tests', run_cwd='pony-build')
+             ]),
+    'twill' : (get_python_config,
+               [ SvnUpdate('twill', 'https://twill.googlecode.com/svn/branches/0.9.2-dev/twill', name='checkout', cache_dir='~/.pony-build/twill'),
+                 BuildCommand([PYTHON_EXE, 'setup.py', 'build'],
+                              name='compile'),
+                 TestCommand([PYTHON_EXE, 'setup.py', 'test'], name='run tests'),
+             ]),
+    }
+
+###
+
 if __name__ == '__main__':
-    import sys
+    options, args = parse_cmdline()
+    
+    package = args[0]
+    (config_fn, recipe) = recipes[package]
+    variables = config_fn(options, args[1:])
 
-    c = BuildCommand(['/bin/echo', 'build output'])
-    t = TestCommand(['/bin/echo', 'test output'])
+    tags = variables['tags']
 
-    name = sys.argv[1]
-    server = sys.argv[2]
-    results = do(name, [c, t])
-    send(server, results)
+    for r in recipe:
+        r.set_variables(variables)
+
+    ###
+
+    server_url = options.server_url
+    
+    if not options.force_build:
+        if not check(package, server_url, tags=tags):
+            print 'check build says no need to build; bye'
+            sys.exit(0)
+
+    context = TempDirectoryContext()
+    results = do(package, recipe, context=context, stop_if_failure=False)
+    client_info, reslist = results
+    
+    if options.report:
+        print 'result: %s; sending' % (client_info['success'],)
+        send(server_url, results, tags=tags)
+    else:
+        print 'build result:'
+        pprint.pprint(client_info)
+        pprint.pprint(reslist)
+
+        print '(NOT SENDING BUILD RESULT TO SERVER)'
+
+    if not client_info['success']:
+        sys.exit(-1)
