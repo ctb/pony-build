@@ -27,7 +27,7 @@ if not options.force_build:
         print 'check build says no need to build; bye'
         sys.exit(0)
 
-commands = [ GitClone(repo_url, name='checkout', cache_dir='~/.pony-build/pony-build'),
+commands = [ GitClone(repo_url, name='checkout'),
              BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
                           name='build', run_cwd='pony-build'),
              TestCommand([python_exe, 'setup.py', 'test'],

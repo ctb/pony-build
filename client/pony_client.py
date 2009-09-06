@@ -96,14 +96,13 @@ class TempDirectoryContext(Context):
         os.chdir(self.tempdir)
 
     def finish(self):
-        try:
-            Context.finish(self)
-        finally:
-            if self.cleanup:
-                print 'removing', self.tempdir
-                shutil.rmtree(self.tempdir)
-
-        os.chdir(self.cwd)
+		os.chdir(self.cwd)
+		try:
+			Context.finish(self)
+		finally:
+			if self.cleanup:
+				print 'removing', self.tempdir
+				shutil.rmtree(self.tempdir, ignore_errors=True)
 
     def update_client_info(self, info):
         Context.update_client_info(self, info)
@@ -412,7 +411,7 @@ def get_arch():
 
 def _send(server, info, results):
     print 'connecting to', server
-    s = xmlrpclib.ServerProxy(server)
+    s = xmlrpclib.ServerProxy(server, allow_none=True)
     s.add_results(info, results)
 
 def do(name, commands, context=None, arch=None, stop_if_failure=True):
@@ -470,7 +469,7 @@ def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
         
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     server_url = get_server_url(server_url)
-    s = xmlrpclib.ServerProxy(server_url)
+    s = xmlrpclib.ServerProxy(server_url, allow_none=True)
     (flag, reason) = s.check_should_build(client_info, True, reserve_time)
     return flag
 
@@ -485,7 +484,7 @@ def get_server_url(server_name):
 
 def get_tagsets_for_package(server, package):
     server = get_server_url(server)
-    s = xmlrpclib.ServerProxy(server)
+    s = xmlrpclib.ServerProxy(server, allow_none=True)
     return s.get_tagsets_for_package(package)
 
 ###
