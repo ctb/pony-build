@@ -142,6 +142,27 @@ refactor BaseCommand => ShellCommand for variable replacement, etc.
 
 command to report on versions of installed Python packages
 
+group views/composite views
+
+selenium results repost script?
+
+separate control channel for "generic" Python package building, etc.
+
+post VCS to server as part of tagset, if available; or have server use
+it, if it's available.  obviates tags like 'experimental' for pygr...
+
+start sprucing up web interface... in particular, package search, and
+projects under /p/, etc.
+
+time/date on submissions
+package name on submissions
+
+get submissions by machine
+
+raw text display; hierarchy; cool js.
+
+"next record with this tagset", "previous record", "history"
+
 --
 
 tonite:

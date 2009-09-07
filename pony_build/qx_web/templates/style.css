@@ -150,6 +150,28 @@ h3 {
 	background-color:#FFFFFF;
 	text-decoration:underline;
 }
+#resulttext p {
+	color:#666666;
+	background-color:#FFFFFF;
+	border-color:#AAAAAA;
+	border-style:none;
+	margin-left:20px;
+	margin-right:20px;
+	margin-bottom:15px;
+	line-height:20px;
+	padding:20px;
+}
+.resultpre {
+	color:#666666;
+	background-color:#FFFFFF;
+	margin-top: 0px;        
+	margin-left:20px;
+	margin-right:20px;
+	margin-bottom:15px;
+	line-height:20px;
+	padding:20px;
+	white-space: pre;
+}
 #footer {
 	clear:both;
 	width:750px;

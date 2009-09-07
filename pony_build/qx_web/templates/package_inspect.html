@@ -1,38 +1,42 @@
 {% extends "package_base.html" %}
 
-{% block title %} Build summary for '{{ package }}' {% endblock %}
+{% block title %} Inspector for record {{ key }} / '{{ package }}' {% endblock %}
 
 {% block content %}
 
-<title>Inspector for record {{ key }}</title>
 <h2>Inspector for record {{ key }}</h2>
 
+<br>
 Tag set: {{ tagset }}
+<br><br>
 <p>
 Receipt info:
-<pre>
+<div class='resultpre'>
 {% for k, v in receipt.items() -%}
    {{ k }}: {{ v }}
 {% endfor -%}
-</pre>
+</div>
 
+<p>
 Client info:
-<pre>
+<div class='resultpre'>
 {% for k, v in client_info.items() -%}
    {{ k }}: {{ v }}
 {% endfor -%}
-</pre>
+</div>
 <hr>
 <p>
 <b>Results:</b>
 <ul>
+<div id="resulttext">
 {% for result_d in results -%}
    <li>Result {{ loop.index }}:<br>
-   <pre>
+   <div class='resultpre'>
    {% for k, v in result_d.items() -%}
       {{ k }}: {{ v }}
    {% endfor -%}
-   </pre>
+   </div>
+</div>
 {% endfor %}
 </ul>
 

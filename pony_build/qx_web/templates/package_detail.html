@@ -44,7 +44,9 @@ Build steps:<br>
 
 <b>Build details:</b>
 
+<div id="resulttext">
 {% for r in results %}
+  
    <p>
    <a name='{{ loop.index0 }}'>{{ loop.index }}. 
    <b>{{ r['name'] }}</b> {{ r['type'] }} -
@@ -57,14 +59,20 @@ Build steps:<br>
    <br>
 
    <b>command line:</b>{{ r['command'] }}<br>
-   <b>stdout:</b><blockquote><pre>{{ r['output'] }}</pre></blockquote>
    
-   {% if r['errout'].strip() %}
-   <b>stderr:</b><pre><blockquote>{{ r['errout'] }}</pre></blockquote>
+   {% if r.has_key('output') and r['output'].strip() %}
+   <b>stdout:</b><tt><div class='resultpre'>{{ r['output'] }}</div></tt><br>
    {% else %}
-   <i>no stderr</i>
+   <i>no stdout</i><br>
+   {% endif %}
+
+   {% if r['errout'].strip() %}
+   <b>stderr:</b><tt><div class='resultpre'>{{ r['errout'] }}</div></tt><br>
+   {% else %}
+   <i>no stderr</i><br>
    {% endif %}
 {% endfor %}
+</div>
 </ul>
 
 {% endblock %}
