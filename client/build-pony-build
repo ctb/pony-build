@@ -28,10 +28,8 @@ if not options.force_build:
         sys.exit(0)
 
 commands = [ GitClone(repo_url, name='checkout'),
-             BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
-                          name='build', run_cwd='pony-build'),
              TestCommand([python_exe, 'setup.py', 'test'],
-                         name='run tests', run_cwd='pony-build')
+                         name='run tests')
              ]
 
 context = TempDirectoryContext(options.cleanup_temp)

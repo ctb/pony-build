@@ -28,8 +28,8 @@ built_exe = './python'
 if distutils.util.get_platform().startswith('macosx'):
     built_exe = './python.exe'
 
-context = TempDirectoryContext(False)
-commands = [ SvnUpdate('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
+context = TempDirectoryContext()
+commands = [ SvnUpdate('python27', repo_url, name='checkout'),
              BuildCommand(['./configure'], name='configure'),
              BuildCommand(['make'], name='make'),
              TestCommand([built_exe, 'Lib/test/regrtest.py'], name='regrtest')

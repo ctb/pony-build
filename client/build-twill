@@ -23,13 +23,11 @@ if not options.force_build:
         print 'check build says no need to build; bye'
         sys.exit(0)
 
-commands = [ SvnUpdate('twill', repo_url, name='checkout', cache_dir='~/.pony-build/twill'),
-             BuildCommand([python_exe, 'setup.py', 'build'],
-                          name='compile'),
-             TestCommand([python_exe, 'setup.py', 'test'], name='run tests'),
+commands = [ SvnUpdate('twill', repo_url, name='checkout'),
+             BuildCommand([python_exe, 'setup.py', 'test'])
              ]
 
-context = TempDirectoryContext(False)
+context = TempDirectoryContext()
 results = do(name, commands, context=context)
 client_info, reslist = results
 

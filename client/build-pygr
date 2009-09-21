@@ -22,13 +22,11 @@ if not options.force_build:
         sys.exit(0)
 
 context = TempDirectoryContext()
-commands = [ GitClone(repo_url, name='checkout', cache_dir='~/.pony-build/pygr'),
+commands = [ GitClone(repo_url),
              BuildCommand(['pyrexc', 'pygr/cdict.pyx', 'pygr/cnestedlist.pyx',
-                           'pygr/seqfmt.pyx'], run_cwd='pygr'),
-             BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
-                          name='compile', run_cwd='pygr'),
-             TestCommand([python_exe, 'runtest.py'],
-                         name='run tests', run_cwd='pygr/tests')
+                           'pygr/seqfmt.pyx']),
+             BuildCommand([python_exe, 'setup.py', 'build_ext', '-i']),
+             TestCommand([python_exe, 'runtest.py'], run_cwd='tests')
              ]
 
 results = do(name, commands, context=context)
