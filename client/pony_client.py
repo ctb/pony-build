@@ -131,51 +131,59 @@ class TempDirectoryContext(Context):
         os.chdir(self.tempdir)
 
     def finish(self):
-		os.chdir(self.cwd)
-		try:
-			Context.finish(self)
-		finally:
-			if self.cleanup:
-				print 'removing', self.tempdir
-				shutil.rmtree(self.tempdir, ignore_errors=True)
+        os.chdir(self.cwd)
+        try:
+            Context.finish(self)
+        finally:
+            if self.cleanup:
+                print 'removing', self.tempdir
+                shutil.rmtree(self.tempdir, ignore_errors=True)
 
     def update_client_info(self, info):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
 
 class VirtualenvContext(Context):
-    """
-    @CTB unfinished
-    """
-    
-    def __init__(self, always_cleanup=True):
+    def __init__(self, always_cleanup=True, dependencies=[]):
         Context.__init__(self)
-        self.always_cleanup = always_cleanup
+        self.cleanup = always_cleanup
+        self.dependencies = dependencies
+
+        # Create the virtualenv. Have to do this here so that commands can use
+        # VirtualenvContext.python (etc) to get at the right python.
+        import virtualenv
+        
+        self.tempdir = tempfile.mkdtemp()
+        
+        print 'creating virtualenv'
+        _run_command(['virtualenv', '--no-site-packages', self.tempdir])
+        
+        # calculate where a few things live so we can easily shell out to 'em
+        self.python = os.path.join(self.tempdir, 'bin', 'python')
+        self.easy_install = os.path.join(self.tempdir, 'bin', 'easy_install')
+        self.pip = os.path.join(self.tempdir, 'bin', 'pip')
 
     def initialize(self):
         Context.initialize(self)
-        self.tempdir = tempfile.mkdtemp()
-        self.cwd = os.getcwd()
-        
         print 'changing to temp directory:', self.tempdir
+        self.cwd = os.getcwd()
         os.chdir(self.tempdir)
+        
+        # install pip, then use it to install any packages desired
+        print 'installing pip'
+        _run_command([self.easy_install, '-U', 'pip'])
+        for dep in self.dependencies:
+            print "installing", dep
+            _run_command([self.pip, 'install', '-U', '-I'] + dep.split())
 
     def finish(self):
-        Context.finish(self)
-        
-        if self.always_cleanup:
-            do_cleanup = self.always_cleanup
-        else:
-            success = [ c.success() for c in self.history ]
-            if all(success):
-                print 'all commands succeeded; setting cleanup=True'
-                do_cleanup = True
-
-        if do_cleanup:
-            print 'removing', self.tempdir
-            shutil.rmtree(self.tempdir)
-
         os.chdir(self.cwd)
+        try:
+            Context.finish(self)
+        finally:
+            if self.cleanup:
+                print 'removing', self.tempdir
+                shutil.rmtree(self.tempdir, ignore_errors=True)
 
     def update_client_info(self, info):
         Context.update_client_info(self, info)
