@@ -39,7 +39,7 @@ def _replace_variables(cmd, variables_d):
         cmd = variables_d[cmd[3:]]
     return cmd
 
-def _run_command(command_list, cwd=None, variables=None):
+def _run_command(command_list, cwd=None, variables=None, kwargs={}):
     if variables:
         x = []
         for cmd in command_list:
@@ -49,7 +49,8 @@ def _run_command(command_list, cwd=None, variables=None):
         
     try:
         p = subprocess.Popen(command_list, shell=False, cwd=cwd,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             **kwargs)
 
         out, err = p.communicate()
         ret = p.returncode
@@ -148,7 +149,8 @@ class VirtualenvContext(Context):
         info['virtualenv'] = True
 
 class BaseCommand(object):
-    def __init__(self, command_list, name='', run_cwd=None):
+    def __init__(self, command_list, name='', run_cwd=None,
+                 subprocess_kwargs=None):
         self.command_list = command_list
         if name:
             self.command_name = name
@@ -160,6 +162,10 @@ class BaseCommand(object):
         self.duration = None
 
         self.variables = None
+        
+        self.subprocess_kwargs = {}
+        if subprocess_kwargs:
+            self.subprocess_kwargs = dict(subprocess_kwargs)
 
     def set_variables(self, v):
         self.variables = dict(v)
@@ -167,7 +173,8 @@ class BaseCommand(object):
     def run(self, context):
         start = time.time()
         (ret, out, err) = _run_command(self.command_list, cwd=self.run_cwd,
-                                       variables=self.variables)
+                                       variables=self.variables,
+                                       kwargs=self.subprocess_kwargs)
         
         self.status = ret
         self.output = out
