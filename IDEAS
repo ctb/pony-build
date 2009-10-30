@@ -163,6 +163,36 @@ raw text display; hierarchy; cool js.
 
 "next record with this tagset", "previous record", "history"
 
+---
+http://seanmcgrath.blogspot.com/2009/08/software-application-architecture.html
+ A software variation on a theme by Antoine de Saint Exupéry:
+
+"A software application architecture is finished when there is nothing left to take out. A software application design is finished when there is nothing left to add." 
+---
+
+URLs that point to the most recent result for a particular machine type.
+
+produce RSS/web hooks/etc.
+
+http://code.google.com/p/support/wiki/PostCommitWebHooks
+
+http://github.com/guides/post-receive-hooks
+
+http://brad.livejournal.com/2405147.html
+
+david bolen:
+"""
+I don't know if it's possible but it would be great if the buildbot   
+master could send an email to a buildbot maintainer if it thinks a  
+buildbot is down.  There have actually been times in the past when
+from the perspective of my buildbot things were just dandy, but the
+master showed it as down.  Stopping and restarting the buildbot,
+forcing it to reconnect, cleaned things up, but I have to monitor the
+web status page which is a manual process.
+"""
+
+kill children before exit?? persistent process ugliness.
+
 --
 
 tonite:
@@ -191,3 +221,10 @@ client example & discussion
 screencast!!
 
 ---
+
+http://twitter.com/jessenoller/status/4892960090 jessenoller I've got
+an itch: A Rest-Based, pony-build backed package index.
+
+jessenoller In my "pypackage" app, I want cool little boxes like
+github has for "install this" or "get the source" - semi transparent
+"pip install foo"
