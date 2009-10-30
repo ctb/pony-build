@@ -200,7 +200,7 @@ class BaseCommand(object):
         self.duration = end - start
 
     def success(self):
-        return (not ignore_failure) or (self.status == 0)
+        return self.ignore_failure or (self.status == 0)
 
     def get_results(self):
         results = dict(status=self.status,
