@@ -153,7 +153,7 @@ class VirtualenvContext(Context):
 
 class BaseCommand(object):
     def __init__(self, command_list, name='', run_cwd=None,
-                 subprocess_kwargs=None):
+                 subprocess_kwargs=None, ignore_failure=False):
         self.command_list = command_list
         if name:
             self.command_name = name
@@ -169,6 +169,8 @@ class BaseCommand(object):
         self.subprocess_kwargs = {}
         if subprocess_kwargs:
             self.subprocess_kwargs = dict(subprocess_kwargs)
+
+        self.ignore_failure = ignore_failure
 
     def set_variables(self, v):
         self.variables = dict(v)
@@ -187,7 +189,7 @@ class BaseCommand(object):
         self.duration = end - start
 
     def success(self):
-        return self.status == 0
+        return (not ignore_failure) or (self.status == 0)
 
     def get_results(self):
         results = dict(status=self.status,
