@@ -235,6 +235,8 @@ class GitClone(SetupCommand):
 
         self.use_cache = use_cache
         self.cache_dir = cache_dir
+        if cache_dir:
+            self.cache_dir = os.path.expanduser(cache_dir)
 
         self.duration = -1
         self.version_info = ''

@@ -193,6 +193,10 @@ web status page which is a manual process.
 
 kill children before exit?? persistent process ugliness.
 
+pythoscope foo - integrate pythoscope reporting
+
+also integrate Virtual mem reporting for processes under linux?
+
 --
 
 tonite:
