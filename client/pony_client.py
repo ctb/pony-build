@@ -49,8 +49,8 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={}):
 
     default_kwargs = dict(shell=False, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE)
-    if kwargs:
-        default_kwargs.update(kwargs)
+    if extra_kwargs:
+        default_kwargs.update(extra_kwargs)
         
     try:
         p = subprocess.Popen(command_list, cwd=cwd, **default_kwargs)
