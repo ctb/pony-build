@@ -39,18 +39,21 @@ def _replace_variables(cmd, variables_d):
         cmd = variables_d[cmd[3:]]
     return cmd
 
-def _run_command(command_list, cwd=None, variables=None, kwargs={}):
+def _run_command(command_list, cwd=None, variables=None, extra_kwargs={}):
     if variables:
         x = []
         for cmd in command_list:
             cmd = _replace_variables(cmd, variables)
             x.append(cmd)
         command_list = x
+
+    default_kwargs = dict(shell=False, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE)
+    if kwargs:
+        default_kwargs.update(kwargs)
         
     try:
-        p = subprocess.Popen(command_list, shell=False, cwd=cwd,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                             **kwargs)
+        p = subprocess.Popen(command_list, cwd=cwd, **default_kwargs)
 
         out, err = p.communicate()
         ret = p.returncode
@@ -174,7 +177,7 @@ class BaseCommand(object):
         start = time.time()
         (ret, out, err) = _run_command(self.command_list, cwd=self.run_cwd,
                                        variables=self.variables,
-                                       kwargs=self.subprocess_kwargs)
+                                       extra_kwargs=self.subprocess_kwargs)
         
         self.status = ret
         self.output = out
