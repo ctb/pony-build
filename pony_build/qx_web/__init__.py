@@ -44,7 +44,7 @@ def format_timestamp(t):
     return dt.strftime("%A, %d %B %Y, %I:%M %p")
 
 class QuixoteWebApp(Directory):
-    _q_exports = [ '', 'css', 'exit']
+    _q_exports = [ '', 'css', 'exit', 'recv_file']
 
     def __init__(self, coord):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
@@ -54,6 +54,15 @@ class QuixoteWebApp(Directory):
 
         #self.pshb_list = ['http://pubsubhubbub.appspot.com']
         self.phsb_list = []
+
+    def recv_file(self):
+        request = quixote.get_request()
+
+        content_length = int(request.get_header('content-length'))
+        data = request.stdin.read(content_length)
+
+        print 'got %d bytes; first 50: ' % (len(data),)
+        return "ok"
 
     def exit(self):
         os._exit(0)
