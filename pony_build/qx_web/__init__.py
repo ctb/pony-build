@@ -291,6 +291,9 @@ class PackageInfo(Directory):
             items=rss_items
           )
 
+        response = quixote.get_response()
+        response.set_content_type('text/xml')
+
         fp = StringIO()
         rss.write_xml(fp)
         return fp.getvalue()
