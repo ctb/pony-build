@@ -39,17 +39,26 @@ def _replace_variables(cmd, variables_d):
         cmd = variables_d[cmd[3:]]
     return cmd
 
-def _run_command(command_list, cwd=None, variables=None):
+def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
+                 verbose=False):
     if variables:
         x = []
         for cmd in command_list:
             cmd = _replace_variables(cmd, variables)
             x.append(cmd)
         command_list = x
+
+    default_kwargs = dict(shell=False, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE)
+    if extra_kwargs:
+        default_kwargs.update(extra_kwargs)
+
+    if verbose:
+        print 'CWD', os.getcwd()
+        print 'running in ->', cwd
         
     try:
-        p = subprocess.Popen(command_list, shell=False, cwd=cwd,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(command_list, cwd=cwd, **default_kwargs)
 
         out, err = p.communicate()
         ret = p.returncode
@@ -57,6 +66,9 @@ def _run_command(command_list, cwd=None, variables=None):
         out = ''
         err = traceback.format_exc()
         ret = -1
+
+    if verbose:
+        print 'status:', ret
 
     return (ret, out, err)
 
@@ -148,7 +160,9 @@ class VirtualenvContext(Context):
         info['virtualenv'] = True
 
 class BaseCommand(object):
-    def __init__(self, command_list, name='', run_cwd=None):
+    def __init__(self, command_list, name='', run_cwd=None,
+                 subprocess_kwargs=None, ignore_failure=False,
+                 verbose=False):
         self.command_list = command_list
         if name:
             self.command_name = name
@@ -160,6 +174,13 @@ class BaseCommand(object):
         self.duration = None
 
         self.variables = None
+        
+        self.subprocess_kwargs = {}
+        if subprocess_kwargs:
+            self.subprocess_kwargs = dict(subprocess_kwargs)
+
+        self.ignore_failure = ignore_failure
+        self.verbose = verbose
 
     def set_variables(self, v):
         self.variables = dict(v)
@@ -167,7 +188,9 @@ class BaseCommand(object):
     def run(self, context):
         start = time.time()
         (ret, out, err) = _run_command(self.command_list, cwd=self.run_cwd,
-                                       variables=self.variables)
+                                       variables=self.variables,
+                                       extra_kwargs=self.subprocess_kwargs,
+                                       verbose=self.verbose)
         
         self.status = ret
         self.output = out
@@ -177,7 +200,7 @@ class BaseCommand(object):
         self.duration = end - start
 
     def success(self):
-        return self.status == 0
+        return self.ignore_failure or (self.status == 0)
 
     def get_results(self):
         results = dict(status=self.status,
@@ -212,6 +235,8 @@ class GitClone(SetupCommand):
 
         self.use_cache = use_cache
         self.cache_dir = cache_dir
+        if cache_dir:
+            self.cache_dir = os.path.expanduser(cache_dir)
 
         self.duration = -1
         self.version_info = ''

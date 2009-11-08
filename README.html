@@ -316,13 +316,13 @@ three ain't bad ;).</p>
 <h1><a id="pony-build-server" name="pony-build-server">pony-build server</a></h1>
 <p>The command:</p>
 <pre class="literal-block">
-python bin/run-qx-server &lt;shelve filename&gt; &lt;port&gt;
+python -m pony_build.qx_web.run &lt;shelve filename&gt; &lt;port&gt;
 </pre>
-<p>will run the Quixote-baesd pony-build Web app on the given port,
+<p>will run the Quixote-based pony-build Web app on the given port,
 reading &amp; writing from the shelve database in 'filename'.</p>
 <p>For example,</p>
 <pre class="literal-block">
-python bin/run-qx-server test.db 8080
+python -m pony_build.qx_web.run test.db 8080
 </pre>
 <p>will run a server that can be accessed on <a class="reference" href="http://localhost:8080/">http://localhost:8080/</a>.  This
 server will report on whatever results are sent to it by the client (see
