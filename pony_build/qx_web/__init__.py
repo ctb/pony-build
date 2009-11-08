@@ -72,7 +72,7 @@ def create_publisher(coordinator):
 
 class PackageInfo(Directory):
     _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail',
-                   'request_build']
+                   'request_build', 'rss2']
     
     def __init__(self, coord, package):
         self.coord = coord
@@ -199,3 +199,24 @@ class PackageInfo(Directory):
         self.coord.set_request_build(client_info, True)
 
         return quixote.redirect('./')
+
+    def rss2(self):
+        return "hello, world"
+
+###
+
+def run(host, port, dbfilename):
+    from .. import server, coordinator, dbsqlite
+    dbfile = dbsqlite.open_shelf(dbfilename)
+    dbfile = coordinator.IntDictWrapper(dbfile)
+
+    pbs_app = coordinator.PonyBuildCoordinator(db=dbfile)
+    wsgi_app = create_publisher(pbs_app)
+
+    the_server = server.create(host, port, pbs_app, wsgi_app)
+
+    try:
+        print 'serving on host %s, port %d, path /xmlrpc' % (host, port)
+        the_server.serve_forever()
+    except KeyboardInterrupt:
+        print 'exiting'

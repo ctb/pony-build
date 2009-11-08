@@ -30,14 +30,14 @@ pony-build server
 
 The command: ::
 
-   python bin/run-qx-server <shelve filename> <port>
+   python -m pony_build.qx_web.run <shelve filename> <port>
 
-will run the Quixote-baesd pony-build Web app on the given port,
+will run the Quixote-based pony-build Web app on the given port,
 reading & writing from the shelve database in 'filename'.
 
 For example, ::
 
-   python bin/run-qx-server test.db 8080
+   python -m pony_build.qx_web.run test.db 8080
 
 will run a server that can be accessed on http://localhost:8080/.  This
 server will report on whatever results are sent to it by the client (see
