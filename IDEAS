@@ -226,9 +226,26 @@ screencast!!
 
 ---
 
+soonest, figure out file uploads for nightly builds
+also provide protocol/setuptools ext/setup.py info for ony-build
+
+---
+
 http://twitter.com/jessenoller/status/4892960090 jessenoller I've got
 an itch: A Rest-Based, pony-build backed package index.
 
 jessenoller In my "pypackage" app, I want cool little boxes like
 github has for "install this" or "get the source" - semi transparent
 "pip install foo"
+
+Subject: [Python-Dev] People want CPAN :-) -- ssteiner on python-dev
+
+
+---
+
+integrate jacob's virtualenv fix.
+
+tests for build steps?
+
+implement file uploads (POST); atom/rss feed, pshb notifications; e-mail
+notify?
