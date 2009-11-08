@@ -201,7 +201,56 @@ class PackageInfo(Directory):
         return quixote.redirect('./')
 
     def rss2(self):
-        return "hello, world"
+        from PyRSS2Gen import RSS2, RSSItem
+        import datetime
+        from cStringIO import StringIO
+
+        def sort_by_timestamp(a, b):
+            ta = a[1][0]['time']
+            tb = b[1][0]['time']
+            return -cmp(ta, tb)
+
+        package = self.package
+        d = self.coord.get_unique_tagsets_for_package(package)
+        it = d.items()
+        it.sort(sort_by_timestamp)
+
+        rss_items = []
+        for k, v in it:
+            tagset = sorted([ x for x in list(k) if not x.startswith('__')])
+            tagset = ", ".join(tagset)
+
+            _, client_info, _ = v
+            status = client_info['success']
+            if status:
+                title = 'Package %s build succeeded (tags %s)' % \
+                        (self.package, tagset)
+            else:
+                title = 'Package %s build FAILED (tags %s)' % \
+                        (self.package, tagset)
+
+            pubDate = datetime.datetime.fromtimestamp(v[0]['time'])
+
+            print title
+            print pubDate
+
+            item = RSSItem(title=title,
+                           pubDate=pubDate)
+            rss_items.append(item)
+
+        rss = RSS2(
+            title = "pony-build feed for %s" % (self.package,),
+            link = 'http://foo./bar/baz',
+            description = 'package build & test information for "%s"' \
+                % self.package,
+
+            lastBuildDate = datetime.datetime.now(),
+            items=rss_items
+          )
+
+        fp = StringIO()
+        rss.write_xml(fp)
+        return fp.getvalue()
 
 ###
 
