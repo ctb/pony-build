@@ -69,6 +69,10 @@ class PonyBuildCoordinator(object):
         self._process_results()
         self.request_build = {}
         self.is_building = {}
+        self.listeners = []
+
+    def add_listener(self, x):
+        self.listeners.append(x)
 
     def notify_build(self, package, client_info, requested_allowance=None):
         tagset = build_tagset(client_info)
@@ -83,6 +87,10 @@ class PonyBuildCoordinator(object):
 
         key = self.db_add_result(receipt, client_ip, client_info, results)
         self._process_results()
+
+        for x in self.listeners:
+            x.notify_result_added(key)
+            
         return key
 
     def set_request_build(self, client_info, value):

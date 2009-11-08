@@ -13,7 +13,15 @@ from jinja2 import Template
 from urllib import quote_plus
 import datetime
 import pprint
+import traceback
 
+###
+
+SERVER='http://lyorn.idyll.org:8088'
+
+###
+
+from .PyRSS2Gen import RSS2, RSSItem, _element, Guid
 from .util import env, templatesdir
 from ..coordinator import build_tagset
 
@@ -36,13 +44,35 @@ def format_timestamp(t):
     return dt.strftime("%A, %d %B %Y, %I:%M %p")
 
 class QuixoteWebApp(Directory):
-    _q_exports = [ '', 'css', 'exit' ]
-    
+    _q_exports = [ '', 'css', 'exit']
+
     def __init__(self, coord):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
 
+        # get notified of new results by the coordinator...
+        self.coord.add_listener(self)
+
+        #self.pshb_list = ['http://pubsubhubbub.appspot.com']
+        self.phsb_list = []
+
     def exit(self):
         os._exit(0)
+
+    def notify_result_added(self, result_key):
+        from pubsubhubbub_publish import publish as pshb_publish, PublishError
+        
+        print '*** NEW RESULT', result_key
+        package = 'build-example'
+        feed_url = '%s/%s/rss2' % (SERVER, package,)
+
+        for pshb_server in self.pshb_list:
+            print 'notifying pshb server', pshb_server
+            try:
+                pshb_publish(pshb_server, feed_url)
+            except PublishError, e:
+                print 'error notify pshb server %s' % (pshb_server,)
+                traceback.print_exc()
+                print 'continuing...'
 
     def _q_index(self):
         packages = self.coord.get_all_packages()
@@ -201,7 +231,6 @@ class PackageInfo(Directory):
         return quixote.redirect('./')
 
     def rss2(self):
-        from PyRSS2Gen import RSS2, RSSItem
         import datetime
         from cStringIO import StringIO
 
@@ -220,27 +249,32 @@ class PackageInfo(Directory):
             tagset = sorted([ x for x in list(k) if not x.startswith('__')])
             tagset = ", ".join(tagset)
 
-            _, client_info, _ = v
+            receipt, client_info, _ = v
+            result_key = receipt['result_key']
             status = client_info['success']
             if status:
                 title = 'Package %s build succeeded (tags %s)' % \
                         (self.package, tagset)
+                description = "status: success"
             else:
                 title = 'Package %s build FAILED (tags %s)' % \
                         (self.package, tagset)
+                description = "status: failure"
 
             pubDate = datetime.datetime.fromtimestamp(v[0]['time'])
 
-            print title
-            print pubDate
-
+            link = '%s/%s/detail?result_key=%s' % (SERVER, self.package,
+                                                   result_key)
             item = RSSItem(title=title,
+                           link=link,
+                           description=description,
+                           guid=Guid(link),
                            pubDate=pubDate)
             rss_items.append(item)
 
-        rss = RSS2(
+        rss = PSHB_RSS2(
             title = "pony-build feed for %s" % (self.package,),
-            link = 'http://foo./bar/baz',
+            link = '%s/%s/' % (SERVER, self.package),
             description = 'package build & test information for "%s"' \
                 % self.package,
 
@@ -269,3 +303,9 @@ def run(host, port, dbfilename):
         the_server.serve_forever()
     except KeyboardInterrupt:
         print 'exiting'
+
+class PSHB_RSS2(RSS2):
+    def publish_extensions(self, handler):
+        pass
+        # is this necessary? it breaks Firefoxes RSS reader...
+        #_element(handler, "atom:link", "", dict(rel='hub', href='http://pubsubhubbub.appspot.com'))
