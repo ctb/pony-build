@@ -53,7 +53,7 @@ class QuixoteWebApp(Directory):
         self.coord.add_listener(self)
 
         #self.pshb_list = ['http://pubsubhubbub.appspot.com']
-        self.phsb_list = []
+        self.pshb_list = []
 
     def recv_file(self):
         request = quixote.get_request()
