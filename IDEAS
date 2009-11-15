@@ -263,3 +263,12 @@ truer to RSS to do all... but...?
 
 better info in report...
 
+feed for all builds?
+
+remove/clean up builds; don't show > 30 days.
+
+remove individual package ./rss2/...
+
+move to a multithreaded web server?
+
+triggered builds/based on commits
