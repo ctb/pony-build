@@ -17,7 +17,7 @@ import traceback
 
 ###
 
-SERVER='http://lyorn.idyll.org:8088'
+SERVER='http://lyorn.idyll.org/ctb/pb-dev'
 
 ###
 
