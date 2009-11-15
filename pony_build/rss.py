@@ -28,23 +28,65 @@ from .PyRSS2Gen import RSS2, RSSItem, _element, Guid
 from .pubsubhubbub_publish import publish as pshb_publish, PublishError
 
 build_snoopers = {}
+build_snoopers_rev = {}
+snoopers_per_package = {}
 
 def add_snooper(snooper, key):
+    """
+    Add a snooper into the forward and reverse key mapping dictionaries.
+    
+    """
     assert key not in build_snoopers
     build_snoopers[key] = snooper
+    build_snoopers_rev[snooper] = key
 
 def register_snooper_for_package(package, snooper):
-    pass
+    """
+    Register a snooper to care about a particular package.
+    
+    """
+    x = snoopers_per_package.get(package, [])
+    x.append(snooper)
+    snoopers_per_package[package] = x
 
-def check_new_builds(*build_keylist):
-    pass
+def check_new_builds(coord, *build_keylist):
+    """
+    Return the list of snooper keys that care about new builds.
+
+    Briefly, for each build in build_keylist, retrieve the package info and
+    see if there are any snoopers interested in that package.  If there are,
+    use 'snooper.is_match' to see if any of them care about this particular
+    build result.
+    
+    """
+    s = set()
+    for result_key in build_keylist:
+       receipt, client_info, results =  coord.db_get_result_info(result_key)
+
+       # are there any snoopers interested in this package?
+       package = client_info['package']
+       x = snoopers_per_package.get(package, [])
+       for snooper in x:
+           # if is_match returns true, then yes: store key for later return.
+           if snooper.is_match(receipt, client_info, results):
+               snooper_key = build_snoopers_rev[snooper]
+               s.add(snooper_key)
+
+    return list(s)
 
 def notify_pubsubhubbub_server(server, *rss_urls):
+    """
+    Notify the given pubsubhubbub server that the given RSS URLs have changed.
+
+    Basically the same as pubsubhubbub_publish.publish, but ignore errors.
+    
+    """
     try:
-        pshb_publish(server, *rss_urls)
+        #pshb_publish(server, *rss_urls)
+        print '*** notifying pshb server: %s' % server, rss_urls
         return True
     except PublishError, e:
-        print 'error notify pshb server %s' % (pshb_server,)
+        print 'error notifying pshb server %s' % (pshb_server,)
         traceback.print_exc()
         
     return False
@@ -57,9 +99,11 @@ class BuildSnooper(object):
         pass
 
 class PackageSnooper(BuildSnooper):
-    def __init__(self, package_name, only_failures=False):
+    def __init__(self, package_name, only_failures=False, register=True):
         self.package_name = package_name
         self.report_successes = not only_failures
+        if register:
+            register_snooper_for_package(package_name, self)
 
     def __str__(self):
         modifier = 'failed'

@@ -1,5 +1,6 @@
 """
 A Quixote-based Web UI for pony-build.
+
 """
 import os, os.path
 
@@ -18,6 +19,7 @@ import traceback
 ###
 
 SERVER='http://lyorn.idyll.org/ctb/pb-dev'
+named_rss_feed_url = 'http://lyorn.idyll.org/ctb/pb-dev/rss2/%(feedname)s'
 
 ###
 
@@ -44,7 +46,7 @@ def format_timestamp(t):
     return dt.strftime("%A, %d %B %Y, %I:%M %p")
 
 class QuixoteWebApp(Directory):
-    _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p']
+    _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p', 'test']
 
     def __init__(self, coord):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
@@ -52,8 +54,7 @@ class QuixoteWebApp(Directory):
         # get notified of new results by the coordinator...
         self.coord.add_listener(self)
 
-        #self.pshb_list = ['http://pubsubhubbub.appspot.com']
-        self.pshb_list = []
+        self.pshb_list = ['http://pubsubhubbub.appspot.com']
         self.rss2 = RSS2FeedDirectory(coord)
         self.p = PackageDirectory(coord)
 
@@ -69,17 +70,22 @@ class QuixoteWebApp(Directory):
     def exit(self):
         os._exit(0)
 
-    def notify_result_added(self, result_key):
-        #@CTB notify pshb
-        #print '*** NEW RESULT', result_key
-        #package = 'build-example'
+    def test(self):
+        self.notify_result_added(16)
 
-        #feed_url = '%s/%s/rss2' % (SERVER, package,)
-        #for pshb_server in self.pshb_list:
-        #    rss.notify_pubsubhubbub_server(pshb_server, feed_url)
-        return
-    
-        # code does not work any more @CTB
+    def notify_result_added(self, result_key):
+        snooper_keys = rss.check_new_builds(self.coord, result_key)
+        print '***', snooper_keys
+
+        urls = set()
+        for key in snooper_keys:
+            feed_url = named_rss_feed_url % dict(feedname=key)
+            urls.add(feed_url)
+
+        urls = list(urls)
+        for pshb_server in self.pshb_list:
+            rss.notify_pubsubhubbub_server(pshb_server, *urls)
+
     def _q_index(self):
         packages = self.coord.get_all_packages()
 
@@ -185,9 +191,10 @@ class RSS2_GenericPackageFeeds(Directory):
     
     def _q_lookup(self, component):
         if component == 'all':
-            snooper = rss.PackageSnooper(self.package)
+            snooper = rss.PackageSnooper(self.package, register=False)
         elif component == 'failed':
-            snooper = rss.PackageSnooper(self.package, only_failures=True)
+            snooper = rss.PackageSnooper(self.package, only_failures=True,
+                                         register=False)
 #        elif component == 'no_recent_build':
 #            pass
         else:
