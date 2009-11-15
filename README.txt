@@ -97,9 +97,6 @@ current coordinator object with 'pony_build.server.get_coordinator()'.
 **The coordinator API is will be stable and public**, after suitable
 evolution.
 
-Note that there are also utility functions in ``pony_build.rss`` for
-helping to create RSS2 feeds.
-
 Client-to-server communication
 ------------------------------
 
@@ -125,6 +122,19 @@ purposes, and/or to use the 'tags' key in the client_info dict.
 The 'tags' associated value is a list of strings.
 
 receipt['result_key'] is the internal key used to store the result.
+
+Notifications
+-------------
+
+RSS2 and pubsubhubbub (http://code.google.com/p/pubsubhubbub/) are the
+core of the notification system built into pony_build; the "officially
+correct" way to actively notify interested people of build results is
+to publish them via RSS2, push them to a pubsubhubbub server, and let
+someone else deal with translating those into e-mail alerts, etc.
+
+Note that there are also utility functions in ``pony_build.rss`` for
+helping to create RSS2 feeds and notify pubsubhubbub servers of
+new results.
 
 Some medium-term ideas
 ======================

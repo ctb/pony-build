@@ -1,11 +1,30 @@
-# @CTB have a generated ascii key, or a name, for each snooper?  how to refer
-# to it in an RSS feed?
+"""
+Functions to help generate RSS2 feeds for pony_build results.
+
+RSS2 and pubsubhubbub (http://code.google.com/p/pubsubhubbub/) are the
+core of the notification system built into pony_build; the "officially
+correct" way to actively notify interested people of build results is
+to publish them via RSS2, push them to a pubsubhubbub server, and let
+someone else deal with translating those into e-mail alerts, etc.
+
+This module contains infrastructure for creating and publishing RSS
+feeds using Andrew Dalke's PyRSS2Gen, and pushing change notifications
+to pubsubhubbub servers via Brett Slatkin's Python module.
+
+The main class to pay attention to is BuildSnooper, ... @CTB ...
+
+Apart from standard UI stuff (creating and managing) RSS feeds, the
+remaining bit of trickiness is that any RSS feeds must be served via a
+URL and also contain ref URLs, which is the responsibility of the Web
+interface.  So the 'generate_rss' function on each BuildSnooper object
+must be called from the Web app and requires some input in the form of
+canonical URLs
+
+"""
 
 import datetime
 from cStringIO import StringIO
 from .PyRSS2Gen import RSS2, RSSItem, _element, Guid
-
-SERVER='XXX'
 
 build_snoopers = {}
 

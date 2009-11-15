@@ -374,8 +374,6 @@ interface in 'pony_build.coordinator'; you can get a handle to the
 current coordinator object with 'pony_build.server.get_coordinator()'.
 <strong>The coordinator API is will be stable and public</strong>, after suitable
 evolution.</p>
-<p>Note that there are also utility functions in <tt class="docutils literal"><span class="pre">pony_build.rss</span></tt> for
-helping to create RSS2 feeds.</p>
 <div class="section">
 <h2><a id="client-to-server-communication" name="client-to-server-communication">Client-to-server communication</a></h2>
 <p>Each client sends two bags of information: the first, 'client_info',
@@ -397,6 +395,17 @@ simple ways to extend things are to add new k/v pairs for specific
 purposes, and/or to use the 'tags' key in the client_info dict.
 The 'tags' associated value is a list of strings.</p>
 <p>receipt['result_key'] is the internal key used to store the result.</p>
+</div>
+<div class="section">
+<h2><a id="notifications" name="notifications">Notifications</a></h2>
+<p>RSS2 and pubsubhubbub (<a class="reference" href="http://code.google.com/p/pubsubhubbub/">http://code.google.com/p/pubsubhubbub/</a>) are the
+core of the notification system built into pony_build; the &quot;officially
+correct&quot; way to actively notify interested people of build results is
+to publish them via RSS2, push them to a pubsubhubbub server, and let
+someone else deal with translating those into e-mail alerts, etc.</p>
+<p>Note that there are also utility functions in <tt class="docutils literal"><span class="pre">pony_build.rss</span></tt> for
+helping to create RSS2 feeds and notify pubsubhubbub servers of
+new results.</p>
 </div>
 </div>
 <div class="section">
