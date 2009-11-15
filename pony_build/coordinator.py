@@ -127,7 +127,6 @@ class PonyBuildCoordinator(object):
                     except KeyError:
                         pass
                 requested = last_duration
-                print 'rEQEUSTED:', requested
             requested = timedelta(0, requested) # seconds
 
             if diff < requested:

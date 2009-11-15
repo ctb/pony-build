@@ -61,14 +61,25 @@ class PackageSnooper(BuildSnooper):
             receipt, client_info, _ = v
             result_key = receipt['result_key']
             status = client_info['success']
+
+            x = []
             if status:
                 title = 'Package %s build succeeded (tags %s)' % \
                         (self.package_name, tagset)
-                description = "status: success"
+                x.append("status: success")
             else:
                 title = 'Package %s build FAILED (tags %s)' % \
                         (self.package_name, tagset)
-                description = "status: failure"
+                x.append("status: failure")
+
+            x.append("result_key: %s" % (receipt['result_key'],))
+            x.append("package: %s" % (self.package_name,))
+            x.append("build host: %s" % (client_info['host'],)) # @CTB XSS
+            x.append("build arch: %s" % (client_info['arch'],))
+
+            tags = list(client_info['tags'])
+            x.append("tags: %s" % (", ".join(tags)))
+            description = "<br>".join(x)
 
             pubDate = datetime.datetime.fromtimestamp(v[0]['time'])
 
