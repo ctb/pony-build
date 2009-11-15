@@ -97,6 +97,9 @@ current coordinator object with 'pony_build.server.get_coordinator()'.
 **The coordinator API is will be stable and public**, after suitable
 evolution.
 
+Note that there are also utility functions in ``pony_build.rss`` for
+helping to create RSS2 feeds.
+
 Client-to-server communication
 ------------------------------
 
