@@ -70,24 +70,16 @@ class QuixoteWebApp(Directory):
         os._exit(0)
 
     def notify_result_added(self, result_key):
+        #@CTB notify pshb
+        #print '*** NEW RESULT', result_key
+        #package = 'build-example'
+
+        #feed_url = '%s/%s/rss2' % (SERVER, package,)
+        #for pshb_server in self.pshb_list:
+        #    rss.notify_pubsubhubbub_server(pshb_server, feed_url)
         return
     
         # code does not work any more @CTB
-        from pubsubhubbub_publish import publish as pshb_publish, PublishError
-        
-        print '*** NEW RESULT', result_key
-        package = 'build-example'
-        feed_url = '%s/%s/rss2' % (SERVER, package,)
-
-        for pshb_server in self.pshb_list:
-            print 'notifying pshb server', pshb_server
-            try:
-                pshb_publish(pshb_server, feed_url)
-            except PublishError, e:
-                print 'error notify pshb server %s' % (pshb_server,)
-                traceback.print_exc()
-                print 'continuing...'
-
     def _q_index(self):
         packages = self.coord.get_all_packages()
 

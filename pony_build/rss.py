@@ -25,6 +25,7 @@ canonical URLs
 import datetime
 from cStringIO import StringIO
 from .PyRSS2Gen import RSS2, RSSItem, _element, Guid
+from .pubsubhubbub_publish import publish as pshb_publish, PublishError
 
 build_snoopers = {}
 
@@ -37,6 +38,16 @@ def register_snooper_for_package(package, snooper):
 
 def check_new_builds(*build_keylist):
     pass
+
+def notify_pubsubhubbub_server(server, *rss_urls):
+    try:
+        pshb_publish(server, *rss_urls)
+        return True
+    except PublishError, e:
+        print 'error notify pshb server %s' % (pshb_server,)
+        traceback.print_exc()
+        
+    return False
 
 class BuildSnooper(object):
     def generate_rss(self, pb_coord, base_url):
