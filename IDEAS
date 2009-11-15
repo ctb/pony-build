@@ -249,3 +249,9 @@ tests for build steps?
 
 implement file uploads (POST); atom/rss feed, pshb notifications; e-mail
 notify?
+
+be able to create RSS feed for one or more packages that lets you:
+
+ - be notified of all builds, or only failed ones
+ - be notified if there has been no build within a particular time
+ - ...etc.
