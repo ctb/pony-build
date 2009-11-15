@@ -112,7 +112,7 @@ class PackageSnooper(BuildSnooper):
         return "Report on %s builds for package '%s'" % (modifier,
                                                          self.package_name,)
 
-    def generate_rss(self, pb_coord, base_url):
+    def generate_rss(self, pb_coord, package_url, per_result_url):
         packages = pb_coord.get_unique_tagsets_for_package(self.package_name)
 
         def sort_by_timestamp(a, b):
@@ -157,8 +157,8 @@ class PackageSnooper(BuildSnooper):
 
             pubDate = datetime.datetime.fromtimestamp(v[0]['time'])
 
-            link = '%s/%s/detail?result_key=%s' % (base_url, self.package_name,
-                                                   result_key)
+            link = per_result_url % dict(result_key=result_key,
+                                         package=self.package_name)
             item = RSSItem(title=title,
                            link=link,
                            description=description,
@@ -168,7 +168,7 @@ class PackageSnooper(BuildSnooper):
 
         rss = PSHB_RSS2(
             title = "pony-build feed for %s" % (self.package_name,),
-            link = '%s/%s/' % (base_url, self.package_name),
+            link = package_url % dict(package=self.package_name),
             description = 'package build & test information for "%s"' \
                 % self.package_name,
 

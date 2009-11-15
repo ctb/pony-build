@@ -18,8 +18,10 @@ import traceback
 
 ###
 
-SERVER='http://lyorn.idyll.org/ctb/pb-dev'
 named_rss_feed_url = 'http://lyorn.idyll.org/ctb/pb-dev/rss2/%(feedname)s'
+
+package_url_template = 'p/%(package)s/'
+per_result_url_template = 'p/%(package)s/detail?result_key=%(result_key)s'
 
 ###
 
@@ -149,7 +151,13 @@ class RSS2FeedDirectory(Directory):
             response.set_status(404)
             return "404: no such component"
 
-        return snooper.generate_rss(self.coord, SERVER)
+        request = quixote.get_request()
+        base_url = request.get_url(2)
+
+        package_url = base_url + '/' + package_url_template
+        per_result_url = base_url + '/' + per_result_url_template
+
+        return snooper.generate_rss(self.coord, package_url, per_result_url)
 
 class RSS2_GenericFeeds(Directory):
     _q_exports = [ '', 'redirect' ]
@@ -202,7 +210,13 @@ class RSS2_GenericPackageFeeds(Directory):
             response.set_status(404)
             return "No such feed"
 
-        xml = snooper.generate_rss(self.coord, SERVER)
+        request = quixote.get_request()
+        base_url = request.get_url(4)
+
+        package_url = base_url + '/' + package_url_template
+        per_result_url = base_url + '/' + per_result_url_template
+
+        xml = snooper.generate_rss(self.coord, package_url, per_result_url)
 
         response = quixote.get_response()
         response.set_content_type('text/xml')
