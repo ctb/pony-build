@@ -197,7 +197,7 @@ class RSS2_GenericPackageFeeds(Directory):
 
 class PackageInfo(Directory):
     _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail',
-                   'request_build', 'rss2']
+                   'request_build' ]
     
     def __init__(self, coord, package):
         self.coord = coord
@@ -325,15 +325,6 @@ class PackageInfo(Directory):
 
         return quixote.redirect('./')
 
-    def rss2(self):
-        snooper = rss.PackageSnooper(self.package)
-        xml = snooper.generate_rss(self.coord, SERVER)
-
-        response = quixote.get_response()
-        response.set_content_type('text/xml')
-        
-        return xml
-
 ###
 
 def run(host, port, dbfilename):
@@ -344,10 +335,10 @@ def run(host, port, dbfilename):
     ###
 
     snooper = rss.PackageSnooper('pygr')
-    rss.add_snooper(snooper, 'foo')
+    rss.add_snooper(snooper, 'pygr-all')
 
     snooper = rss.PackageSnooper('pygr', only_failures=True)
-    rss.add_snooper(snooper, 'fib')
+    rss.add_snooper(snooper, 'pygr-failures')
 
     ###
 

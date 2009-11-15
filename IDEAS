@@ -272,3 +272,5 @@ remove individual package ./rss2/...
 move to a multithreaded web server?
 
 triggered builds/based on commits
+
+generic feeds for specific tagsets, duh
