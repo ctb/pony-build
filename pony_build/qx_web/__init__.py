@@ -22,7 +22,7 @@ SERVER='http://lyorn.idyll.org/ctb/pb-dev'
 ###
 
 from .util import env, templatesdir
-from . import rss
+from .. import rss
 from ..coordinator import build_tagset
 
 day_diff = datetime.timedelta(1)
@@ -70,6 +70,9 @@ class QuixoteWebApp(Directory):
         os._exit(0)
 
     def notify_result_added(self, result_key):
+        return
+    
+        # code does not work any more @CTB
         from pubsubhubbub_publish import publish as pshb_publish, PublishError
         
         print '*** NEW RESULT', result_key
