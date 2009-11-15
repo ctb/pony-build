@@ -8,19 +8,17 @@
 
 {% block content %}
 
-{% if feeds %}
    <h3 class="top_main_heading">RSS2 Feed information</h3>
    <p>
    <b>Generic feeds:</b>
    <br><br>
    We support several <a href='./_generic/'>generic feeds</a> for each package.
    <br><br>
+{% if feeds %}
    In addition to the generic feeds, we export the following:<br><br>
    {% for feedkey, description in feeds %} 
-      <A href='./{{ feedkey }}'>Feed {{ feedkey }}: {{ description }}.</a><br>
+      <A href='./{{ feedkey }}'>{{ feedkey }}: {{ description }}.</a><br>
    {% endfor %}
-{% else %}
-No feeds available!
 {% endif %}
 
 {% endblock %}
