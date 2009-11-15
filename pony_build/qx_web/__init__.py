@@ -44,7 +44,7 @@ def format_timestamp(t):
     return dt.strftime("%A, %d %B %Y, %I:%M %p")
 
 class QuixoteWebApp(Directory):
-    _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss']
+    _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2']
 
     def __init__(self, coord):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
@@ -54,7 +54,7 @@ class QuixoteWebApp(Directory):
 
         #self.pshb_list = ['http://pubsubhubbub.appspot.com']
         self.pshb_list = []
-        self.rss = RSSFeedDirectory()
+        self.rss2 = RSS2FeedDirectory()
 
     def recv_file(self):
         request = quixote.get_request()
@@ -110,7 +110,7 @@ def create_publisher(coordinator):
 
 ###
 
-class RSSFeedDirectory(Directory):
+class RSS2FeedDirectory(Directory):
     _q_exports = [ '' ]
 
     def _q_index(self):
