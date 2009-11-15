@@ -18,7 +18,18 @@ import traceback
 
 ###
 
-named_rss_feed_url = 'http://lyorn.idyll.org/ctb/pb-dev/rss2/%(feedname)s'
+base_url = None
+
+def set_base_url(host, port, script_name=''):
+    global base_url
+    
+    if not host.strip():
+        host = 'localhost'
+    base_url = 'http://%s:%s' % (host, port)
+    if script_name:
+        base_url += '/' + script_name.strip('/')
+
+named_rss_feed_url = '/rss2/%(feedname)s'
 
 package_url_template = 'p/%(package)s/'
 per_result_url_template = 'p/%(package)s/detail?result_key=%(result_key)s'
@@ -81,7 +92,7 @@ class QuixoteWebApp(Directory):
 
         urls = set()
         for key in snooper_keys:
-            feed_url = named_rss_feed_url % dict(feedname=key)
+            feed_url = base_url + named_rss_feed_url % dict(feedname=key)
             urls.add(feed_url)
 
         urls = list(urls)
@@ -151,9 +162,6 @@ class RSS2FeedDirectory(Directory):
             response.set_status(404)
             return "404: no such component"
 
-        request = quixote.get_request()
-        base_url = request.get_url(2)
-
         package_url = base_url + '/' + package_url_template
         per_result_url = base_url + '/' + per_result_url_template
 
@@ -209,9 +217,6 @@ class RSS2_GenericPackageFeeds(Directory):
             response = quixote.get_response()
             response.set_status(404)
             return "No such feed"
-
-        request = quixote.get_request()
-        base_url = request.get_url(4)
 
         package_url = base_url + '/' + package_url_template
         per_result_url = base_url + '/' + per_result_url_template
@@ -376,6 +381,7 @@ def run(host, port, dbfilename):
     wsgi_app = create_publisher(pbs_app)
 
     the_server = server.create(host, port, pbs_app, wsgi_app)
+    set_base_url(host, port)
 
     try:
         print 'serving on host %s, port %d, path /xmlrpc' % (host, port)
