@@ -9,6 +9,10 @@ SERVER='XXX'
 
 build_snoopers = {}
 
+def add_snooper(snooper, key):
+    assert key not in build_snoopers
+    build_snoopers[key] = snooper
+
 def register_snooper_for_package(package, snooper):
     pass
 
@@ -16,17 +20,25 @@ def check_new_builds(*build_keylist):
     pass
 
 class BuildSnooper(object):
-    def generate_rss(self, pb_coord):
+    def generate_rss(self, pb_coord, base_url):
         pass
     
     def is_match(self, receipt, client_info, results):
         pass
 
 class PackageSnooper(BuildSnooper):
-    def __init__(self, package_name):
+    def __init__(self, package_name, only_failures=False):
         self.package_name = package_name
+        self.report_successes = not only_failures
 
-    def generate_rss(self, pb_coord):
+    def __str__(self):
+        modifier = 'failed'
+        if self.report_successes:
+            modifier = 'all'
+        return "Report on %s builds for package '%s'" % (modifier,
+                                                         self.package_name,)
+
+    def generate_rss(self, pb_coord, base_url):
         packages = pb_coord.get_unique_tagsets_for_package(self.package_name)
 
         def sort_by_timestamp(a, b):
@@ -35,6 +47,10 @@ class PackageSnooper(BuildSnooper):
             return -cmp(ta, tb)
 
         it = packages.items()
+
+        if not self.report_successes:
+            it = [ (k, v) for (k, v) in it if not v[1]['success'] ]
+        
         it.sort(sort_by_timestamp)
 
         rss_items = []
@@ -56,7 +72,7 @@ class PackageSnooper(BuildSnooper):
 
             pubDate = datetime.datetime.fromtimestamp(v[0]['time'])
 
-            link = '%s/%s/detail?result_key=%s' % (SERVER, self.package_name,
+            link = '%s/%s/detail?result_key=%s' % (base_url, self.package_name,
                                                    result_key)
             item = RSSItem(title=title,
                            link=link,
@@ -67,7 +83,7 @@ class PackageSnooper(BuildSnooper):
 
         rss = PSHB_RSS2(
             title = "pony-build feed for %s" % (self.package_name,),
-            link = '%s/%s/' % (SERVER, self.package_name),
+            link = '%s/%s/' % (base_url, self.package_name),
             description = 'package build & test information for "%s"' \
                 % self.package_name,
 

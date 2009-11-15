@@ -22,7 +22,7 @@ SERVER='http://lyorn.idyll.org:8088'
 ###
 
 from .util import env, templatesdir
-from .rss import PackageSnooper
+from . import rss
 from ..coordinator import build_tagset
 
 day_diff = datetime.timedelta(1)
@@ -54,7 +54,7 @@ class QuixoteWebApp(Directory):
 
         #self.pshb_list = ['http://pubsubhubbub.appspot.com']
         self.pshb_list = []
-        self.rss2 = RSS2FeedDirectory()
+        self.rss2 = RSS2FeedDirectory(coord)
 
     def recv_file(self):
         request = quixote.get_request()
@@ -113,11 +113,27 @@ def create_publisher(coordinator):
 class RSS2FeedDirectory(Directory):
     _q_exports = [ '' ]
 
+    def __init__(self, coord):
+        self.coord = coord
+
     def _q_index(self):
-        return "this is index, hear me roar"
+        feeds = []
+        for k in rss.build_snoopers:
+            snooper = rss.build_snoopers[k]
+            feeds.append((k, str(snooper)))
+            
+        template = env.get_template('feed_index.html')
+        return template.render(locals()).encode('latin-1', 'replace')
     
     def _q_lookup(self, component):
-        return "hello, %s" % (component,)
+        try:
+            snooper = rss.build_snoopers[component]
+        except KeyError:
+            response = quixote.get_response()
+            response.set_status(404)
+            return "404: no such component"
+
+        return snooper.generate_rss(self.coord, SERVER)
 
 ###
 
@@ -252,8 +268,8 @@ class PackageInfo(Directory):
         return quixote.redirect('./')
 
     def rss2(self):
-        snooper = PackageSnooper(self.package)
-        xml = snooper.generate_rss(self.coord)
+        snooper = rss.PackageSnooper(self.package)
+        xml = snooper.generate_rss(self.coord, SERVER)
 
         response = quixote.get_response()
         response.set_content_type('text/xml')
@@ -266,6 +282,16 @@ def run(host, port, dbfilename):
     from .. import server, coordinator, dbsqlite
     dbfile = dbsqlite.open_shelf(dbfilename)
     dbfile = coordinator.IntDictWrapper(dbfile)
+
+    ###
+
+    snooper = rss.PackageSnooper('pygr')
+    rss.add_snooper(snooper, 'foo')
+
+    snooper = rss.PackageSnooper('pygr', only_failures=True)
+    rss.add_snooper(snooper, 'fib')
+
+    ###
 
     pbs_app = coordinator.PonyBuildCoordinator(db=dbfile)
     wsgi_app = create_publisher(pbs_app)
