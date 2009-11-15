@@ -44,7 +44,7 @@ def format_timestamp(t):
     return dt.strftime("%A, %d %B %Y, %I:%M %p")
 
 class QuixoteWebApp(Directory):
-    _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2']
+    _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p']
 
     def __init__(self, coord):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
@@ -55,6 +55,7 @@ class QuixoteWebApp(Directory):
         #self.pshb_list = ['http://pubsubhubbub.appspot.com']
         self.pshb_list = []
         self.rss2 = RSS2FeedDirectory(coord)
+        self.p = PackageDirectory(coord)
 
     def recv_file(self):
         request = quixote.get_request()
@@ -98,15 +99,28 @@ class QuixoteWebApp(Directory):
         response.set_content_type('text/css')
         return open(cssfile).read()
 
-    def _q_lookup(self, component):
-        return PackageInfo(self.coord, component)
-
 def create_publisher(coordinator):
     # sets global Quixote publisher
     Publisher(QuixoteWebApp(coordinator), display_exceptions='plain')
 
     # return a WSGI wrapper for the Quixote Web app.
     return quixote.get_wsgi_app()
+
+###
+
+class PackageDirectory(Directory):
+    _q_exports = [ '' ]
+
+    def __init__(self, coord):
+        self.coord = coord
+
+    def _q_index(self):
+        request = quixote.get_request()
+        response = quixote.get_response()
+        response.redirect(request.get_url(2))
+
+    def _q_lookup(self, component):
+        return PackageInfo(self.coord, component)
 
 ###
 
