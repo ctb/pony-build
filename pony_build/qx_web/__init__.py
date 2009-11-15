@@ -111,10 +111,11 @@ def create_publisher(coordinator):
 ###
 
 class RSS2FeedDirectory(Directory):
-    _q_exports = [ '' ]
+    _q_exports = [ '', '_generic' ]
 
     def __init__(self, coord):
         self.coord = coord
+        self._generic = RSS2_GenericFeeds(self.coord)
 
     def _q_index(self):
         feeds = []
@@ -134,6 +135,63 @@ class RSS2FeedDirectory(Directory):
             return "404: no such component"
 
         return snooper.generate_rss(self.coord, SERVER)
+
+class RSS2_GenericFeeds(Directory):
+    _q_exports = [ '', 'redirect' ]
+    
+    def __init__(self, coord):
+        self.coord = coord
+
+    def _q_index(self):
+        return """<form method="POST" action="redirect">Package to monitor? <input type="text" name="package"> <input type="submit"></form>"""
+
+    def redirect(self):
+        request = quixote.get_request()
+        response = quixote.get_response()
+        url = request.get_url(1)
+        
+        form = request.form
+        if 'package' in form:
+            package = form['package'].strip()
+            if package:
+                return response.redirect('%s/%s/' % (url, package))
+
+        return response.redirect('%s' % (url,))
+
+    def _q_lookup(self, package):
+        return RSS2_GenericPackageFeeds(self.coord, package)
+
+class RSS2_GenericPackageFeeds(Directory):
+    _q_exports = [ '' ]
+
+    def __init__(self, coord, package):
+        self.coord = coord
+        self.package = package
+    
+    def _q_index(self):
+        request = quixote.get_request()
+        package = self.package
+
+        return '''Generic package feeds for package '%(package)s':<p><ul><li><A href='./all'>All builds</a><li><A href='./failed'>Failed builds</a>''' % locals()
+    
+    def _q_lookup(self, component):
+        if component == 'all':
+            snooper = rss.PackageSnooper(self.package)
+        elif component == 'failed':
+            snooper = rss.PackageSnooper(self.package, only_failures=True)
+#        elif component == 'no_recent_build':
+#            pass
+        else:
+            response = quixote.get_response()
+            response.set_status(404)
+            return "No such feed"
+
+        xml = snooper.generate_rss(self.coord, SERVER)
+
+        response = quixote.get_response()
+        response.set_content_type('text/xml')
+        
+        return xml
 
 ###
 

@@ -255,3 +255,11 @@ be able to create RSS feed for one or more packages that lets you:
  - be notified of all builds, or only failed ones
  - be notified if there has been no build within a particular time
  - ...etc.
+ - pshb notify for these...
+
+
+should we generically RSS feed *all* builds or just the latest?  Probably
+truer to RSS to do all... but...?
+
+better info in report...
+
