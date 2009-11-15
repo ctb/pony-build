@@ -4,8 +4,12 @@ import _mypath
 import shelve
 from pony_build import coordinator, dbsqlite
 
-package = sys.argv[1]
-dbfile = dbsqlite.open_shelf(sys.argv[2])
+if len(sys.argv) != 5:
+    print 'Usage: %s <dbfile> <package> <arch> <tags>' % sys.argv[0]
+    sys.exit(0)
+
+dbfile = dbsqlite.open_shelf(sys.argv[1])
+package = sys.argv[2]
 dbfile = coordinator.IntDictWrapper(dbfile)
 
 arch = sys.argv[3]

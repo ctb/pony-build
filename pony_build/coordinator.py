@@ -6,7 +6,6 @@ pony_build.server.get_coordinator().
 """
 
 import time
-import sets
 from datetime import datetime, timedelta
 import UserDict
 
@@ -56,7 +55,7 @@ def build_tagset(client_info, no_arch=False, no_host=False):
     if not no_host:
         tags.append('__host=' + host)
 
-    tagset = sets.ImmutableSet(tags)
+    tagset = frozenset(tags)
     return tagset
 
 class PonyBuildCoordinator(object):
