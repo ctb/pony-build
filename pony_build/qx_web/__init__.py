@@ -18,19 +18,10 @@ import traceback
 
 ###
 
-base_url = None
-
-def set_base_url(host, port, script_name=''):
-    global base_url
-    
-    if not host.strip():
-        host = 'localhost'
-    base_url = 'http://%s:%s' % (host, port)
-    if script_name:
-        base_url += '/' + script_name.strip('/')
+_base_url = None
 
 named_rss_feed_url = '/rss2/%(feedname)s'
-
+generic_rss_feed_root = '/rss2/_generic/%(package)s/'
 package_url_template = 'p/%(package)s/'
 per_result_url_template = 'p/%(package)s/detail?result_key=%(result_key)s'
 
@@ -87,14 +78,33 @@ class QuixoteWebApp(Directory):
         self.notify_result_added(16)
 
     def notify_result_added(self, result_key):
+        """
+        Notify pubsubhubbub servers of any changes to the RSS feeds.
+        """
+        # first, find any registered snoopers that care about this new build
         snooper_keys = rss.check_new_builds(self.coord, result_key)
         print '***', snooper_keys
 
         urls = set()
         for key in snooper_keys:
-            feed_url = base_url + named_rss_feed_url % dict(feedname=key)
+            feed_url = _base_url + named_rss_feed_url % dict(feedname=key)
             urls.add(feed_url)
 
+        # next, construct the generic feed URLs that will have changed
+        receipt, client_info, results = self.coord.db_get_result_info(result_key)
+        package = client_info['package']
+
+        generic_url = _base_url + generic_rss_feed_root % dict(package=package)
+
+        all_url = generic_url + 'all'
+        urls.add(all_url)
+        
+        if not client_info['success']:
+            # also notify 'failed'
+            failed_url = generic_url + 'failed'
+            urls.add(failed_url)
+
+        # finally, NOTIFY pubsubhubbub servers of the changed URLs.
         urls = list(urls)
         for pshb_server in self.pshb_list:
             rss.notify_pubsubhubbub_server(pshb_server, *urls)
@@ -162,8 +172,8 @@ class RSS2FeedDirectory(Directory):
             response.set_status(404)
             return "404: no such component"
 
-        package_url = base_url + '/' + package_url_template
-        per_result_url = base_url + '/' + per_result_url_template
+        package_url = _base_url + '/' + package_url_template
+        per_result_url = _base_url + '/' + per_result_url_template
 
         return snooper.generate_rss(self.coord, package_url, per_result_url)
 
@@ -218,8 +228,8 @@ class RSS2_GenericPackageFeeds(Directory):
             response.set_status(404)
             return "No such feed"
 
-        package_url = base_url + '/' + package_url_template
-        per_result_url = base_url + '/' + per_result_url_template
+        package_url = _base_url + '/' + package_url_template
+        per_result_url = _base_url + '/' + per_result_url_template
 
         xml = snooper.generate_rss(self.coord, package_url, per_result_url)
 
@@ -362,7 +372,17 @@ class PackageInfo(Directory):
 
 ###
 
-def run(host, port, dbfilename):
+def calculate_base_url(host, port, script_name=''):
+    if not host.strip():
+        host = 'localhost'
+    base_url = 'http://%s:%s' % (host, port)
+    if script_name:
+        base_url += '/' + script_name.strip('/')
+
+    return base_url
+
+def run(host, port, dbfilename, public_url=None):
+    global _base_url
     from .. import server, coordinator, dbsqlite
     dbfile = dbsqlite.open_shelf(dbfilename)
     dbfile = coordinator.IntDictWrapper(dbfile)
@@ -381,10 +401,14 @@ def run(host, port, dbfilename):
     wsgi_app = create_publisher(pbs_app)
 
     the_server = server.create(host, port, pbs_app, wsgi_app)
-    set_base_url(host, port)
+    if public_url is None:
+        _base_url = calculate_base_url(host, port)
+    else:
+        _base_url = public_url.rstrip('/')
 
     try:
         print 'serving on host %s, port %d, path /xmlrpc' % (host, port)
+        print 'public URL set to:', _base_url
         the_server.serve_forever()
     except KeyboardInterrupt:
         print 'exiting'

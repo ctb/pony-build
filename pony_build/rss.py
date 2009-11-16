@@ -183,6 +183,11 @@ class PackageSnooper(BuildSnooper):
     def is_match(self, *args):
         (receipt, client_info, results) = args
         assert self.package_name == client_info['package']
+        success = client_info['success']
+        
+        if not self.report_successes and success:
+            return False
+            
         return True
 
 ###
