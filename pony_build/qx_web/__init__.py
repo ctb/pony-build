@@ -291,7 +291,6 @@ class PackageInfo(Directory):
             return quote_plus(str(x))
         
         def calc_status(status):
-            print 'STATUS:', status
             if status:
                 return "<font color='green'>SUCCESS</font>"
             else:
