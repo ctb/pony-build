@@ -3,8 +3,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     {% block head %}
-    <link rel="stylesheet" href="./css" />
-    <title>{% block title %}{% endblock %} - pony-build</title>
+      {% block css %}
+       <link rel="stylesheet" href="./css" />
+      {% endblock css %}
+       <title>{% block title %}{% endblock %} - pony-build</title>
     {% endblock %}
 </head>
 <body>

@@ -191,7 +191,8 @@ class RSS2_GenericFeeds(Directory):
         self.coord = coord
 
     def _q_index(self):
-        return """<form method="POST" action="redirect">Package to monitor? <input type="text" name="package"> <input type="submit"></form>"""
+        template = env.get_template('feed_generic_index.html')
+        return template.render().encode('latin-1', 'replace')
 
     def redirect(self):
         request = quixote.get_request()
@@ -219,8 +220,8 @@ class RSS2_GenericPackageFeeds(Directory):
     def _q_index(self):
         request = quixote.get_request()
         package = self.package
-
-        return '''Generic package feeds for package '%(package)s':<p><ul><li><A href='./all'>All builds</a><li><A href='./failed'>Failed builds</a>''' % locals()
+        template = env.get_template('feed_generic_package_index.html')
+        return template.render(locals()).encode('latin-1', 'replace')
     
     def _q_lookup(self, component):
         if component == 'all':
