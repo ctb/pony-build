@@ -58,11 +58,11 @@ class QuixoteWebApp(Directory):
         snooper_keys = rss.check_new_builds(self.coord, result_key)
         print '***', snooper_keys
 
-        urls = set()
+        feed_urls = set()
         for key in snooper_keys:
             feed_url = urls.base_url + urls.named_rss_feed_url % \
                        dict(feedname=key)
-            urls.add(feed_url)
+            feed_urls.add(feed_url)
 
         # next, construct the generic feed URLs that will have changed
         receipt, client_info, results = self.coord.db_get_result_info(result_key)
@@ -72,17 +72,17 @@ class QuixoteWebApp(Directory):
                       dict(package=package)
 
         all_url = generic_url + 'all'
-        urls.add(all_url)
+        feed_urls.add(all_url)
         
         if not client_info['success']:
             # also notify 'failed'
             failed_url = generic_url + 'failed'
-            urls.add(failed_url)
+            feed_urls.add(failed_url)
 
         # finally, NOTIFY pubsubhubbub servers of the changed URLs.
-        urls = list(urls)
+        feed_urls = list(feed_urls)
         for pshb_server in self.pshb_list:
-            rss.notify_pubsubhubbub_server(pshb_server, *urls)
+            rss.notify_pubsubhubbub_server(pshb_server, *feed_urls)
 
     def _q_index(self):
         packages = self.coord.get_all_packages()

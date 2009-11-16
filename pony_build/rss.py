@@ -23,6 +23,7 @@ canonical URLs
 """
 
 import datetime
+import traceback
 from cStringIO import StringIO
 from .PyRSS2Gen import RSS2, RSSItem, _element, Guid
 from .pubsubhubbub_publish import publish as pshb_publish, PublishError
@@ -86,7 +87,7 @@ def notify_pubsubhubbub_server(server, *rss_urls):
         print '*** notifying pshb server: %s' % server, rss_urls
         return True
     except PublishError, e:
-        print 'error notifying pshb server %s' % (pshb_server,)
+        print 'error notifying pshb server %s' % (server,)
         traceback.print_exc()
         
     return False
