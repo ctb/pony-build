@@ -52,13 +52,14 @@ def format_timestamp(t):
 class QuixoteWebApp(Directory):
     _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p', 'test']
 
-    def __init__(self, coord):
+    def __init__(self, coord, pshb_list=[]):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
 
         # get notified of new results by the coordinator...
         self.coord.add_listener(self)
 
-        self.pshb_list = ['http://pubsubhubbub.appspot.com']
+        print 'PPP', pshb_list
+        self.pshb_list = list(pshb_list)
         self.rss2 = RSS2FeedDirectory(coord)
         self.p = PackageDirectory(coord)
 
@@ -123,9 +124,15 @@ class QuixoteWebApp(Directory):
         response.set_content_type('text/css')
         return open(cssfile).read()
 
-def create_publisher(coordinator):
+def create_publisher(coordinator, pubsubhubbub_server=None):
+    pshb_list = []
+    if pubsubhubbub_server:
+        pshb_list.append(pubsubhubbub_server)
+        
+    qx_app = QuixoteWebApp(coordinator, pshb_list)
+    
     # sets global Quixote publisher
-    Publisher(QuixoteWebApp(coordinator), display_exceptions='plain')
+    Publisher(qx_app, display_exceptions='plain')
 
     # return a WSGI wrapper for the Quixote Web app.
     return quixote.get_wsgi_app()
@@ -381,7 +388,7 @@ def calculate_base_url(host, port, script_name=''):
 
     return base_url
 
-def run(host, port, dbfilename, public_url=None):
+def run(host, port, dbfilename, public_url=None, pubsubhubbub_server=None):
     global _base_url
     from .. import server, coordinator, dbsqlite
     dbfile = dbsqlite.open_shelf(dbfilename)
@@ -398,7 +405,7 @@ def run(host, port, dbfilename, public_url=None):
     ###
 
     pbs_app = coordinator.PonyBuildCoordinator(db=dbfile)
-    wsgi_app = create_publisher(pbs_app)
+    wsgi_app = create_publisher(pbs_app, pubsubhubbub_server)
 
     the_server = server.create(host, port, pbs_app, wsgi_app)
     if public_url is None:

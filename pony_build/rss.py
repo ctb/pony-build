@@ -82,7 +82,7 @@ def notify_pubsubhubbub_server(server, *rss_urls):
     
     """
     try:
-        #pshb_publish(server, *rss_urls)
+        pshb_publish(server, *rss_urls)
         print '*** notifying pshb server: %s' % server, rss_urls
         return True
     except PublishError, e:
