@@ -285,6 +285,7 @@ class PackageInfo(Directory):
     def show_all(self):
         package = self.package
         all_results = self.coord.get_all_results_for_package(package)
+        all_results.reverse()
 
         def qp(x):
             return quote_plus(str(x))
