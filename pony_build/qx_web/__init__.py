@@ -10,44 +10,16 @@ pkg_resources.require('Quixote>=2.6')
 import quixote
 from quixote.directory import Directory
 from quixote.publish import Publisher
-from jinja2 import Template
 from urllib import quote_plus
-import datetime
 import pprint
-import traceback
 
 ###
 
-_base_url = None
+from .util import env, templatesdir, format_timestamp
+from . import urls
 
-named_rss_feed_url = '/rss2/%(feedname)s'
-generic_rss_feed_root = '/rss2/_generic/%(package)s/'
-package_url_template = 'p/%(package)s/'
-per_result_url_template = 'p/%(package)s/detail?result_key=%(result_key)s'
-
-###
-
-from .util import env, templatesdir
 from .. import rss
 from ..coordinator import build_tagset
-
-day_diff = datetime.timedelta(1)
-hour_diff = datetime.timedelta(0, 3600)
-min_diff = datetime.timedelta(0, 60)
-
-def format_timestamp(t):
-    dt = datetime.datetime.fromtimestamp(t)
-    now = datetime.datetime.now()
-
-    diff = now - dt
-    if diff < min_diff:
-        return dt.strftime("less than a minute ago (%I:%M %p)")
-    elif diff < hour_diff:
-        return dt.strftime("less than an hour ago (%I:%M %p)")
-    elif diff < day_diff:
-        return dt.strftime("less than a day ago (%I:%M %p)")
-    
-    return dt.strftime("%A, %d %B %Y, %I:%M %p")
 
 class QuixoteWebApp(Directory):
     _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p', 'test']
@@ -88,14 +60,16 @@ class QuixoteWebApp(Directory):
 
         urls = set()
         for key in snooper_keys:
-            feed_url = _base_url + named_rss_feed_url % dict(feedname=key)
+            feed_url = urls.base_url + urls.named_rss_feed_url % \
+                       dict(feedname=key)
             urls.add(feed_url)
 
         # next, construct the generic feed URLs that will have changed
         receipt, client_info, results = self.coord.db_get_result_info(result_key)
         package = client_info['package']
 
-        generic_url = _base_url + generic_rss_feed_root % dict(package=package)
+        generic_url = urls.base_url + urls.generic_rss_feed_root % \
+                      dict(package=package)
 
         all_url = generic_url + 'all'
         urls.add(all_url)
@@ -179,8 +153,8 @@ class RSS2FeedDirectory(Directory):
             response.set_status(404)
             return "404: no such component"
 
-        package_url = _base_url + '/' + package_url_template
-        per_result_url = _base_url + '/' + per_result_url_template
+        package_url = urls.base_url + '/' + urls.package_url_template
+        per_result_url = urls.base_url + '/' + urls.per_result_url_template
 
         return snooper.generate_rss(self.coord, package_url, per_result_url)
 
@@ -238,8 +212,8 @@ class RSS2_GenericPackageFeeds(Directory):
             response.set_status(404)
             return "No such feed"
 
-        package_url = _base_url + '/' + package_url_template
-        per_result_url = _base_url + '/' + per_result_url_template
+        package_url = urls.base_url + '/' + urls.package_url_template
+        per_result_url = urls.base_url + '/' + urls.per_result_url_template
 
         xml = snooper.generate_rss(self.coord, package_url, per_result_url)
 
@@ -382,17 +356,7 @@ class PackageInfo(Directory):
 
 ###
 
-def calculate_base_url(host, port, script_name=''):
-    if not host.strip():
-        host = 'localhost'
-    base_url = 'http://%s:%s' % (host, port)
-    if script_name:
-        base_url += '/' + script_name.strip('/')
-
-    return base_url
-
 def run(host, port, dbfilename, public_url=None, pubsubhubbub_server=None):
-    global _base_url
     from .. import server, coordinator, dbsqlite
     dbfile = dbsqlite.open_shelf(dbfilename)
     dbfile = coordinator.IntDictWrapper(dbfile)
@@ -412,13 +376,14 @@ def run(host, port, dbfilename, public_url=None, pubsubhubbub_server=None):
 
     the_server = server.create(host, port, pbs_app, wsgi_app)
     if public_url is None:
-        _base_url = calculate_base_url(host, port)
+        url = urls.calculate_base_url(host, port)
     else:
-        _base_url = public_url.rstrip('/')
+        url = public_url.rstrip('/')
+    urls.set_base_url(url)
 
     try:
         print 'serving on host %s, port %d, path /xmlrpc' % (host, port)
-        print 'public URL set to:', _base_url
+        print 'public URL set to:', url
         the_server.serve_forever()
     except KeyboardInterrupt:
         print 'exiting'
