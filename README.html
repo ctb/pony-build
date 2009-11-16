@@ -403,9 +403,14 @@ core of the notification system built into pony_build; the &quot;officially
 correct&quot; way to actively notify interested people of build results is
 to publish them via RSS2, push them to a pubsubhubbub server, and let
 someone else deal with translating those into e-mail alerts, etc.</p>
+<p>All of the RSS feeds that pony-build makes available can be posted to
+pubsubhubbub with the proper configuration (see -P and -S options to
+<tt class="docutils literal"><span class="pre">pony_build.qx_web.run</span></tt>).  A simple example CGI callback script is
+in <tt class="docutils literal"><span class="pre">examples/pshb_cgi_subscriber.cgi</span></tt> in the pony-build source
+distribution.</p>
 <p>Note that there are also utility functions in <tt class="docutils literal"><span class="pre">pony_build.rss</span></tt> for
 helping to create RSS2 feeds and notify pubsubhubbub servers of
-new results.</p>
+new results</p>
 </div>
 </div>
 <div class="section">
