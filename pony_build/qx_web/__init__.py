@@ -220,6 +220,8 @@ class RSS2_GenericPackageFeeds(Directory):
     def _q_index(self):
         request = quixote.get_request()
         package = self.package
+        package_exists = (self.package in self.coord.get_all_packages())
+        
         template = env.get_template('feed_generic_package_index.html')
         return template.render(locals()).encode('latin-1', 'replace')
     
