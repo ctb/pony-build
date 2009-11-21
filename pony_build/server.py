@@ -48,6 +48,12 @@ def add_results(client_info, results):
 
     return key
 
+def get_results(results_key):
+    x = _coordinator.db_get_result_info(results_key)
+    (receipt, client_info, results) = x
+
+    return x
+
 def check_should_build(client_info, reserve_build=True, build_allowance=0):
     """
     Should a client build, according to the server?
@@ -198,6 +204,7 @@ def create(interface, port, pbs_coordinator, wsgi_app):
     _coordinator = pbs_coordinator
     
     server.register_function(add_results)
+    server.register_function(get_results)
     server.register_function(check_should_build)
     server.register_function(get_tagsets_for_package)
     server.register_function(get_last_result_for_tagset)
