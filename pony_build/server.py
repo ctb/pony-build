@@ -3,8 +3,8 @@ A combined XML-RPC + WSGI server for pony-build, based on wsgiref.
 
 This is a hacked implementation that combines SimpleXMLRPCServer with
 a wsgiref WSGIServer, redirecting all requests to '/xmlrpc' into
-SimpleXMLRPCServer and letting wsgiref pass the rest on to a WSGI
-application.
+SimpleXMLRPCServer, handling uploads of raw files into '/upload', and
+letting wsgiref pass the rest on to a WSGI application.
 
 One nice feature of this is that you can swap out the Web UI
 completely without affecting the RPC functionality; and, since all of
