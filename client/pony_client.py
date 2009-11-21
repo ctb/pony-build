@@ -491,16 +491,18 @@ def get_arch():
 def _send(server, info, results):
     print 'connecting to', server
     s = xmlrpclib.ServerProxy(server, allow_none=True)
-    s.add_results(info, results)
+    auth_key = s.add_results(info, results)
+    return str(auth_key)
 
-def _upload_file(server_url, fileobj):
+def _upload_file(server_url, fileobj, auth_key):
     # @CTB make sure files can't be uploaded from elsewhere on system?
     # @CTB hack hack
     assert server_url.endswith('xmlrpc')
     upload_url = server_url[:-6] + 'upload'
 
     qs = urllib.urlencode(dict(description=fileobj.description,
-                               filename=fileobj.description))
+                               filename=fileobj.filename,
+                               auth_key=str(auth_key)))
     upload_url += '?' + qs
 
     print 'XXX', upload_url
@@ -561,12 +563,12 @@ def send(server_url, x, hostname=None, tags=()):
 
     server_url = get_server_url(server_url)
     print 'using server URL:', server_url
-    _send(server_url, client_info, reslist)
+    auth_key = _send(server_url, client_info, reslist)
 
     if files_to_upload:
         for fileobj in files_to_upload:
             print 'uploading', fileobj
-            _upload_file(server_url, fileobj)
+            _upload_file(server_url, fileobj, auth_key)
 
 def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
     if hostname is None:

@@ -41,12 +41,12 @@ def add_results(client_info, results):
         d.keys()
 
     try:
-        _coordinator.add_results(client_ip, client_info, results)
+        key = _coordinator.add_results(client_ip, client_info, results)
     except:
         traceback.print_exc()
         raise
 
-    return 1
+    return key
 
 def check_should_build(client_info, reserve_build=True, build_allowance=0):
     """
@@ -96,7 +96,58 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
     
     MAX_CONTENT_LENGTH = 5*1000*1000    # allow only 5 mb at a time.
 
+    def _send_html_response(self, code, message):
+        self.send_response(code)
+        self.send_header('Content-type', 'text/html')
+        self.send_header('Content-length', str(len(message)))
+        self.end_headers()
+
+        self.wfile.write(message)
+        self.wfile.close()
+
+    def _handle_upload(self):
+        url, qs = self.path.split('?', 1)
+        qs = parse_qs(qs)
+
+        try:
+            description = qs.get('description')[0]
+            filename = qs.get('filename')[0]
+            auth_key = qs.get('auth_key')[0]
+        except (TypeError, ValueError, KeyError):
+            message = 'upload attempt, but missing filename, description, or auth_key!?'
+            self._send_html_response(400, message)
+            return
+
+        content_length = self.headers.getheader('content-length')
+        if content_length:
+            content_length = int(content_length)
+            data = self.rfile.read(content_length)
+            print 'XX', 'server got upload content:', len(data)
+            print 'XX', 'filename:', filename
+            print 'XX', 'description:', description
+
+            code = 401
+            message = "you are not auth to upload files!"
+
+            if _coordinator.db_add_uploaded_file(auth_key,
+                                                 filename,
+                                                 data,
+                                                 description):
+                code = 200
+                message = ''
+        else:
+            code = 400
+            message = 'upload attempt, but no upload content?!'
+
+        self._send_html_response(code, message)
+
     def handle(self):
+        """
+        Handle:
+          /xmlrpc => SimpleXMLRPCServer
+          /upload => self._handle_upload
+          all else => WSGI app for Web UI
+        """
         self.raw_requestline = self.rfile.readline()
         if not self.parse_request(): # An error code has been sent, just exit
             return
@@ -112,14 +163,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
 
         if content_length > self.MAX_CONTENT_LENGTH:
             message = "403 FORBIDDEN: You're trying to upload %d bytes; we only allow %d per request." % (content_length, self.MAX_CONTENT_LENGTH)
-            
-            self.send_response(403)
-            self.send_header('Content-type', 'text/html')
-            self.send_header('Content-length', str(len(message)))
-            self.end_headers()
-            
-            self.wfile.write(message)
-            self.wfile.close()
+            self._send_html_response(403, message)
             return
 
         if SimpleXMLRPCRequestHandler.is_rpc_path_valid(self):
@@ -127,53 +171,11 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             global client_ip
             client_ip = self.client_address[0]
             return SimpleXMLRPCRequestHandler.do_POST(self)
-
+        
         elif self.path.startswith('/upload?'):
-            url, qs = self.path.split('?', 1)
-            qs = parse_qs(qs)
+            return self._handle_upload()
 
-            try:
-                description = qs.get('description')[0]
-                filename = qs.get('filename')[0]
-            except (TypeError, ValueError, KeyError):
-                message = 'upload attempt, but no filename or description!?'
-                self.send_response(400)
-                self.send_header('Content-type', 'text/html')
-                self.send_header('Content-length', str(len(message)))
-                self.end_headers()
-
-                self.wfile.write(message)
-                self.wfile.close()
-                return
-            
-            content_length = self.headers.getheader('content-length')
-
-            data = ""
-            if content_length:
-                content_length = int(content_length)
-                data = self.rfile.read(content_length)
-                print 'XX', 'server got upload content:', len(data)
-                print 'XX', 'filename:', filename
-                print 'XX', 'description:', description
-
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html')
-                self.send_header('Content-length', '0')
-                self.end_headers()
-                
-                self.wfile.write('')
-                self.wfile.close()
-            else:
-                message = 'upload attempt, but no upload content?!'
-                self.send_response(400)
-                self.send_header('Content-type', 'text/html')
-                self.send_header('Content-length', str(len(message)))
-                self.end_headers()
-
-                self.wfile.write(message)
-                self.wfile.close()
-                
-            return
+        ## else:
 
         handler = ServerHandler(
             self.rfile, self.wfile, self.get_stderr(), self.get_environ(),

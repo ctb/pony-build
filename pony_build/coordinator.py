@@ -89,7 +89,9 @@ class PonyBuildCoordinator(object):
 
         for x in self.listeners:
             x.notify_result_added(key)
-            
+
+        # @CTB should return an auth key to allow changes to this record,
+        # not just the record #... INSECURE.
         return key
 
     def set_request_build(self, client_info, value):
@@ -190,6 +192,17 @@ class PonyBuildCoordinator(object):
         self.db.sync()
 
         return next_key
+
+    def db_add_uploaded_file(self, auth_key, filename, content, description):
+        if auth_key not in self.db:
+            return False
+        
+        print 'YY', auth_key
+        print 'YY', filename
+        print 'YY', len(content)
+        print 'YY', description
+        
+        return True
 
     def get_all_packages(self):
         k = self._packages.keys()
