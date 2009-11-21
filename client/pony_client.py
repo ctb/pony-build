@@ -84,6 +84,11 @@ class FileToUpload(object):
         self.location = location
         self.description = description
 
+    def __repr__(self):
+        return "<FileToUpload('%s', '%s', '%s')>" % (self.filename,
+                                                     self.location,
+                                                     self.description)
+
 class Context(object):
     def __init__(self):
         self.history = []
@@ -109,7 +114,6 @@ class Context(object):
 
     def add_file_to_upload(self, name, location, description):
         o = FileToUpload(name, location, description)
-        print 'ZZ', name, location, description
         self.files.append(o)
 
 class TempDirectoryContext(Context):
@@ -178,6 +182,9 @@ class VirtualenvContext(Context):
         info['virtualenv'] = True
 
 class UploadAFile(object):
+    """
+    @CTB add glob support
+    """
     def __init__(self, filepath, public_name, description):
         self.filepath = os.path.realpath(filepath)
         self.public_name = public_name
@@ -492,14 +499,8 @@ def _upload_file(server_url, fileobj):
     assert server_url.endswith('xmlrpc')
     upload_url = server_url[:-6] + 'upload'
 
-    print fileobj.filename
-    print fileobj.location
-    print fileobj.description
-
     try:
         data = open(fileobj.location, 'rb').read()
-        print upload_url
-        print len(data)
         http_result = urllib.urlopen(upload_url, data)
     except:
         print 'file upload failed:', fileobj
@@ -558,7 +559,7 @@ def send(server_url, x, hostname=None, tags=()):
 
     if files_to_upload:
         for fileobj in files_to_upload:
-            print 'XX', fileobj
+            print 'uploading', fileobj
             _upload_file(server_url, fileobj)
 
 def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
