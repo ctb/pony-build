@@ -499,6 +499,12 @@ def _upload_file(server_url, fileobj):
     assert server_url.endswith('xmlrpc')
     upload_url = server_url[:-6] + 'upload'
 
+    qs = urllib.urlencode(dict(description=fileobj.description,
+                               filename=fileobj.description))
+    upload_url += '?' + qs
+
+    print 'XXX', upload_url
+
     try:
         data = open(fileobj.location, 'rb').read()
         http_result = urllib.urlopen(upload_url, data)

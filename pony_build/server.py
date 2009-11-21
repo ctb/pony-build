@@ -18,6 +18,11 @@ from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
      ServerHandler
 
+try:
+    from urlparse import parse_qs
+except ImportError:
+    from cgi import parse_qs
+
 ### public XML-RPC API.
 
 client_ip = None
@@ -88,10 +93,33 @@ class PonyBuildServer(WSGIServer, SimpleXMLRPCDispatcher):
 
 class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
     rpc_paths = ('/xmlrpc',)
+    
+    MAX_CONTENT_LENGTH = 5*1000*1000    # allow only 5 mb at a time.
 
     def handle(self):
         self.raw_requestline = self.rfile.readline()
         if not self.parse_request(): # An error code has been sent, just exit
+            return
+
+        print "SERVER HANDLE: path is '%s'" % self.path
+        
+        content_length = self.headers.getheader('content-length')
+        if not content_length:
+            content_length = 0
+        content_length = int(content_length)
+
+        print 'content length is:', content_length
+
+        if content_length > self.MAX_CONTENT_LENGTH:
+            message = "403 FORBIDDEN: You're trying to upload %d bytes; we only allow %d per request." % (content_length, self.MAX_CONTENT_LENGTH)
+            
+            self.send_response(403)
+            self.send_header('Content-type', 'text/html')
+            self.send_header('Content-length', str(len(message)))
+            self.end_headers()
+            
+            self.wfile.write(message)
+            self.wfile.close()
             return
 
         if SimpleXMLRPCRequestHandler.is_rpc_path_valid(self):
@@ -99,8 +127,25 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             global client_ip
             client_ip = self.client_address[0]
             return SimpleXMLRPCRequestHandler.do_POST(self)
-        elif self.path == '/upload':
-            self.close_connection = 1
+
+        elif self.path.startswith('/upload?'):
+            url, qs = self.path.split('?', 1)
+            qs = parse_qs(qs)
+
+            try:
+                description = qs.get('description')[0]
+                filename = qs.get('filename')[0]
+            except (TypeError, ValueError, KeyError):
+                message = 'upload attempt, but no filename or description!?'
+                self.send_response(400)
+                self.send_header('Content-type', 'text/html')
+                self.send_header('Content-length', str(len(message)))
+                self.end_headers()
+
+                self.wfile.write(message)
+                self.wfile.close()
+                return
+            
             content_length = self.headers.getheader('content-length')
 
             data = ""
@@ -108,14 +153,26 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
                 content_length = int(content_length)
                 data = self.rfile.read(content_length)
                 print 'XX', 'server got upload content:', len(data)
+                print 'XX', 'filename:', filename
+                print 'XX', 'description:', description
 
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.send_header('Content-length', '0')
-            self.end_headers()
-            
-            self.wfile.write('')
-            self.wfile.close()
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.send_header('Content-length', '0')
+                self.end_headers()
+                
+                self.wfile.write('')
+                self.wfile.close()
+            else:
+                message = 'upload attempt, but no upload content?!'
+                self.send_response(400)
+                self.send_header('Content-type', 'text/html')
+                self.send_header('Content-length', str(len(message)))
+                self.end_headers()
+
+                self.wfile.write(message)
+                self.wfile.close()
+                
             return
 
         handler = ServerHandler(
