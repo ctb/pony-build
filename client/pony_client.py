@@ -12,6 +12,7 @@ import shutil
 import os, os.path
 import time
 import urlparse
+import urllib
 import traceback
 from optparse import OptionParser
 import pprint
@@ -72,11 +73,23 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
 
     return (ret, out, err)
 
+class FileToUpload(object):
+    def __init__(self, filename, location, description):
+        """
+        filename - name to publish as
+        location - full location on build system (not sent to server)
+        description - brief description of file/arch for server
+        """
+        self.filename = filename
+        self.location = location
+        self.description = description
+
 class Context(object):
     def __init__(self):
         self.history = []
         self.start_time = self.end_time = None
         self.build_dir = None
+        self.files = []
         
     def initialize(self):
         self.start_time = time.time()
@@ -93,6 +106,11 @@ class Context(object):
 
     def update_client_info(self, info):
         info['duration'] = self.end_time - self.start_time
+
+    def add_file_to_upload(self, name, location, description):
+        o = FileToUpload(name, location, description)
+        print 'ZZ', name, location, description
+        self.files.append(o)
 
 class TempDirectoryContext(Context):
     def __init__(self, cleanup=True):
@@ -159,6 +177,32 @@ class VirtualenvContext(Context):
         info['tempdir'] = self.tempdir
         info['virtualenv'] = True
 
+class UploadAFile(object):
+    def __init__(self, filepath, public_name, description):
+        self.filepath = os.path.realpath(filepath)
+        self.public_name = public_name
+        self.description = description
+
+    def success(self):
+        return os.path.exists(self.filepath)
+
+    def run(self, context):
+        context.add_file_to_upload(self.public_name, self.filepath,
+                                   self.description)
+
+    def get_results(self):
+        try:
+            filesize = os.path.getsize(self.filepath)
+        except OSError:
+            filesize = -1
+            
+        results = dict(type='file_upload',
+                       description=self.description,
+                       filesize=filesize,
+                       errout="",       # @CTB should be unnecessary!
+                       status=0)        # @CTB should be unnecessary!
+        return results
+
 class BaseCommand(object):
     def __init__(self, command_list, name='', run_cwd=None,
                  subprocess_kwargs=None, ignore_failure=False,
@@ -181,6 +225,9 @@ class BaseCommand(object):
 
         self.ignore_failure = ignore_failure
         self.verbose = verbose
+
+    def __repr__(self):
+        return "%s (%s)" % (self.command_name, self.command_type)
 
     def set_variables(self, v):
         self.variables = dict(v)
@@ -439,6 +486,25 @@ def _send(server, info, results):
     s = xmlrpclib.ServerProxy(server, allow_none=True)
     s.add_results(info, results)
 
+def _upload_file(server_url, fileobj):
+    # @CTB make sure files can't be uploaded from elsewhere on system?
+    # @CTB hack hack
+    assert server_url.endswith('xmlrpc')
+    upload_url = server_url[:-6] + 'upload'
+
+    print fileobj.filename
+    print fileobj.location
+    print fileobj.description
+
+    try:
+        data = open(fileobj.location, 'rb').read()
+        print upload_url
+        print len(data)
+        http_result = urllib.urlopen(upload_url, data)
+    except:
+        print 'file upload failed:', fileobj
+        print traceback.format_exc()
+
 def do(name, commands, context=None, arch=None, stop_if_failure=True):
     reslist = []
 
@@ -446,7 +512,7 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
         context.initialize()
 
     for c in commands:
-        print 'running: %s (%s)' % (c.command_name, c.command_type)
+        print 'running:', c
         if context:
             context.start_command(c)
         c.run(context)
@@ -467,13 +533,18 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
     success = all([ c.success() for c in commands ])
 
     client_info = dict(package=name, arch=arch, success=success)
+    files_to_upload = None
+    
     if context:
         context.update_client_info(client_info)
 
-    return (client_info, reslist)
+        if context.files:
+            files_to_upload = context.files
+
+    return (client_info, reslist, files_to_upload)
 
 def send(server_url, x, hostname=None, tags=()):
-    client_info, reslist = x
+    client_info, reslist, files_to_upload = x
     if hostname is None:
         import socket
         hostname = socket.gethostname()
@@ -484,6 +555,11 @@ def send(server_url, x, hostname=None, tags=()):
     server_url = get_server_url(server_url)
     print 'using server URL:', server_url
     _send(server_url, client_info, reslist)
+
+    if files_to_upload:
+        for fileobj in files_to_upload:
+            print 'XX', fileobj
+            _upload_file(server_url, fileobj)
 
 def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
     if hostname is None:
@@ -605,7 +681,7 @@ if __name__ == '__main__':
 
     context = TempDirectoryContext()
     results = do(package, recipe, context=context, stop_if_failure=False)
-    client_info, reslist = results
+    client_info, reslist, files_list = results
     
     if options.report:
         print 'result: %s; sending' % (client_info['success'],)

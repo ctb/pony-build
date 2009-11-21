@@ -107,6 +107,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             if content_length:
                 content_length = int(content_length)
                 data = self.rfile.read(content_length)
+                print 'XX', 'server got upload content:', len(data)
 
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
