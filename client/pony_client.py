@@ -496,6 +496,7 @@ def _send(server, info, results):
 
 def _upload_file(server_url, fileobj, auth_key):
     # @CTB make sure files can't be uploaded from elsewhere on system?
+    
     # @CTB hack hack
     assert server_url.endswith('xmlrpc')
     upload_url = server_url[:-6] + 'upload'
@@ -504,8 +505,6 @@ def _upload_file(server_url, fileobj, auth_key):
                                filename=fileobj.filename,
                                auth_key=str(auth_key)))
     upload_url += '?' + qs
-
-    print 'XXX', upload_url
 
     try:
         data = open(fileobj.location, 'rb').read()

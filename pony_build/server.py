@@ -128,10 +128,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         if content_length:
             content_length = int(content_length)
             data = self.rfile.read(content_length)
-            print 'XX', 'server got upload content:', len(data)
-            print 'XX', 'filename:', filename
-            print 'XX', 'description:', description
-
+            
             code = 401
             message = "you are not auth to upload files!"
 
