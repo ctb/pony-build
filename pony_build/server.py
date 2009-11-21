@@ -99,6 +99,23 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             global client_ip
             client_ip = self.client_address[0]
             return SimpleXMLRPCRequestHandler.do_POST(self)
+        elif self.path == '/upload':
+            self.close_connection = 1
+            content_length = self.headers.getheader('content-length')
+
+            data = ""
+            if content_length:
+                content_length = int(content_length)
+                data = self.rfile.read(content_length)
+
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.send_header('Content-length', '0')
+            self.end_headers()
+            
+            self.wfile.write('')
+            self.wfile.close()
+            return
 
         handler = ServerHandler(
             self.rfile, self.wfile, self.get_stderr(), self.get_environ(),
