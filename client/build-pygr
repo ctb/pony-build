@@ -24,12 +24,12 @@ if not options.force_build:
         sys.exit(0)
 
 context = TempDirectoryContext()
-commands = [ GitClone(repo_url, name='checkout', cache_dir='~/.pony-build/pygr'),
+commands = [ GitClone(repo_url, name='checkout'),
              BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
-                          name='compile', run_cwd='pygr'),
+                          name='compile'),
              TestCommand([python_exe, 'runtest.py'],
-                         name='run tests', run_cwd='pygr/tests')
-             ]
+                         name='run tests', run_cwd='tests'),
+             PythonPackageEgg()]
 
 results = do(name, commands, context=context)
 client_info, reslist, files = results
