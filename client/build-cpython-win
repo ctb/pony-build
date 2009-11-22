@@ -15,8 +15,7 @@ repo_url = 'http://svn.python.org/projects/python/trunk'
 tags = ['python2.7']
 name = 'python'
 
-#server_url = 'http://localhost:8080/xmlrpc'
-server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
+server_url = options.server_url
 
 if not options.force_build:
     if not check(name, server_url, tags=tags):
@@ -33,7 +32,7 @@ commands = [
              ]
 
 results = do(name, commands, context=context)
-client_info, reslist = results
+client_info, reslist, files = results
 
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)

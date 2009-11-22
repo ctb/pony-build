@@ -33,7 +33,7 @@ commands = [ GitClone(repo_url),
              ]
 
 results = do(name, commands, context=context)
-client_info, reslist, file_list = results
+client_info, reslist, files = results
 
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)

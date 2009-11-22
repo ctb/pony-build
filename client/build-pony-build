@@ -30,14 +30,14 @@ if not options.force_build:
         sys.exit(0)
 
 commands = [ GitClone(repo_url, name='checkout'),
-#             TestCommand([python_exe, 'setup.py', 'test'],
-#                         name='run tests')
+             TestCommand([python_exe, 'setup.py', 'test'],
+                         name='run tests')
              PythonPackageEgg(),
              ]
 
 context = TempDirectoryContext(options.cleanup_temp)
 results = do(name, commands, context=context)
-client_info, reslist, file_list = results
+client_info, reslist, files = results
 
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)
