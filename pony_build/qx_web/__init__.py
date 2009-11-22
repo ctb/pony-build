@@ -466,7 +466,12 @@ class ResultFiles(Directory):
                 response.set_content_type('application/binary')
                 response.set_header('Content-Disposition',
                                     'filename=%s' % enc_filename)
-                response.set_body(fileobj)
+
+                fp = fileobj.open()
+                data = fp.read()
+                fp.close()
+                
+                response.set_body(data)
                 return
 
         response.set_status(404)
