@@ -16,6 +16,7 @@ import urllib
 import traceback
 from optparse import OptionParser
 import pprint
+import glob
 
 pb_servers = {
     'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
@@ -80,15 +81,14 @@ class FileToUpload(object):
         location - full location on build system (not sent to server)
         description - brief description of file/arch for server
         """
+        self.data = open(location).read()
         self.filename = filename
-        self.location = location
         self.description = description
         self.visible = visible
 
     def __repr__(self):
-        return "<FileToUpload('%s', '%s', '%s')>" % (self.filename,
-                                                     self.location,
-                                                     self.description)
+        return "<FileToUpload('%s', '%s')>" % (self.filename,
+                                               self.description)
 
 class Context(object):
     def __init__(self):
@@ -280,6 +280,27 @@ class TestCommand(BaseCommand):
     command_type = 'test'
     command_name = 'test'
 
+class PackageEgg(BaseCommand):
+    command_type = 'package'
+    command_name = 'package_egg'
+
+    def __init__(self, python_exe='python'):
+        BaseCommand.__init__(self, [python_exe, 'setup.py', 'bdist_egg'],
+                             name='build an egg')
+
+    def run(self, context):
+        BaseCommand.run(self, context)
+        if self.status == 0:            # success?
+            eggfiles = os.path.join('dist', '*.egg')
+            eggfiles = glob.glob(eggfiles)
+
+            for filename in eggfiles:
+                context.add_file_to_upload(os.path.basename(filename),
+                                           filename,
+                                           'an egg installation file',
+                                           visible=True)
+            
+            
 class GitClone(SetupCommand):
     command_name = 'checkout'
     
@@ -515,8 +536,7 @@ def _upload_file(server_url, fileobj, auth_key):
     upload_url += '?' + qs
 
     try:
-        data = open(fileobj.location, 'rb').read()
-        http_result = urllib.urlopen(upload_url, data)
+        http_result = urllib.urlopen(upload_url, fileobj.data)
     except:
         print 'file upload failed:', fileobj
         print traceback.format_exc()
