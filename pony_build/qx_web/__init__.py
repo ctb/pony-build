@@ -44,20 +44,8 @@ class QuixoteWebApp(Directory):
         self.rss2 = RSS2FeedDirectory(coord)
         self.p = PackageDirectory(coord)
 
-    def recv_file(self):
-        request = quixote.get_request()
-
-        content_length = int(request.get_header('content-length'))
-        data = request.stdin.read(content_length)
-
-        print 'got %d bytes; first 50: ' % (len(data),)
-        return "ok"
-
     def exit(self):
         os._exit(0)
-
-    def test(self):
-        self.notify_result_added(16)
 
     def notify_result_added(self, result_key):
         """
