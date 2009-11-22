@@ -81,7 +81,7 @@ class FileToUpload(object):
         location - full location on build system (not sent to server)
         description - brief description of file/arch for server
         """
-        self.data = open(location).read()
+        self.data = open(location, 'rb').read()
         self.filename = filename
         self.description = description
         self.visible = visible
