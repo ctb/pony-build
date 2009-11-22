@@ -14,7 +14,7 @@ with warnings.catch_warnings():
     import quixote
     from quixote.directory import Directory
     from quixote.publish import Publisher
-    from quixote.util import StaticDirectory
+    from quixote.util import StaticDirectory, StaticFile
     
 from urllib import quote_plus
 import pprint
@@ -46,6 +46,7 @@ class QuixoteWebApp(Directory):
         self.rss2 = RSS2FeedDirectory(coord)
         self.p = PackageDirectory(coord)
         self.img = StaticDirectory(os.path.join(templatesdir, 'img'))
+        self.css = StaticFile(os.path.join(templatesdir, 'style.css'))
 
     def exit(self):
         os._exit(0)
@@ -90,13 +91,6 @@ class QuixoteWebApp(Directory):
         qp = quote_plus
         template = env.get_template('top_index.html')
         return template.render(locals())
-
-    def css(self):
-        cssfile = os.path.join(templatesdir, 'style.css')
-        
-        response = quixote.get_response()
-        response.set_content_type('text/css')
-        return open(cssfile).read()
 
 def create_publisher(coordinator, pubsubhubbub_server=None):
     pshb_list = []
