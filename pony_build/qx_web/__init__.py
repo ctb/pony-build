@@ -14,6 +14,7 @@ with warnings.catch_warnings():
     import quixote
     from quixote.directory import Directory
     from quixote.publish import Publisher
+    from quixote.util import StaticDirectory
     
 from urllib import quote_plus
 import pprint
@@ -31,7 +32,8 @@ class QuixoteWebApp(Directory):
     """
     URL: /
     """
-    _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p', 'test']
+    _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p', 'test',
+                   'img']
 
     def __init__(self, coord, pshb_list=[]):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
@@ -43,6 +45,7 @@ class QuixoteWebApp(Directory):
         self.pshb_list = list(pshb_list)
         self.rss2 = RSS2FeedDirectory(coord)
         self.p = PackageDirectory(coord)
+        self.img = StaticDirectory(os.path.join(templatesdir, 'img'))
 
     def exit(self):
         os._exit(0)
