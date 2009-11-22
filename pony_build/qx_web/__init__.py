@@ -17,6 +17,7 @@ with warnings.catch_warnings():
     
 from urllib import quote_plus
 import pprint
+import email.utils
 
 ###
 
@@ -312,6 +313,23 @@ class PackageInfo(Directory):
         return template.render(locals()).encode('latin-1', 'replace')
 
     def _q_lookup(self, component):
+        if component == 'latest':
+            d = self.coord.get_unique_tagsets_for_package(self.package)
+            if not d:
+                response = quixote.get_response()
+                response.set_status(404)
+                response.set_body("no results for this package")
+                return 
+            
+            latest = d.itervalues().next()
+            latest_time = latest[0]['time']
+            for it in d.itervalues():
+                if it[0]['time'] > latest_time:
+                    latest = it
+                    latest_time = latest[0]['time']
+
+            component = latest[0]['result_key']
+            
         return ResultInfo(self.coord, self.package, component)
 
 class ResultInfo(Directory):
@@ -325,6 +343,8 @@ class ResultInfo(Directory):
                       self.coord.db_get_result_info(result_key)
         
         assert self.package == self.client_info['package']
+
+        self.files = ResultFiles(coord, package, result_key)
 
     def _q_index(self):
         key = self.result_key
@@ -360,21 +380,6 @@ class ResultInfo(Directory):
         template = env.get_template('results_inspect.html')
         return template.render(locals()).encode('latin-1', 'replace')
 
-    def files(self):
-        key = self.result_key
-        receipt = self.receipt
-        client_info = self.client_info
-        results = self.results
-        package = self.package
-        
-        file_list = self.coord.get_files_for_result(key)
-
-        x = []
-        for name, description, visible in file_list:
-            x.append("%s -- %s (%s)" % (name, description, visible))
-
-        return "".join(x)
-
     def request_build(self):
         key = self.result_key
         receipt = self.receipt
@@ -385,6 +390,52 @@ class ResultInfo(Directory):
         self.coord.set_request_build(client_info, True)
 
         return quixote.redirect('./')
+
+class ResultFiles(Directory):
+    _q_exports = ['']
+
+    def __init__(self, coord, package, result_key):
+        self.coord = coord
+        self.package = package
+        self.result_key = result_key
+
+        file_list = self.coord.get_files_for_result(result_key)
+        self.file_list = [ x for x in file_list if x.visible ]
+
+    def _q_index(self):
+        x = []
+
+        result_key = self.result_key
+        receipt, client_info, results = \
+                 self.coord.db_get_result_info(result_key)
+        file_list = self.file_list
+        package = self.package
+        tags = ", ".join(client_info['tags'])
+
+        template = env.get_template('results_files_index.html')
+        return template.render(locals()).encode('latin-1', 'replace')
+
+    def _q_traverse(self, paths):
+        # can't use _q_lookup; quixote unescapes %2F in paths before '?'
+        if len(paths) == 1 and paths[0] == '':
+            return self._q_index()
+
+        filename = "/".join(paths)
+
+        print 'LOOKING FOR:', filename
+        
+        response = quixote.get_response()
+        for fileobj in self.file_list:
+            if fileobj.filename == filename:
+                enc_filename = filename.replace('\\', '\\\\').replace('"', '\\"')
+                response.set_content_type('application/binary')
+                response.set_header('Content-Disposition',
+                                    'filename=%s' % enc_filename)
+                response.set_body(fileobj)
+                return
+
+        response.set_status(404)
+        response.set_body('not found')
 
 ###
 
