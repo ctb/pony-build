@@ -6,7 +6,12 @@
 
 <h2>Result detail</h2>
 
-<i><a href='../{{ key }}/'>permanent link</a></i> | <i><a href='./inspect'>inspect raw record</a></i>
+<i><a href='../{{ key }}/'>permanent link</a></i> |
+<i><a href='./inspect'>inspect raw record</a></i>
+{% if files_exist() %}
+| <i><a href='./files/'>attached files</a></i>
+{% endif %}
+
 <br><br>
 
 <p>

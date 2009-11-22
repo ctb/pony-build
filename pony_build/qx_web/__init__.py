@@ -28,6 +28,9 @@ from .. import rss
 from ..coordinator import build_tagset
 
 class QuixoteWebApp(Directory):
+    """
+    URL: /
+    """
     _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p', 'test']
 
     def __init__(self, coord, pshb_list=[]):
@@ -120,6 +123,9 @@ def create_publisher(coordinator, pubsubhubbub_server=None):
 ###
 
 class PackageDirectory(Directory):
+    """
+    URL: /p/
+    """
     _q_exports = [ '' ]
 
     def __init__(self, coord):
@@ -136,6 +142,9 @@ class PackageDirectory(Directory):
 ###
 
 class RSS2FeedDirectory(Directory):
+    """
+    URL: /rss2/
+    """
     _q_exports = [ '', '_generic' ]
 
     def __init__(self, coord):
@@ -165,6 +174,9 @@ class RSS2FeedDirectory(Directory):
         return snooper.generate_rss(self.coord, package_url, per_result_url)
 
 class RSS2_GenericFeeds(Directory):
+    """
+    URL: /rss2/_generic/
+    """
     _q_exports = [ '', 'redirect' ]
     
     def __init__(self, coord):
@@ -191,6 +203,9 @@ class RSS2_GenericFeeds(Directory):
         return RSS2_GenericPackageFeeds(self.coord, package)
 
 class RSS2_GenericPackageFeeds(Directory):
+    """
+    URL: /rss2/_generic/<package>/
+    """
     _q_exports = [ '' ]
 
     def __init__(self, coord, package):
@@ -231,6 +246,9 @@ class RSS2_GenericPackageFeeds(Directory):
 ###
 
 class PackageInfo(Directory):
+    """
+    /p/<package>/
+    """
     _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail',
                    'request_build', 'files' ]
     
@@ -280,6 +298,12 @@ class PackageInfo(Directory):
             ta = a[1][0]['time']
             tb = b[1][0]['time']
             return -cmp(ta, tb)
+
+        def files_exist(tagset):
+            key = d[tagset][0]['result_key']
+            x = self.coord.get_files_for_result(key)
+            x = [ f for f in x if f.visible and f.exists() ]
+            return len(x)
 
         it = d.items()
         it.sort(sort_by_timestamp)
@@ -333,6 +357,9 @@ class PackageInfo(Directory):
         return ResultInfo(self.coord, self.package, component)
 
 class ResultInfo(Directory):
+    """
+    URL: /p/<package>/<result>/
+    """
     _q_exports = ['', 'inspect', 'files' ]
     def __init__(self, coord, package, result_key):
         self.coord = coord
@@ -357,7 +384,12 @@ class ResultInfo(Directory):
         timestamp = format_timestamp(receipt['time'])
         tags = ", ".join(client_info['tags'])
 
-        template = env.get_template('results_detail.html')
+        def files_exist():
+            x = self.coord.get_files_for_result(key)
+            x = [ f for f in x if f.visible and f.exists() ]
+            return len(x)
+
+        template = env.get_template('results_index.html')
         return template.render(locals()).encode('latin-1', 'replace')
         
     def inspect(self):
@@ -392,6 +424,9 @@ class ResultInfo(Directory):
         return quixote.redirect('./')
 
 class ResultFiles(Directory):
+    """
+    URL: /p/<package>/<result>/files/
+    """
     _q_exports = ['']
 
     def __init__(self, coord, package, result_key):

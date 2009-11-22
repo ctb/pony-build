@@ -36,7 +36,7 @@ Tags: {{ tags }}<br>
 {% if file_list %}
   {% for fileobj in file_list %}
       {% if fileobj.visible %}
-      {{ loop.index }}. <a href='{{ fileobj.filename|e }}'>{{ fileobj.filename }}</a> - {{ fileobj.description }}<br>
+      {{ loop.index }}. <a href='{{ fileobj.filename|e }}'>{{ fileobj.filename }}</a> - {{ fileobj.description }} ({{ (fileobj.size() / 1000 + 1)|int }} kb)<br>
       {% endif %}
   {% endfor %}
 {% else %}

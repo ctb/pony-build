@@ -18,7 +18,11 @@
         <td>{{ calc_status(tagset) }}</td>
         <td>{{ calc_time(tagset) }}</td>
         <td><a href='./{{ get_result_key(tagset) }}/'>view details</a> | 
-<a href='./{{ get_result_key(tagset) }}/inspect'>request build</a> | <a href='./{{get_result_key(tagset) }}/files'>files</a></td>
+<a href='./{{ get_result_key(tagset) }}/inspect'>request build</a>
+{% if files_exist(tagset) %}
+   | <a href='./{{get_result_key(tagset) }}/files'>files</a>
+{% endif %}
+</td>
       </tr>
    {% endfor %}
    </table>

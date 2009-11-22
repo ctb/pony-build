@@ -108,6 +108,10 @@ class UploadedFile(object):
         "Check to see if the file still exists."
         return os.path.isfile(self._make_abspath())
 
+    def size(self):
+        "Return the size, in bytes, of the file."
+        return os.path.getsize(self._make_abspath())
+
     def open(self, mode='rb'):
         "Provide a handle to the file contents.  Make sure to use binary..."
         return open(self._make_abspath(), mode)
