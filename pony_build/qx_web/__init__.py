@@ -4,12 +4,17 @@ A Quixote-based Web UI for pony-build.
 """
 import os, os.path
 
-import pkg_resources
-pkg_resources.require('Quixote>=2.6')
+import warnings
 
-import quixote
-from quixote.directory import Directory
-from quixote.publish import Publisher
+import pkg_resources
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+
+    pkg_resources.require('Quixote>=2.6') # Quixote has some deprecated code
+    import quixote
+    from quixote.directory import Directory
+    from quixote.publish import Publisher
+    
 from urllib import quote_plus
 import pprint
 
