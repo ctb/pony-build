@@ -30,6 +30,10 @@ if not os.path.exists(files_dir):
 
 print 'putting uploaded files into %s' % files_dir
 
+def get_file_catalog():
+    import dbsqlite
+    return dbsqlite.open_shelf(os.path.join(files_dir, 'catalog.sqlite'))
+
 def sweep():
     """
     Expire files based on oldest-dir-first, once the total is over the limit.

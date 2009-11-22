@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import UserDict
 import os, os.path
 
-from .file_storage import UploadedFile, sweep
+from .file_storage import UploadedFile, sweep, get_file_catalog
 
 # default duration allocated to a build
 DEFAULT_BUILD_DURATION=60*60            # in seconds <== 1 hr
@@ -73,7 +73,8 @@ class PonyBuildCoordinator(object):
         self.is_building = {}
         self.listeners = []
 
-        self.files = {}
+        # @CTB another database hack; yay?
+        self.files = IntDictWrapper(get_file_catalog())
 
     def add_listener(self, x):
         self.listeners.append(x)
@@ -203,11 +204,6 @@ class PonyBuildCoordinator(object):
         if auth_key not in self.db:
             return False
         
-        print 'YY', auth_key
-        print 'YY', filename
-        print 'YY', len(content)
-        print 'YY', description
-
         auth_key = str(auth_key)
 
         subdir = auth_key
@@ -220,6 +216,7 @@ class PonyBuildCoordinator(object):
         file_list = self.files.get(auth_key, [])
         file_list.append(fileobj)
         self.files[auth_key] = file_list
+        self.files.sync()
 
         sweep()
 
