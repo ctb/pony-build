@@ -400,7 +400,7 @@ class ResultFiles(Directory):
         self.result_key = result_key
 
         file_list = self.coord.get_files_for_result(result_key)
-        self.file_list = [ x for x in file_list if x.visible ]
+        self.file_list = [ x for x in file_list if x.visible and x.exists() ]
 
     def _q_index(self):
         x = []

@@ -9,57 +9,14 @@ import time
 from datetime import datetime, timedelta
 import UserDict
 import os, os.path
-import urllib
+
+from .file_storage import UploadedFile, sweep
 
 # default duration allocated to a build
 DEFAULT_BUILD_DURATION=60*60            # in seconds <== 1 hr
 
 # the maximum request for a build allowance
 MAX_BUILD_ALLOWANCE=4*60*60               # in seconds <== 1 hr
-
-### files location
-
-if 'PONY_BUILD_FILES' in os.environ:
-    _files_dir = os.path.abspath(os.environ['PONY_BUILD_FILES'])
-else:
-    _files_dir = os.path.dirname(__file__)
-    _files_dir = os.path.join(_files_dir, '..', '.files')
-    _files_dir = os.path.abspath(_files_dir)
-
-if not os.path.exists(_files_dir):
-    os.mkdir(_files_dir)
-
-print 'putting uploaded files into %s' % _files_dir
-
-###
-
-class UploadedFile(object):
-    def __init__(self, subdir, filename, description, visible):
-        self.subdir = subdir
-        self.filename = filename
-        self.description = description
-        self.visible = visible
-
-    def make_subdir(self):
-        subdir = os.path.join(_files_dir, self.subdir)
-        subdir = os.path.abspath(subdir)
-        if not os.path.isdir(subdir):
-            os.mkdir(subdir)
-
-    def _make_abspath(self):
-        safe_path = urllib.quote_plus(self.filename)
-        fullpath = os.path.join(_files_dir, self.subdir, safe_path)
-        fullpath = os.path.abspath(fullpath)
-        if not fullpath.startswith(_files_dir):
-            raise Exception("security warning: %s not under %s" % \
-                            (self.filename, _files_dir))
-        return fullpath
-
-    def exists(self):
-        return os.path.isfile(self._make_abspath())
-
-    def open(self, mode='rb'):
-        return open(self._make_abspath(), mode)
 
 class IntDictWrapper(object, UserDict.DictMixin):
     def __init__(self, d):
@@ -263,6 +220,8 @@ class PonyBuildCoordinator(object):
         file_list = self.files.get(auth_key, [])
         file_list.append(fileobj)
         self.files[auth_key] = file_list
+
+        sweep()
 
         return True
 
