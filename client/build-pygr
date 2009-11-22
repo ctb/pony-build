@@ -24,13 +24,14 @@ if not options.force_build:
         sys.exit(0)
 
 context = TempDirectoryContext()
-commands = [ GitClone(repo_url),
+commands = [ GitClone(repo_url, name='checkout'),
              BuildCommand(['pyrexc', 'pygr/cdict.pyx', 'pygr/cnestedlist.pyx',
                            'pygr/seqfmt.pyx']),
-             BuildCommand([python_exe, 'setup.py', 'build_ext', '-i']),
-             TestCommand([python_exe, 'runtest.py'], run_cwd='tests'),
-             PythonPackageEgg()
-             ]
+             BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
+                          name='compile'),
+             TestCommand([python_exe, 'runtest.py'],
+                         name='run tests', run_cwd='tests'),
+             PythonPackageEgg()]
 
 results = do(name, commands, context=context)
 client_info, reslist, files = results
