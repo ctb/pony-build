@@ -280,7 +280,7 @@ class TestCommand(BaseCommand):
     command_type = 'test'
     command_name = 'test'
 
-class PackageEgg(BaseCommand):
+class PythonPackageEgg(BaseCommand):
     command_type = 'package'
     command_name = 'package_egg'
 

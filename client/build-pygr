@@ -3,7 +3,7 @@ import sys
 import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
      TempDirectoryContext, SetupCommand, GitClone, check, parse_cmdline, \
-     PackageEgg
+     PythonPackageEgg
 
 options, args = parse_cmdline()
 
@@ -29,7 +29,7 @@ commands = [ GitClone(repo_url),
                            'pygr/seqfmt.pyx']),
              BuildCommand([python_exe, 'setup.py', 'build_ext', '-i']),
 #             TestCommand([python_exe, 'runtest.py'], run_cwd='tests'),
-             PackageEgg()
+             PythonPackageEgg()
              ]
 
 results = do(name, commands, context=context)

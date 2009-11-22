@@ -2,7 +2,7 @@
 import sys
 from pony_client import BuildCommand, TestCommand, do, send, \
      TempDirectoryContext, SetupCommand, GitClone, check, parse_cmdline, \
-     PackageEgg
+     PythonPackageEgg
 import os
 import tempfile
 import shutil
@@ -32,7 +32,7 @@ if not options.force_build:
 commands = [ GitClone(repo_url, name='checkout'),
 #             TestCommand([python_exe, 'setup.py', 'test'],
 #                         name='run tests')
-             PackageEgg(),
+             PythonPackageEgg(),
              ]
 
 context = TempDirectoryContext(options.cleanup_temp)
