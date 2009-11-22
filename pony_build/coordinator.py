@@ -195,7 +195,8 @@ class PonyBuildCoordinator(object):
 
         return next_key
 
-    def db_add_uploaded_file(self, auth_key, filename, content, description):
+    def db_add_uploaded_file(self, auth_key, filename, content, description,
+                             visible):
         if auth_key not in self.db:
             return False
         
@@ -207,7 +208,7 @@ class PonyBuildCoordinator(object):
         auth_key = str(auth_key)
 
         file_list = self.files.get(auth_key, [])
-        file_list.append((filename, description))
+        file_list.append((filename, description, visible))
         self.files[auth_key] = file_list
         
         return True

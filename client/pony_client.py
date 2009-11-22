@@ -74,7 +74,7 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
     return (ret, out, err)
 
 class FileToUpload(object):
-    def __init__(self, filename, location, description):
+    def __init__(self, filename, location, description, visible):
         """
         filename - name to publish as
         location - full location on build system (not sent to server)
@@ -83,6 +83,7 @@ class FileToUpload(object):
         self.filename = filename
         self.location = location
         self.description = description
+        self.visible = visible
 
     def __repr__(self):
         return "<FileToUpload('%s', '%s', '%s')>" % (self.filename,
@@ -112,8 +113,8 @@ class Context(object):
     def update_client_info(self, info):
         info['duration'] = self.end_time - self.start_time
 
-    def add_file_to_upload(self, name, location, description):
-        o = FileToUpload(name, location, description)
+    def add_file_to_upload(self, name, location, description, visible):
+        o = FileToUpload(name, location, description, visible)
         self.files.append(o)
 
 class TempDirectoryContext(Context):
@@ -185,17 +186,18 @@ class UploadAFile(object):
     """
     @CTB add glob support
     """
-    def __init__(self, filepath, public_name, description):
+    def __init__(self, filepath, public_name, description, visible=True):
         self.filepath = os.path.realpath(filepath)
         self.public_name = public_name
         self.description = description
+        self.visible = visible
 
     def success(self):
         return os.path.exists(self.filepath)
 
     def run(self, context):
         context.add_file_to_upload(self.public_name, self.filepath,
-                                   self.description)
+                                   self.description, self.visible)
 
     def get_results(self):
         try:
@@ -501,9 +503,15 @@ def _upload_file(server_url, fileobj, auth_key):
     assert server_url.endswith('xmlrpc')
     upload_url = server_url[:-6] + 'upload'
 
+    if fileobj.visible:
+        visible='yes'
+    else:
+        visible = 'no'
+
     qs = urllib.urlencode(dict(description=fileobj.description,
                                filename=fileobj.filename,
-                               auth_key=str(auth_key)))
+                               auth_key=str(auth_key),
+                               visible=visible))
     upload_url += '?' + qs
 
     try:

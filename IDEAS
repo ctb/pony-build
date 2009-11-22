@@ -286,4 +286,10 @@ http://chris.prather.org/everybody-wants-some--cpan.html
 
 http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
 
-a lite/heavy client separation?
+two clients, one lite one heavy?
+
+files visible flag
+
+gae version of pony-build?
+
+'latest' magic component, 'latest='tags magic component

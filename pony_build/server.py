@@ -119,6 +119,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             description = qs.get('description')[0]
             filename = qs.get('filename')[0]
             auth_key = qs.get('auth_key')[0]
+            visible = qs.get('visible', ['no'])[0] == 'yes'
         except (TypeError, ValueError, KeyError):
             message = 'upload attempt, but missing filename, description, or auth_key!?'
             self._send_html_response(400, message)
@@ -135,7 +136,8 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             if _coordinator.db_add_uploaded_file(auth_key,
                                                  filename,
                                                  data,
-                                                 description):
+                                                 description,
+                                                 visible):
                 code = 200
                 message = ''
         else:

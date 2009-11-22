@@ -365,8 +365,8 @@ class ResultInfo(Directory):
         file_list = self.coord.get_files_for_result(key)
 
         x = []
-        for name, description in file_list:
-            x.append("%s -- %s" % (name, description))
+        for name, description, visible in file_list:
+            x.append("%s -- %s (%s)" % (name, description, visible))
 
         return "".join(x)
 
