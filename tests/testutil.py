@@ -22,9 +22,10 @@ def run_server(DB_FILE, PORT=None):
 
     outfd = tempfile.mkstemp('twilltst')[0]
 
-    print 'STARTING:', sys.executable, 'bin/run-qx-server', os.getcwd()
+    print 'STARTING:', sys.executable, 'pony_build.qx_web.run', os.getcwd()
     process = subprocess.Popen([sys.executable, '-u',
-                                'bin/run-qx-server', DB_FILE, str(PORT)],
+                                '-m', 'pony_build.qx_web.run', DB_FILE,
+                                '-p', str(PORT)],
                                stderr=subprocess.STDOUT,
                                stdout=outfd)
    

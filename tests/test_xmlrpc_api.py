@@ -21,6 +21,7 @@ DB_TEST_FILE='tests/tests.db'
 ###
 
 def make_db(filename=DB_TEST_FILE):
+    print 'FILENAME', filename
     try:
         os.unlink(filename)
     except OSError:
@@ -66,7 +67,7 @@ def test_check_fn():
 def test_send_fn():
     client_info = dict(package='test-underway2', arch='fooarch2',
                        success=True)
-    results = (client_info, [])
+    results = (client_info, [], None)
 
     x = pbc.get_tagsets_for_package(rpc_url, 'test-underway2')
     assert len(x) == 0
