@@ -226,7 +226,7 @@ class RSS2_GenericPackageFeeds(Directory):
 
 class PackageInfo(Directory):
     _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail',
-                   'request_build' ]
+                   'request_build', 'files' ]
     
     def __init__(self, coord, package):
         self.coord = coord
@@ -344,6 +344,18 @@ class PackageInfo(Directory):
 
         template = env.get_template('package_inspect.html')
         return template.render(locals()).encode('latin-1', 'replace')
+
+    def files(self):
+        request = quixote.get_request()
+        key = request.form['result_key']
+        receipt, client_info, results = self.coord.db_get_result_info(key)
+        file_list = self.coord.get_files_for_result(key)
+
+        x = []
+        for name, description in file_list:
+            x.append("%s -- %s" % (name, description))
+
+        return "".join(x)
 
     def request_build(self):
         request = quixote.get_request()

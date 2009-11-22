@@ -70,6 +70,8 @@ class PonyBuildCoordinator(object):
         self.is_building = {}
         self.listeners = []
 
+        self.files = {}
+
     def add_listener(self, x):
         self.listeners.append(x)
 
@@ -201,8 +203,15 @@ class PonyBuildCoordinator(object):
         print 'YY', filename
         print 'YY', len(content)
         print 'YY', description
+
+        file_list = self.files.get(auth_key, [])
+        file_list.append((filename, description))
+        self.files[auth_key] = file_list
         
         return True
+
+    def get_files_for_result(self, key):
+        return self.files[key]
 
     def get_all_packages(self):
         k = self._packages.keys()
