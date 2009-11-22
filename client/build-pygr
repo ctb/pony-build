@@ -23,8 +23,6 @@ if not options.force_build:
 
 context = TempDirectoryContext()
 commands = [ GitClone(repo_url, name='checkout', cache_dir='~/.pony-build/pygr'),
-             BuildCommand(['pyrexc', 'pygr/cdict.pyx', 'pygr/cnestedlist.pyx',
-                           'pygr/seqfmt.pyx'], run_cwd='pygr'),
              BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
                           name='compile', run_cwd='pygr'),
              TestCommand([python_exe, 'runtest.py'],

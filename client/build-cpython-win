@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import sys
 import distutils
+import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
      Context, TempDirectoryContext, SetupCommand, SvnUpdate, check, parse_cmdline
 
@@ -15,8 +16,7 @@ repo_url = 'http://svn.python.org/projects/python/trunk'
 tags = ['python2.7']
 name = 'python'
 
-#server_url = 'http://localhost:8080/xmlrpc'
-server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
+server_url = options.server_url
 
 if not options.force_build:
     if not check(name, server_url, tags=tags):
@@ -24,16 +24,16 @@ if not options.force_build:
         sys.exit(0)
 
 
-context = Context()
-#SvnUpdate('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
+context = TempDirectoryContext()
 
 commands = [
+             SvnUpdate('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
              BuildCommand(['build.bat'], name='build.bat', run_cwd='pcbuild', subprocess_kwargs=dict(shell=True), ignore_failure=True, verbose=True),
              TestCommand(['pcbuild\\python.exe', 'Lib\\test\\regrtest.py', '-x', 'test_ttk_textonly', 'test_bz2', 'test_ttk_guionly', 'test_bsddb', 'test_ssl', 'test_tcl', 'test_tk', 'test_readline', 'test_sqlite', 'test_distutils', 'test_winsound'], name='regrtest')
              ]
 
 results = do(name, commands, context=context)
-client_info, reslist = results
+client_info, reslist, files = results
 
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)
@@ -41,8 +41,6 @@ if options.report:
 else:
 
     print 'build result:'
-
-    import pprint
     pprint.pprint(client_info)
     pprint.pprint(reslist)
 
