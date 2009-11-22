@@ -28,7 +28,7 @@ commands = [ GitClone(repo_url),
              BuildCommand(['pyrexc', 'pygr/cdict.pyx', 'pygr/cnestedlist.pyx',
                            'pygr/seqfmt.pyx']),
              BuildCommand([python_exe, 'setup.py', 'build_ext', '-i']),
-#             TestCommand([python_exe, 'runtest.py'], run_cwd='tests'),
+             TestCommand([python_exe, 'runtest.py'], run_cwd='tests'),
              PythonPackageEgg()
              ]
 
