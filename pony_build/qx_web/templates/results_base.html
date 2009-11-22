@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block css %}
+    <link rel="stylesheet" href="../../../css" />
+{% endblock %}
+
+{% block sidebar %}
+
+<p>
+
+<h3>{{ package }}</h3>
+
+<p class="news">
+<a href='../'>latest builds</a><br>
+<a href='../show_all'>all builds</a>
+</p>
+<br>
+<p>
+<a href='../../../'>../index</a>
+<br>
+<br
+{% endblock %}
+
+{% block footer %}
+<br>
+<center>
+Monitor package via RSS:
+<a href='../../../rss2/_generic/{{ package-}}/all'>all builds</a> |
+<a href='../../../rss2/_generic/{{ package-}}/failed'>failed builds</a><Br>
+</center>
+
+{% endblock %}

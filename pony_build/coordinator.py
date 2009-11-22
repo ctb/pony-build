@@ -204,6 +204,8 @@ class PonyBuildCoordinator(object):
         print 'YY', len(content)
         print 'YY', description
 
+        auth_key = str(auth_key)
+
         file_list = self.files.get(auth_key, [])
         file_list.append((filename, description))
         self.files[auth_key] = file_list
@@ -211,7 +213,7 @@ class PonyBuildCoordinator(object):
         return True
 
     def get_files_for_result(self, key):
-        return self.files[key]
+        return self.files.get(key, [])
 
     def get_all_packages(self):
         k = self._packages.keys()

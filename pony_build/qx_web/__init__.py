@@ -306,35 +306,45 @@ class PackageInfo(Directory):
         template = env.get_template('package_all.html')
         return template.render(locals()).encode('latin-1', 'replace')
 
-    def detail(self):
-        request = quixote.get_request()
-        key = request.form['result_key']
-        receipt, client_info, results = self.coord.db_get_result_info(key)
+    def _q_lookup(self, component):
+        return ResultInfo(self.coord, self.package, component)
 
-        if self.package != client_info['package']:
-            raise Exception
+class ResultInfo(Directory):
+    _q_exports = ['', 'inspect', 'files' ]
+    def __init__(self, coord, package, result_key):
+        self.coord = coord
+        self.result_key = result_key
+        self.package = package
+        
+        self.receipt, self.client_info, self.results = \
+                      self.coord.db_get_result_info(result_key)
+        
+        assert self.package == self.client_info['package']
+
+    def _q_index(self):
+        key = self.result_key
+        receipt = self.receipt
+        client_info = self.client_info
+        results = self.results
+        package = self.package
 
         qp = quote_plus
         timestamp = format_timestamp(receipt['time'])
-        package = self.package
         tags = ", ".join(client_info['tags'])
 
-        template = env.get_template('package_detail.html')
+        template = env.get_template('results_detail.html')
         return template.render(locals()).encode('latin-1', 'replace')
         
     def inspect(self):
-
-        request = quixote.get_request()
-        key = request.form['result_key']
-        receipt, client_info, results = self.coord.db_get_result_info(key)
-
-        if self.package != client_info['package']:
-            raise Exception
+        key = self.result_key
+        receipt = self.receipt
+        client_info = self.client_info
+        results = self.results
+        package = self.package
 
         def repr_dict(d):
             return dict([ (k, pprint.pformat(d[k])) for k in d ])
 
-        package = self.package
         receipt = repr_dict(receipt)
         tagset = list(build_tagset(client_info))
         client_info = repr_dict(client_info)
@@ -342,13 +352,16 @@ class PackageInfo(Directory):
         
         qp = quote_plus
 
-        template = env.get_template('package_inspect.html')
+        template = env.get_template('results_inspect.html')
         return template.render(locals()).encode('latin-1', 'replace')
 
     def files(self):
-        request = quixote.get_request()
-        key = request.form['result_key']
-        receipt, client_info, results = self.coord.db_get_result_info(key)
+        key = self.result_key
+        receipt = self.receipt
+        client_info = self.client_info
+        results = self.results
+        package = self.package
+        
         file_list = self.coord.get_files_for_result(key)
 
         x = []
@@ -358,9 +371,11 @@ class PackageInfo(Directory):
         return "".join(x)
 
     def request_build(self):
-        request = quixote.get_request()
-        key = request.form['result_key']
-        receipt, client_info, results = self.coord.db_get_result_info(key)
+        key = self.result_key
+        receipt = self.receipt
+        client_info = self.client_info
+        results = self.results
+        package = self.package
 
         self.coord.set_request_build(client_info, True)
 
