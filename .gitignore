@@ -5,3 +5,4 @@ build
 dist
 pony_build.egg-info
 tests/tests.db
+.files

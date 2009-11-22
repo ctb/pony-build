@@ -6,9 +6,11 @@ pony_build.server.get_coordinator().
 """
 
 import time
-import sets
 from datetime import datetime, timedelta
 import UserDict
+import os, os.path
+
+from .file_storage import UploadedFile, sweep, get_file_catalog
 
 # default duration allocated to a build
 DEFAULT_BUILD_DURATION=60*60            # in seconds <== 1 hr
@@ -56,7 +58,7 @@ def build_tagset(client_info, no_arch=False, no_host=False):
     if not no_host:
         tags.append('__host=' + host)
 
-    tagset = sets.ImmutableSet(tags)
+    tagset = frozenset(tags)
     return tagset
 
 class PonyBuildCoordinator(object):
@@ -69,6 +71,13 @@ class PonyBuildCoordinator(object):
         self._process_results()
         self.request_build = {}
         self.is_building = {}
+        self.listeners = []
+
+        # @CTB another database hack; yay?
+        self.files = IntDictWrapper(get_file_catalog())
+
+    def add_listener(self, x):
+        self.listeners.append(x)
 
     def notify_build(self, package, client_info, requested_allowance=None):
         tagset = build_tagset(client_info)
@@ -83,6 +92,12 @@ class PonyBuildCoordinator(object):
 
         key = self.db_add_result(receipt, client_ip, client_info, results)
         self._process_results()
+
+        for x in self.listeners:
+            x.notify_result_added(key)
+
+        # @CTB should return an auth key to allow changes to this record,
+        # not just the record #... INSECURE.
         return key
 
     def set_request_build(self, client_info, value):
@@ -119,7 +134,6 @@ class PonyBuildCoordinator(object):
                     except KeyError:
                         pass
                 requested = last_duration
-                print 'rEQEUSTED:', requested
             requested = timedelta(0, requested) # seconds
 
             if diff < requested:
@@ -184,6 +198,32 @@ class PonyBuildCoordinator(object):
         self.db.sync()
 
         return next_key
+
+    def db_add_uploaded_file(self, auth_key, filename, content, description,
+                             visible):
+        if auth_key not in self.db:
+            return False
+        
+        auth_key = str(auth_key)
+
+        subdir = auth_key
+        fileobj = UploadedFile(subdir, filename, description, visible)
+        fileobj.make_subdir()
+        fp = fileobj.open('wb')
+        fp.write(content)
+        fp.close()
+
+        file_list = self.files.get(auth_key, [])
+        file_list.append(fileobj)
+        self.files[auth_key] = file_list
+        self.files.sync()
+
+        sweep()
+
+        return True
+
+    def get_files_for_result(self, key):
+        return self.files.get(key, [])
 
     def get_all_packages(self):
         k = self._packages.keys()

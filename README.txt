@@ -30,14 +30,14 @@ pony-build server
 
 The command: ::
 
-   python bin/run-qx-server <shelve filename> <port>
+   python -m pony_build.qx_web.run <shelve filename> <port>
 
-will run the Quixote-baesd pony-build Web app on the given port,
+will run the Quixote-based pony-build Web app on the given port,
 reading & writing from the shelve database in 'filename'.
 
 For example, ::
 
-   python bin/run-qx-server test.db 8080
+   python -m pony_build.qx_web.run test.db 8080
 
 will run a server that can be accessed on http://localhost:8080/.  This
 server will report on whatever results are sent to it by the client (see
@@ -122,6 +122,25 @@ purposes, and/or to use the 'tags' key in the client_info dict.
 The 'tags' associated value is a list of strings.
 
 receipt['result_key'] is the internal key used to store the result.
+
+Notifications
+-------------
+
+RSS2 and pubsubhubbub (http://code.google.com/p/pubsubhubbub/) are the
+core of the notification system built into pony_build; the "officially
+correct" way to actively notify interested people of build results is
+to publish them via RSS2, push them to a pubsubhubbub server, and let
+someone else deal with translating those into e-mail alerts, etc.
+
+All of the RSS feeds that pony-build makes available can be posted to
+pubsubhubbub with the proper configuration (see -P and -S options to
+``pony_build.qx_web.run``).  A simple example CGI callback script is
+in ``examples/pshb_cgi_subscriber.cgi`` in the pony-build source
+distribution.
+
+Note that there are also utility functions in ``pony_build.rss`` for
+helping to create RSS2 feeds and notify pubsubhubbub servers of
+new results
 
 Some medium-term ideas
 ======================

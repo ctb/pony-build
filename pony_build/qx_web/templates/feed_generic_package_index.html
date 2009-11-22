@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block css %}
+    <link rel="stylesheet" href="../../../css" />
+{% endblock %}
+
+{% block title %}Generic feeds for {{ package }}{% endblock %}
+
+{% block content %}
+
+<h3 class="top_main_heading">Generic RSS feeds for package '{{ package }}':</h3>
+<p>
+{% if not package_exists %}
+<font color='red'>Warning: no results for this package yet.  Is this the
+right package name?</font>
+<br><br>
+{% endif %}
+1. <A href='./all'>All builds</a><br>
+2. <A href='./failed'>Failed builds only</a>
+</ul>
+
+{% endblock %}

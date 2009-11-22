@@ -170,15 +170,13 @@ http://seanmcgrath.blogspot.com/2009/08/software-application-architecture.html
 "A software application architecture is finished when there is nothing left to take out. A software application design is finished when there is nothing left to add." 
 ---
 
-URLs that point to the most recent result for a particular machine type.
+static URLs that point to the most recent result for a particular machine type?
 
-produce RSS/web hooks/etc.
+Web hooks:
+   http://code.google.com/p/support/wiki/PostCommitWebHooks
+   http://github.com/guides/post-receive-hooks
+   http://bitbucket.org/help/ServiceIntegration
 
-http://code.google.com/p/support/wiki/PostCommitWebHooks
-
-http://github.com/guides/post-receive-hooks
-
-http://brad.livejournal.com/2405147.html
 
 david bolen:
 """
@@ -226,9 +224,73 @@ screencast!!
 
 ---
 
+soonest, figure out file uploads for nightly builds
+
+also provide protocol/setuptools ext/setup.py info for pony-build
+
+---
+
 http://twitter.com/jessenoller/status/4892960090 jessenoller I've got
 an itch: A Rest-Based, pony-build backed package index.
 
 jessenoller In my "pypackage" app, I want cool little boxes like
 github has for "install this" or "get the source" - semi transparent
 "pip install foo"
+
+Subject: [Python-Dev] People want CPAN :-) -- ssteiner on python-dev
+
+---
+
+integrate jacob's virtualenv fix.
+
+tests for build steps?
+
+implement file uploads (POST); e-mail notify?
+
+be able to create RSS feed for one or more packages that lets you:
+
+RSS feed ideas:
+ - be notified if there has been no build within a particular time
+
+
+should we generically RSS feed *all* builds or just the latest?  Probably
+truer to RSS to do all... but...?
+
+feed for all builds?
+
+remove/clean up builds; don't show > 30 days.
+
+move to a multithreaded web server?
+
+triggered builds/based on commits
+
+generic feeds for specific tagsets, duh
+
+RESTish interface
+
+show how to integrate with buildbot
+
+document pbc values
+
+coverage return?
+
+config.rc file for server
+
+rotating file repo with max size limit
+
+put a red flag next to builds that have failed within last 24 hrs
+
+PuSH instead of pshb
+
+http://chris.prather.org/everybody-wants-some--cpan.html
+
+http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
+
+two clients, one lite one heavy?
+
+files visible flag
+
+gae version of pony-build?
+
+'latest' magic component, 'latest='tags magic component
+'latest files' magic component, also with tags (so, latest egg from win32)

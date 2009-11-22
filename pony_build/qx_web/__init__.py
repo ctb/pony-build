@@ -1,48 +1,89 @@
 """
 A Quixote-based Web UI for pony-build.
+
 """
 import os, os.path
 
+import warnings
+
 import pkg_resources
-pkg_resources.require('Quixote>=2.6')
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
 
-import quixote
-from quixote.directory import Directory
-from quixote.publish import Publisher
-from jinja2 import Template
+    pkg_resources.require('Quixote>=2.6') # Quixote has some deprecated code
+    import quixote
+    from quixote.directory import Directory
+    from quixote.publish import Publisher
+    from quixote.util import StaticDirectory, StaticFile
+    
 from urllib import quote_plus
-import datetime
 import pprint
+import email.utils
 
-from .util import env, templatesdir
+###
+
+from .util import env, templatesdir, format_timestamp
+from . import urls
+
+from .. import rss
 from ..coordinator import build_tagset
 
-day_diff = datetime.timedelta(1)
-hour_diff = datetime.timedelta(0, 3600)
-min_diff = datetime.timedelta(0, 60)
-
-def format_timestamp(t):
-    dt = datetime.datetime.fromtimestamp(t)
-    now = datetime.datetime.now()
-
-    diff = now - dt
-    if diff < min_diff:
-        return dt.strftime("less than a minute ago (%I:%M %p)")
-    elif diff < hour_diff:
-        return dt.strftime("less than an hour ago (%I:%M %p)")
-    elif diff < day_diff:
-        return dt.strftime("less than a day ago (%I:%M %p)")
-    
-    return dt.strftime("%A, %d %B %Y, %I:%M %p")
-
 class QuixoteWebApp(Directory):
-    _q_exports = [ '', 'css', 'exit' ]
-    
-    def __init__(self, coord):
+    """
+    URL: /
+    """
+    _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p', 'test',
+                   'img']
+
+    def __init__(self, coord, pshb_list=[]):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
+
+        # get notified of new results by the coordinator...
+        self.coord.add_listener(self)
+
+        print 'PPP', pshb_list
+        self.pshb_list = list(pshb_list)
+        self.rss2 = RSS2FeedDirectory(coord)
+        self.p = PackageDirectory(coord)
+        self.img = StaticDirectory(os.path.join(templatesdir, 'img'))
+        self.css = StaticFile(os.path.join(templatesdir, 'style.css'))
 
     def exit(self):
         os._exit(0)
+
+    def notify_result_added(self, result_key):
+        """
+        Notify pubsubhubbub servers of any changes to the RSS feeds.
+        """
+        # first, find any registered snoopers that care about this new build
+        snooper_keys = rss.check_new_builds(self.coord, result_key)
+        print '***', snooper_keys
+
+        feed_urls = set()
+        for key in snooper_keys:
+            feed_url = urls.base_url + urls.named_rss_feed_url % \
+                       dict(feedname=key)
+            feed_urls.add(feed_url)
+
+        # next, construct the generic feed URLs that will have changed
+        receipt, client_info, results = self.coord.db_get_result_info(result_key)
+        package = client_info['package']
+
+        generic_url = urls.base_url + urls.generic_rss_feed_root % \
+                      dict(package=package)
+
+        all_url = generic_url + 'all'
+        feed_urls.add(all_url)
+        
+        if not client_info['success']:
+            # also notify 'failed'
+            failed_url = generic_url + 'failed'
+            feed_urls.add(failed_url)
+
+        # finally, NOTIFY pubsubhubbub servers of the changed URLs.
+        feed_urls = list(feed_urls)
+        for pshb_server in self.pshb_list:
+            rss.notify_pubsubhubbub_server(pshb_server, *feed_urls)
 
     def _q_index(self):
         packages = self.coord.get_all_packages()
@@ -51,28 +92,150 @@ class QuixoteWebApp(Directory):
         template = env.get_template('top_index.html')
         return template.render(locals())
 
-    def css(self):
-        cssfile = os.path.join(templatesdir, 'style.css')
+def create_publisher(coordinator, pubsubhubbub_server=None):
+    pshb_list = []
+    if pubsubhubbub_server:
+        pshb_list.append(pubsubhubbub_server)
         
-        response = quixote.get_response()
-        response.set_content_type('text/css')
-        return open(cssfile).read()
-
-    def _q_lookup(self, component):
-        return PackageInfo(self.coord, component)
-
-def create_publisher(coordinator):
+    qx_app = QuixoteWebApp(coordinator, pshb_list)
+    
     # sets global Quixote publisher
-    Publisher(QuixoteWebApp(coordinator), display_exceptions='plain')
+    Publisher(qx_app, display_exceptions='plain')
 
     # return a WSGI wrapper for the Quixote Web app.
     return quixote.get_wsgi_app()
 
 ###
 
+class PackageDirectory(Directory):
+    """
+    URL: /p/
+    """
+    _q_exports = [ '' ]
+
+    def __init__(self, coord):
+        self.coord = coord
+
+    def _q_index(self):
+        request = quixote.get_request()
+        response = quixote.get_response()
+        response.redirect(request.get_url(2))
+
+    def _q_lookup(self, component):
+        return PackageInfo(self.coord, component)
+
+###
+
+class RSS2FeedDirectory(Directory):
+    """
+    URL: /rss2/
+    """
+    _q_exports = [ '', '_generic' ]
+
+    def __init__(self, coord):
+        self.coord = coord
+        self._generic = RSS2_GenericFeeds(self.coord)
+
+    def _q_index(self):
+        feeds = []
+        for k in rss.build_snoopers:
+            snooper = rss.build_snoopers[k]
+            feeds.append((k, str(snooper)))
+            
+        template = env.get_template('feed_index.html')
+        return template.render(locals()).encode('latin-1', 'replace')
+    
+    def _q_lookup(self, component):
+        try:
+            snooper = rss.build_snoopers[component]
+        except KeyError:
+            response = quixote.get_response()
+            response.set_status(404)
+            return "404: no such component"
+
+        package_url = urls.base_url + '/' + urls.package_url_template
+        per_result_url = urls.base_url + '/' + urls.per_result_url_template
+
+        return snooper.generate_rss(self.coord, package_url, per_result_url)
+
+class RSS2_GenericFeeds(Directory):
+    """
+    URL: /rss2/_generic/
+    """
+    _q_exports = [ '', 'redirect' ]
+    
+    def __init__(self, coord):
+        self.coord = coord
+
+    def _q_index(self):
+        template = env.get_template('feed_generic_index.html')
+        return template.render().encode('latin-1', 'replace')
+
+    def redirect(self):
+        request = quixote.get_request()
+        response = quixote.get_response()
+        url = request.get_url(1)
+        
+        form = request.form
+        if 'package' in form:
+            package = form['package'].strip()
+            if package:
+                return response.redirect('%s/%s/' % (url, package))
+
+        return response.redirect('%s' % (url,))
+
+    def _q_lookup(self, package):
+        return RSS2_GenericPackageFeeds(self.coord, package)
+
+class RSS2_GenericPackageFeeds(Directory):
+    """
+    URL: /rss2/_generic/<package>/
+    """
+    _q_exports = [ '' ]
+
+    def __init__(self, coord, package):
+        self.coord = coord
+        self.package = package
+    
+    def _q_index(self):
+        request = quixote.get_request()
+        package = self.package
+        package_exists = (self.package in self.coord.get_all_packages())
+        
+        template = env.get_template('feed_generic_package_index.html')
+        return template.render(locals()).encode('latin-1', 'replace')
+    
+    def _q_lookup(self, component):
+        if component == 'all':
+            snooper = rss.PackageSnooper(self.package, register=False)
+        elif component == 'failed':
+            snooper = rss.PackageSnooper(self.package, only_failures=True,
+                                         register=False)
+#        elif component == 'no_recent_build':
+#            pass
+        else:
+            response = quixote.get_response()
+            response.set_status(404)
+            return "No such feed"
+
+        package_url = urls.base_url + '/' + urls.package_url_template
+        per_result_url = urls.base_url + '/' + urls.per_result_url_template
+
+        xml = snooper.generate_rss(self.coord, package_url, per_result_url)
+
+        response = quixote.get_response()
+        response.set_content_type('text/xml')
+        
+        return xml
+
+###
+
 class PackageInfo(Directory):
+    """
+    /p/<package>/
+    """
     _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail',
-                   'request_build']
+                   'request_build', 'files' ]
     
     def __init__(self, coord, package):
         self.coord = coord
@@ -121,6 +284,12 @@ class PackageInfo(Directory):
             tb = b[1][0]['time']
             return -cmp(ta, tb)
 
+        def files_exist(tagset):
+            key = d[tagset][0]['result_key']
+            x = self.coord.get_files_for_result(key)
+            x = [ f for f in x if f.visible and f.exists() ]
+            return len(x)
+
         it = d.items()
         it.sort(sort_by_timestamp)
         tagset_list = [ k for (k, v) in it ]
@@ -131,12 +300,12 @@ class PackageInfo(Directory):
     def show_all(self):
         package = self.package
         all_results = self.coord.get_all_results_for_package(package)
+        all_results.reverse()
 
         def qp(x):
             return quote_plus(str(x))
         
         def calc_status(status):
-            print 'STATUS:', status
             if status:
                 return "<font color='green'>SUCCESS</font>"
             else:
@@ -152,35 +321,72 @@ class PackageInfo(Directory):
         template = env.get_template('package_all.html')
         return template.render(locals()).encode('latin-1', 'replace')
 
-    def detail(self):
-        request = quixote.get_request()
-        key = request.form['result_key']
-        receipt, client_info, results = self.coord.db_get_result_info(key)
+    def _q_lookup(self, component):
+        if component == 'latest':
+            d = self.coord.get_unique_tagsets_for_package(self.package)
+            if not d:
+                response = quixote.get_response()
+                response.set_status(404)
+                response.set_body("no results for this package")
+                return 
+            
+            latest = d.itervalues().next()
+            latest_time = latest[0]['time']
+            for it in d.itervalues():
+                if it[0]['time'] > latest_time:
+                    latest = it
+                    latest_time = latest[0]['time']
 
-        if self.package != client_info['package']:
-            raise Exception
+            component = latest[0]['result_key']
+            
+        return ResultInfo(self.coord, self.package, component)
+
+class ResultInfo(Directory):
+    """
+    URL: /p/<package>/<result>/
+    """
+    _q_exports = ['', 'inspect', 'files' ]
+    def __init__(self, coord, package, result_key):
+        self.coord = coord
+        self.result_key = result_key
+        self.package = package
+        
+        self.receipt, self.client_info, self.results = \
+                      self.coord.db_get_result_info(result_key)
+        
+        assert self.package == self.client_info['package']
+
+        self.files = ResultFiles(coord, package, result_key)
+
+    def _q_index(self):
+        key = self.result_key
+        receipt = self.receipt
+        client_info = self.client_info
+        results = self.results
+        package = self.package
 
         qp = quote_plus
         timestamp = format_timestamp(receipt['time'])
-        package = self.package
         tags = ", ".join(client_info['tags'])
 
-        template = env.get_template('package_detail.html')
+        def files_exist():
+            x = self.coord.get_files_for_result(key)
+            x = [ f for f in x if f.visible and f.exists() ]
+            return len(x)
+
+        template = env.get_template('results_index.html')
         return template.render(locals()).encode('latin-1', 'replace')
         
     def inspect(self):
-
-        request = quixote.get_request()
-        key = request.form['result_key']
-        receipt, client_info, results = self.coord.db_get_result_info(key)
-
-        if self.package != client_info['package']:
-            raise Exception
+        key = self.result_key
+        receipt = self.receipt
+        client_info = self.client_info
+        results = self.results
+        package = self.package
 
         def repr_dict(d):
             return dict([ (k, pprint.pformat(d[k])) for k in d ])
 
-        package = self.package
         receipt = repr_dict(receipt)
         tagset = list(build_tagset(client_info))
         client_info = repr_dict(client_info)
@@ -188,14 +394,104 @@ class PackageInfo(Directory):
         
         qp = quote_plus
 
-        template = env.get_template('package_inspect.html')
+        template = env.get_template('results_inspect.html')
         return template.render(locals()).encode('latin-1', 'replace')
 
     def request_build(self):
-        request = quixote.get_request()
-        key = request.form['result_key']
-        receipt, client_info, results = self.coord.db_get_result_info(key)
+        key = self.result_key
+        receipt = self.receipt
+        client_info = self.client_info
+        results = self.results
+        package = self.package
 
         self.coord.set_request_build(client_info, True)
 
         return quixote.redirect('./')
+
+class ResultFiles(Directory):
+    """
+    URL: /p/<package>/<result>/files/
+    """
+    _q_exports = ['']
+
+    def __init__(self, coord, package, result_key):
+        self.coord = coord
+        self.package = package
+        self.result_key = result_key
+
+        file_list = self.coord.get_files_for_result(result_key)
+        self.file_list = [ x for x in file_list if x.visible and x.exists() ]
+
+    def _q_index(self):
+        x = []
+
+        result_key = self.result_key
+        receipt, client_info, results = \
+                 self.coord.db_get_result_info(result_key)
+        file_list = self.file_list
+        package = self.package
+        tags = ", ".join(client_info['tags'])
+
+        template = env.get_template('results_files_index.html')
+        return template.render(locals()).encode('latin-1', 'replace')
+
+    def _q_traverse(self, paths):
+        # can't use _q_lookup; quixote unescapes %2F in paths before '?'
+        if len(paths) == 1 and paths[0] == '':
+            return self._q_index()
+
+        filename = "/".join(paths)
+
+        print 'LOOKING FOR:', filename
+        
+        response = quixote.get_response()
+        for fileobj in self.file_list:
+            if fileobj.filename == filename:
+                enc_filename = filename.replace('\\', '\\\\').replace('"', '\\"')
+                response.set_content_type('application/binary')
+                response.set_header('Content-Disposition',
+                                    'filename=%s' % enc_filename)
+
+                fp = fileobj.open()
+                data = fp.read()
+                fp.close()
+                
+                response.set_body(data)
+                return
+
+        response.set_status(404)
+        response.set_body('not found')
+
+###
+
+def run(host, port, dbfilename, public_url=None, pubsubhubbub_server=None):
+    from .. import server, coordinator, dbsqlite
+    dbfile = dbsqlite.open_shelf(dbfilename)
+    dbfile = coordinator.IntDictWrapper(dbfile)
+
+    ###
+
+    snooper = rss.PackageSnooper('pygr')
+    rss.add_snooper(snooper, 'pygr-all')
+
+    snooper = rss.PackageSnooper('pygr', only_failures=True)
+    rss.add_snooper(snooper, 'pygr-failures')
+
+    ###
+
+    pbs_app = coordinator.PonyBuildCoordinator(db=dbfile)
+    wsgi_app = create_publisher(pbs_app, pubsubhubbub_server)
+
+    the_server = server.create(host, port, pbs_app, wsgi_app)
+    if public_url is None:
+        url = urls.calculate_base_url(host, port)
+    else:
+        url = public_url.rstrip('/')
+    urls.set_base_url(url)
+
+    try:
+        print 'serving on host %s, port %d, path /xmlrpc' % (host, port)
+        print 'public URL set to:', url
+        the_server.serve_forever()
+    except KeyboardInterrupt:
+        print 'exiting'

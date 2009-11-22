@@ -14,7 +14,7 @@ repo_url = 'git://github.com/ctb/pygr.git'
 tags = [python_exe, 'experimental']
 name = 'pygr'
 
-server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
+server_url = options.server_url
 
 if not options.force_build:
     if not check(name, server_url, tags=tags):
@@ -22,18 +22,16 @@ if not options.force_build:
         sys.exit(0)
 
 context = TempDirectoryContext()
-commands = [ GitClone(repo_url, branch='000-buildbot', name='checkout', cache_dir='~/.pony-build/pygr'),
+commands = [ GitClone(repo_url, branch='000-buildbot'),
              BuildCommand(['pyrexc', 'pygr/cdict.pyx', 'pygr/cnestedlist.pyx',
-                           'pygr/seqfmt.pyx'], run_cwd='pygr'),
-             BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
-                          name='compile', run_cwd='pygr'),
-             TestCommand([python_exe, 'runtest.py'],
-                         name='run tests', run_cwd='pygr/tests')
+                           'pygr/seqfmt.pyx']),
+             BuildCommand([python_exe, 'setup.py', 'build_ext', '-i']),
+             TestCommand([python_exe, 'runtest.py'], run_cwd='tests')
              ]
 
 results = do(name, commands, context=context)
 
-client_info, reslist = results
+client_info, reslist, files = results
 
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block css %}
+    <link rel="stylesheet" href="../../css" />
+{% endblock %}
+{% block title %}Index of generic feeds{% endblock %}
+
+{% block content %}
+
+<form method="POST" action="redirect">
+
+<h3 class="top_main_heading">Generic feeds</h3>
+<p>
+Build results for every package on this build server are
+available via RSS.  Enter the package name below to see
+a list of available feeds.
+<br>
+<br>
+Package to monitor? <input type="text" name="package">
+<input type="submit" value="go to feed list">
+
+</form>
+
+{% endblock %}

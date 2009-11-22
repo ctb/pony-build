@@ -1,0 +1,26 @@
+{% extends "feed_base.html" %}
+
+{% block title %} pony-build RSS2 feeds {% endblock %}
+
+{% block header %}
+<h1>pony-build report server - RSS2 feeds</h1>
+{% endblock %}
+
+{% block content %}
+
+<h3 class="top_main_heading">RSS2 Feed information</h3>
+<p>
+  
+<b>Generic feeds:</b>
+<br><br>
+We support several <a href='./_generic/'>generic feeds</a> for each package.
+<br><br>
+{% if feeds %}
+   In addition to the generic feeds, we export the following named
+feeds:<br><br>
+   {% for feedkey, description in feeds %} 
+      <A href='./{{ feedkey }}'>{{ feedkey }}: {{ description }}.</a><br>
+   {% endfor %}
+{% endif %}
+
+{% endblock %}

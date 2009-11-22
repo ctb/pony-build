@@ -63,7 +63,7 @@ def test_package_index():
     go(testutil._server_url)
     code(200)
     
-    go('./test-underway/')
+    go('./p/test-underway/')
     title('Build summary for')
     code(200)
     show()
@@ -81,7 +81,7 @@ def test_package_stale():
     go(testutil._server_url)
     code(200)
     
-    go('./test-stale/')
+    go('./p/test-stale/')
     title('Build summary for')
     code(200)
     show()

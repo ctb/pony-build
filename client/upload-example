@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 import sys
-import pprint
 from pony_client import BuildCommand, TestCommand, do, send, check, \
-     TempDirectoryContext, parse_cmdline
+     TempDirectoryContext, parse_cmdline, UploadAFile
 
 options, args = parse_cmdline()
 if args:
@@ -20,12 +19,13 @@ if not options.force_build:
         sys.exit(0)
 
 commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='David'),
-             TestCommand(['/bin/echo', 'this is a test'], name='Bill')
+             TestCommand(['/bin/echo', 'this is a test'], name='Bill'),
+             UploadAFile('/bin/ls', 'my-test-file', 'test upload/binary file')
              ]
 
 context = TempDirectoryContext()
 results = do(name, commands, context=context, stop_if_failure=False)
-client_info, reslist, files = results
+client_info, reslist, files_to_upload = results
 
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)
@@ -33,6 +33,8 @@ if options.report:
 else:
 
     print 'build result:'
+
+    import pprint
     pprint.pprint(client_info)
     pprint.pprint(reslist)
     

@@ -17,7 +17,7 @@
         <td>{{ calc_status(client_info['success']) }}</td>
         <td>{{ nicetagset(client_info['tags']) }}</td>
         <td>{{ calc_time(receipt['time']) }}</td>
-        <td><a href='detail?result_key={{ qp(receipt['result_key']) }}'>view details</a></td>      </tr>
+        <td><a href='./{{ qp(receipt['result_key']) }}/'>view details</a></td>      </tr>
    {% endfor %}
    </table>
 {% else %}

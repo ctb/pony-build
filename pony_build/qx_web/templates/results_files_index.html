@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block css %}
+    <link rel="stylesheet" href="../../../../css" />
+{% endblock %}
+
+{% block title %}
+Files for package '{{ package }}'
+{% endblock %}
+
+{% block sidebar %}
+
+<p>
+
+<h3>{{ package }}</h3>
+
+<p class="news">
+<a href='../../'>latest builds</a><br>
+<a href='../../show_all'>all builds</a>
+</p>
+<br>
+<p>
+<a href='../../../../'>../index</a>
+<br>
+<br
+{% endblock %}
+
+{% block content %}
+
+<h2>Files for package '{{ package }}'</h2>
+
+Tags: {{ tags }}<br>
+<br>
+<p>
+
+{% if file_list %}
+  {% for fileobj in file_list %}
+      {% if fileobj.visible %}
+      {{ loop.index }}. <a href='{{ fileobj.filename|e }}'>{{ fileobj.filename }}</a> - {{ fileobj.description }} ({{ (fileobj.size() / 1000 + 1)|int }} kb)<br>
+      {% endif %}
+  {% endfor %}
+{% else %}
+No files.
+{% endif %}
+
+{% endblock %}
+
+{% block footer %}
+<br>
+<center>
+Monitor package via RSS:
+<a href='../../../../rss2/_generic/{{ package-}}/all'>all builds</a> |
+<a href='../../../../rss2/_generic/{{ package-}}/failed'>failed builds</a><Br>
+</center>
+
+{% endblock %}

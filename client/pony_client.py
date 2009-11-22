@@ -12,9 +12,11 @@ import shutil
 import os, os.path
 import time
 import urlparse
+import urllib
 import traceback
 from optparse import OptionParser
 import pprint
+import glob
 
 pb_servers = {
     'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
@@ -72,11 +74,28 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
 
     return (ret, out, err)
 
+class FileToUpload(object):
+    def __init__(self, filename, location, description, visible):
+        """
+        filename - name to publish as
+        location - full location on build system (not sent to server)
+        description - brief description of file/arch for server
+        """
+        self.data = open(location).read()
+        self.filename = filename
+        self.description = description
+        self.visible = visible
+
+    def __repr__(self):
+        return "<FileToUpload('%s', '%s')>" % (self.filename,
+                                               self.description)
+
 class Context(object):
     def __init__(self):
         self.history = []
         self.start_time = self.end_time = None
         self.build_dir = None
+        self.files = []
         
     def initialize(self):
         self.start_time = time.time()
@@ -93,6 +112,10 @@ class Context(object):
 
     def update_client_info(self, info):
         info['duration'] = self.end_time - self.start_time
+
+    def add_file_to_upload(self, name, location, description, visible):
+        o = FileToUpload(name, location, description, visible)
+        self.files.append(o)
 
 class TempDirectoryContext(Context):
     def __init__(self, cleanup=True):
@@ -159,6 +182,36 @@ class VirtualenvContext(Context):
         info['tempdir'] = self.tempdir
         info['virtualenv'] = True
 
+class UploadAFile(object):
+    """
+    @CTB add glob support
+    """
+    def __init__(self, filepath, public_name, description, visible=True):
+        self.filepath = os.path.realpath(filepath)
+        self.public_name = public_name
+        self.description = description
+        self.visible = visible
+
+    def success(self):
+        return os.path.exists(self.filepath)
+
+    def run(self, context):
+        context.add_file_to_upload(self.public_name, self.filepath,
+                                   self.description, self.visible)
+
+    def get_results(self):
+        try:
+            filesize = os.path.getsize(self.filepath)
+        except OSError:
+            filesize = -1
+            
+        results = dict(type='file_upload',
+                       description=self.description,
+                       filesize=filesize,
+                       errout="",       # @CTB should be unnecessary!
+                       status=0)        # @CTB should be unnecessary!
+        return results
+
 class BaseCommand(object):
     def __init__(self, command_list, name='', run_cwd=None,
                  subprocess_kwargs=None, ignore_failure=False,
@@ -181,6 +234,9 @@ class BaseCommand(object):
 
         self.ignore_failure = ignore_failure
         self.verbose = verbose
+
+    def __repr__(self):
+        return "%s (%s)" % (self.command_name, self.command_type)
 
     def set_variables(self, v):
         self.variables = dict(v)
@@ -224,6 +280,27 @@ class TestCommand(BaseCommand):
     command_type = 'test'
     command_name = 'test'
 
+class PythonPackageEgg(BaseCommand):
+    command_type = 'package'
+    command_name = 'package_egg'
+
+    def __init__(self, python_exe='python'):
+        BaseCommand.__init__(self, [python_exe, 'setup.py', 'bdist_egg'],
+                             name='build an egg')
+
+    def run(self, context):
+        BaseCommand.run(self, context)
+        if self.status == 0:            # success?
+            eggfiles = os.path.join('dist', '*.egg')
+            eggfiles = glob.glob(eggfiles)
+
+            for filename in eggfiles:
+                context.add_file_to_upload(os.path.basename(filename),
+                                           filename,
+                                           'an egg installation file',
+                                           visible=True)
+            
+            
 class GitClone(SetupCommand):
     command_name = 'checkout'
     
@@ -437,7 +514,32 @@ def get_arch():
 def _send(server, info, results):
     print 'connecting to', server
     s = xmlrpclib.ServerProxy(server, allow_none=True)
-    s.add_results(info, results)
+    auth_key = s.add_results(info, results)
+    return str(auth_key)
+
+def _upload_file(server_url, fileobj, auth_key):
+    # @CTB make sure files can't be uploaded from elsewhere on system?
+    
+    # @CTB hack hack
+    assert server_url.endswith('xmlrpc')
+    upload_url = server_url[:-6] + 'upload'
+
+    if fileobj.visible:
+        visible='yes'
+    else:
+        visible = 'no'
+
+    qs = urllib.urlencode(dict(description=fileobj.description,
+                               filename=fileobj.filename,
+                               auth_key=str(auth_key),
+                               visible=visible))
+    upload_url += '?' + qs
+
+    try:
+        http_result = urllib.urlopen(upload_url, fileobj.data)
+    except:
+        print 'file upload failed:', fileobj
+        print traceback.format_exc()
 
 def do(name, commands, context=None, arch=None, stop_if_failure=True):
     reslist = []
@@ -446,7 +548,7 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
         context.initialize()
 
     for c in commands:
-        print 'running: %s (%s)' % (c.command_name, c.command_type)
+        print 'running:', c
         if context:
             context.start_command(c)
         c.run(context)
@@ -467,13 +569,18 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
     success = all([ c.success() for c in commands ])
 
     client_info = dict(package=name, arch=arch, success=success)
+    files_to_upload = None
+    
     if context:
         context.update_client_info(client_info)
 
-    return (client_info, reslist)
+        if context.files:
+            files_to_upload = context.files
+
+    return (client_info, reslist, files_to_upload)
 
 def send(server_url, x, hostname=None, tags=()):
-    client_info, reslist = x
+    client_info, reslist, files_to_upload = x
     if hostname is None:
         import socket
         hostname = socket.gethostname()
@@ -483,7 +590,12 @@ def send(server_url, x, hostname=None, tags=()):
 
     server_url = get_server_url(server_url)
     print 'using server URL:', server_url
-    _send(server_url, client_info, reslist)
+    auth_key = _send(server_url, client_info, reslist)
+
+    if files_to_upload:
+        for fileobj in files_to_upload:
+            print 'uploading', fileobj
+            _upload_file(server_url, fileobj, auth_key)
 
 def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
     if hostname is None:
@@ -605,7 +717,7 @@ if __name__ == '__main__':
 
     context = TempDirectoryContext()
     results = do(package, recipe, context=context, stop_if_failure=False)
-    client_info, reslist = results
+    client_info, reslist, files_list = results
     
     if options.report:
         print 'result: %s; sending' % (client_info['success'],)

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import sys
+import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
      TempDirectoryContext, SetupCommand, SvnUpdate, check, parse_cmdline
 
@@ -15,32 +16,26 @@ if args:
 
 name = 'twill'
 tags = [python_exe]
-#server_url = 'http://localhost:8080/xmlrpc'
-server_url = 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc'
+server_url = options.server_url
 
 if not options.force_build:
     if not check(name, server_url, tags=tags):
         print 'check build says no need to build; bye'
         sys.exit(0)
 
-commands = [ SvnUpdate('twill', repo_url, name='checkout', cache_dir='~/.pony-build/twill'),
-             BuildCommand([python_exe, 'setup.py', 'build'],
-                          name='compile'),
-             TestCommand([python_exe, 'setup.py', 'test'], name='run tests'),
+commands = [ SvnUpdate('twill', repo_url, name='checkout'),
+             BuildCommand([python_exe, 'setup.py', 'test'])
              ]
 
-context = TempDirectoryContext(False)
+context = TempDirectoryContext()
 results = do(name, commands, context=context)
-client_info, reslist = results
+client_info, reslist, files = results
 
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)
     send(server_url, results, tags=tags)
 else:
-
     print 'build result:'
-
-    import pprint
     pprint.pprint(client_info)
     pprint.pprint(reslist)
     

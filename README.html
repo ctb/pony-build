@@ -316,13 +316,13 @@ three ain't bad ;).</p>
 <h1><a id="pony-build-server" name="pony-build-server">pony-build server</a></h1>
 <p>The command:</p>
 <pre class="literal-block">
-python bin/run-qx-server &lt;shelve filename&gt; &lt;port&gt;
+python -m pony_build.qx_web.run &lt;shelve filename&gt; &lt;port&gt;
 </pre>
-<p>will run the Quixote-baesd pony-build Web app on the given port,
+<p>will run the Quixote-based pony-build Web app on the given port,
 reading &amp; writing from the shelve database in 'filename'.</p>
 <p>For example,</p>
 <pre class="literal-block">
-python bin/run-qx-server test.db 8080
+python -m pony_build.qx_web.run test.db 8080
 </pre>
 <p>will run a server that can be accessed on <a class="reference" href="http://localhost:8080/">http://localhost:8080/</a>.  This
 server will report on whatever results are sent to it by the client (see
@@ -395,6 +395,22 @@ simple ways to extend things are to add new k/v pairs for specific
 purposes, and/or to use the 'tags' key in the client_info dict.
 The 'tags' associated value is a list of strings.</p>
 <p>receipt['result_key'] is the internal key used to store the result.</p>
+</div>
+<div class="section">
+<h2><a id="notifications" name="notifications">Notifications</a></h2>
+<p>RSS2 and pubsubhubbub (<a class="reference" href="http://code.google.com/p/pubsubhubbub/">http://code.google.com/p/pubsubhubbub/</a>) are the
+core of the notification system built into pony_build; the &quot;officially
+correct&quot; way to actively notify interested people of build results is
+to publish them via RSS2, push them to a pubsubhubbub server, and let
+someone else deal with translating those into e-mail alerts, etc.</p>
+<p>All of the RSS feeds that pony-build makes available can be posted to
+pubsubhubbub with the proper configuration (see -P and -S options to
+<tt class="docutils literal"><span class="pre">pony_build.qx_web.run</span></tt>).  A simple example CGI callback script is
+in <tt class="docutils literal"><span class="pre">examples/pshb_cgi_subscriber.cgi</span></tt> in the pony-build source
+distribution.</p>
+<p>Note that there are also utility functions in <tt class="docutils literal"><span class="pre">pony_build.rss</span></tt> for
+helping to create RSS2 feeds and notify pubsubhubbub servers of
+new results</p>
 </div>
 </div>
 <div class="section">
