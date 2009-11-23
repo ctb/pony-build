@@ -31,7 +31,7 @@ commands = [ GitClone(repo_url, name='checkout'),
                           name='compile'),
              TestCommand([python_exe, 'runtest.py'],
                          name='run tests', run_cwd='tests'),
-             PythonPackageEgg()]
+             PythonPackageEgg(python_exe)]
 
 results = do(name, commands, context=context)
 client_info, reslist, files = results
