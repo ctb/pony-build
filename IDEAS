@@ -294,3 +294,8 @@ gae version of pony-build?
 
 'latest' magic component, 'latest='tags magic component
 'latest files' magic component, also with tags (so, latest egg from win32)
+
+a build "DSL" that multiple build systems can use, controlling
+  not only build params (easy in python) but coverage reporting/etc.
+
+http://github.com/stefanv/scikits.image
