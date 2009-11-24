@@ -168,12 +168,11 @@ class PonyBuildCoordinator(object):
         self._archs = archs = {}
         self._packages = packages = {}
 
-        keys = sorted(self.db.keys())
-
         now = datetime.now()
         a_week = timedelta(days=7)
 
-        discarded_count = 0
+        keys = list(reversed(sorted(self.db.keys())))
+        kept_count = 0
         for k in keys:
             (receipt, client_info, results_list) = self.db[k]
 
@@ -181,27 +180,27 @@ class PonyBuildCoordinator(object):
             t = datetime.fromtimestamp(t)
 
             if now - t > a_week:
-                discarded_count += 1
-                #print 'discarding', receipt['result_key'], '-- over a week old'
-                continue
+                break
+            
+            kept_count += 1
 
             host = client_info['host']
             arch = client_info['arch']
             pkg = client_info['package']
 
             l = hosts.get(host, [])
-            l.append(k)
+            l.insert(0, k)
             hosts[host] = l
 
             l = archs.get(arch, [])
-            l.append(k)
+            l.insert(0, k)
             archs[arch] = l
 
             l = packages.get(pkg, [])
-            l.append(k)
+            l.insert(0, k)
             packages[pkg] = l
 
-        print 'discarded', discarded_count, 'week+-old results of', len(keys)
+        print 'discarded', len(keys) - kept_count, 'week+-old results of', len(keys)
 
     def db_get_result_info(self, result_id):
         return self.db[result_id]
