@@ -168,6 +168,7 @@ class PonyBuildCoordinator(object):
         now = datetime.now()
         a_week = timedelta(days=7)
 
+        discarded_count = 0
         for k in keys:
             (receipt, client_info, results_list) = self.db[k]
 
@@ -175,6 +176,7 @@ class PonyBuildCoordinator(object):
             t = datetime.fromtimestamp(t)
 
             if now - t > a_week:
+                discarded_count += 1
                 #print 'discarding', receipt['result_key'], '-- over a week old'
                 continue
 
@@ -193,6 +195,8 @@ class PonyBuildCoordinator(object):
             l = packages.get(pkg, [])
             l.append(k)
             packages[pkg] = l
+
+        print 'discarded', discarded_count, 'week+-old results of', len(keys)
 
     def db_get_result_info(self, result_id):
         return self.db[result_id]
