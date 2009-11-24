@@ -9,6 +9,7 @@ import time
 from datetime import datetime, timedelta
 import UserDict
 import os, os.path
+import uuid
 
 from .file_storage import UploadedFile, sweep, get_file_catalog
 
@@ -76,6 +77,8 @@ class PonyBuildCoordinator(object):
         # @CTB another database hack; yay?
         self.files = IntDictWrapper(get_file_catalog())
 
+        self.auth_keys = {}             # map uuids to result keys
+
     def add_listener(self, x):
         self.listeners.append(x)
 
@@ -96,9 +99,11 @@ class PonyBuildCoordinator(object):
         for x in self.listeners:
             x.notify_result_added(key)
 
-        # @CTB should return an auth key to allow changes to this record,
-        # not just the record #... INSECURE.
-        return key
+        # only allow modifications (e.g. file uploads) using this auth key,
+        # which is (in theory) unpredictable.  Tie it to the results key.
+        unique_id = uuid.uuid4().hex
+        self.auth_keys[unique_id] = key
+        return unique_id
 
     def set_request_build(self, client_info, value):
         # note: setting value=False is a way to override value=True.
@@ -215,21 +220,21 @@ class PonyBuildCoordinator(object):
 
     def db_add_uploaded_file(self, auth_key, filename, content, description,
                              visible):
-        if auth_key not in self.db:
+        if auth_key not in self.auth_keys:
             return False
         
-        auth_key = str(auth_key)
+        result_key = self.auth_keys[auth_key]
 
-        subdir = auth_key
+        subdir = str(result_key)
         fileobj = UploadedFile(subdir, filename, description, visible)
         fileobj.make_subdir()
         fp = fileobj.open('wb')
         fp.write(content)
         fp.close()
 
-        file_list = self.files.get(auth_key, [])
+        file_list = self.files.get(result_key, [])
         file_list.append(fileobj)
-        self.files[auth_key] = file_list
+        self.files[result_key] = file_list
         self.files.sync()
 
         sweep()
