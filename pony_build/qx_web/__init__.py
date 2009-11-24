@@ -41,7 +41,10 @@ class QuixoteWebApp(Directory):
         # get notified of new results by the coordinator...
         self.coord.add_listener(self)
 
-        print 'PPP', pshb_list
+        if pshb_list:
+            print '** PuSH servers:', pshb_list
+        else:
+            print '** PuSH disabled'
         self.pshb_list = list(pshb_list)
         self.rss2 = RSS2FeedDirectory(coord)
         self.p = PackageDirectory(coord)
