@@ -165,8 +165,18 @@ class PonyBuildCoordinator(object):
 
         keys = sorted(self.db.keys())
 
+        now = datetime.now()
+        a_week = timedelta(days=7)
+
         for k in keys:
             (receipt, client_info, results_list) = self.db[k]
+
+            t = receipt['time']
+            t = datetime.fromtimestamp(t)
+
+            if now - t > a_week:
+                #print 'discarding', receipt['result_key'], '-- over a week old'
+                continue
 
             host = client_info['host']
             arch = client_info['arch']

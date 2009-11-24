@@ -678,12 +678,20 @@ PYTHON_EXE = 'PB:python_exe'
 PythonBuild = BuildCommand([PYTHON_EXE, 'setup.py', 'build'])
 PythonBuildInPlace = BuildCommand([PYTHON_EXE, 'setup.py', 'build_ext', '-i'])
 PythonTest = TestCommand([PYTHON_EXE, 'setup.py', 'test'])
+Python_package_egg = PythonPackageEgg(PYTHON_EXE)
 
 recipes = {
     'pony-build' : (get_python_config,
                     [ GitClone('git://github.com/ctb/pony-build.git'),
                       PythonBuild,
-                      PythonTest
+                      PythonTest,
+                      Python_package_egg
+             ]),
+    'scikits.image' : (get_python_config,
+                       [ GitClone('git://github.com/stefanv/scikits.image.git'),
+                         PythonBuild,
+                         PythonTest,
+                         Python_package_egg
              ]),
     'twill' : (get_python_config,
                [ SvnUpdate('twill', 'https://twill.googlecode.com/svn/branches/0.9.2-dev/twill', cache_dir='~/.pony-build/twill'),

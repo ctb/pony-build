@@ -299,3 +299,5 @@ a build "DSL" that multiple build systems can use, controlling
   not only build params (easy in python) but coverage reporting/etc.
 
 http://github.com/stefanv/scikits.image
+
+protect against , in tags
