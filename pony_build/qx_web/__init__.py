@@ -237,8 +237,7 @@ class PackageInfo(Directory):
     """
     /p/<package>/
     """
-    _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail',
-                   'request_build', 'files' ]
+    _q_exports = [ '', 'show_latest', 'show_all', 'inspect', 'detail','files' ]
     
     def __init__(self, coord, package):
         self.coord = coord
@@ -348,7 +347,7 @@ class ResultInfo(Directory):
     """
     URL: /p/<package>/<result>/
     """
-    _q_exports = ['', 'inspect', 'files' ]
+    _q_exports = ['', 'inspect', 'files', 'request_build' ]
     def __init__(self, coord, package, result_key):
         self.coord = coord
         self.result_key = result_key
@@ -409,7 +408,7 @@ class ResultInfo(Directory):
 
         self.coord.set_request_build(client_info, True)
 
-        return quixote.redirect('./')
+        return quixote.redirect('../')
 
 class ResultFiles(Directory):
     """
