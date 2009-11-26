@@ -301,3 +301,11 @@ a build "DSL" that multiple build systems can use, controlling
 http://github.com/stefanv/scikits.image
 
 protect against , in tags
+
+ucosp ideas:
+ - leaderboard stuff
+
+tagtranslator
+directorycopy
+
+Context vs TempDirContext problems
