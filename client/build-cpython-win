@@ -3,7 +3,8 @@ import sys
 import distutils
 import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
-     Context, TempDirectoryContext, SetupCommand, SvnUpdate, check, parse_cmdline
+     Context, TempDirectoryContext, SetupCommand, SvnUpdate, check, parse_cmdline, \
+     UploadAFile
 
 options, args = parse_cmdline()
 if args:
@@ -24,13 +25,15 @@ if not options.force_build:
         sys.exit(0)
 
 
-context = TempDirectoryContext()
-
+#context = TempDirectoryContext()
+context = Context()
 commands = [
-             SvnUpdate('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
-             BuildCommand(['build.bat'], name='build.bat', run_cwd='pcbuild', subprocess_kwargs=dict(shell=True), ignore_failure=True, verbose=True),
-             TestCommand(['pcbuild\\python.exe', 'Lib\\test\\regrtest.py', '-x', 'test_ttk_textonly', 'test_bz2', 'test_ttk_guionly', 'test_bsddb', 'test_ssl', 'test_tcl', 'test_tk', 'test_readline', 'test_sqlite', 'test_distutils', 'test_winsound'], name='regrtest')
-             ]
+             #SvnUpdate('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
+             BuildCommand(['build.bat'], name='build.bat', run_cwd='python27\\pcbuild', subprocess_kwargs=dict(shell=True), ignore_failure=True, verbose=True),
+             TestCommand(['pcbuild\\python.exe', 'Lib\\test\\regrtest.py', '-x', 'test_ttk_textonly', 'test_bz2', 'test_ttk_guionly', 'test_bsddb', 'test_ssl', 'test_tcl', 'test_tk', 'test_readline', 'test_sqlite', 'test_distutils', 'test_winsound'], name='regrtest'),
+             BuildCommand(['Tools\\buildbot\\buildmsi.bat'], run_cwd='python27', subprocess_kwargs=dict(shell=True)),
+	     UploadAFile("python27\\Tools\\msi\\python-2.7.*.msi", "python-2.7-latest.msi", "Windows installer")
+	     ]
 
 results = do(name, commands, context=context)
 client_info, reslist, files = results

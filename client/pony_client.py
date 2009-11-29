@@ -196,6 +196,9 @@ class UploadAFile(object):
         return os.path.exists(self.filepath)
 
     def run(self, context):
+        print 'XX', self.filepath
+	print 'YY', glob.glob(self.filepath)
+        self.filepath = glob.glob(self.filepath)[0]
         context.add_file_to_upload(self.public_name, self.filepath,
                                    self.description, self.visible)
 
