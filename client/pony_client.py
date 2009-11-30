@@ -514,7 +514,7 @@ def get_arch():
 def _send(server, info, results):
     print 'connecting to', server
     s = xmlrpclib.ServerProxy(server, allow_none=True)
-    auth_key = s.add_results(info, results)
+    (result_key, auth_key) = s.add_results(info, results)
     return str(auth_key)
 
 def _upload_file(server_url, fileobj, auth_key):

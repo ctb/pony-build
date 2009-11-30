@@ -17,8 +17,10 @@ class Test_Coordinator_API(object):
         self.tagset = coordinator.build_tagset(self.some_client_info)
 
     def load_results(self):
-        k = self.coord.add_results('127.0.0.1', self.some_client_info, [])
-        return k
+        (results_key, auth_key) = self.coord.add_results('127.0.0.1',
+                                                         self.some_client_info,
+                                                         [])
+        return results_key
 
     def test_get_no_arch(self):
         keys = self.coord.get_all_archs()

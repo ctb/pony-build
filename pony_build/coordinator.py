@@ -103,7 +103,8 @@ class PonyBuildCoordinator(object):
         # which is (in theory) unpredictable.  Tie it to the results key.
         unique_id = uuid.uuid4().hex
         self.auth_keys[unique_id] = key
-        return unique_id
+        
+        return (key, unique_id)
 
     def set_request_build(self, client_info, value):
         # note: setting value=False is a way to override value=True.

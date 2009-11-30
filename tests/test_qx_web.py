@@ -1,5 +1,5 @@
 import os
-import shelve
+import time
 
 import testutil
 from twill.commands import *
@@ -38,9 +38,9 @@ def make_db(filename=DB_TEST_FILE):
     results = [ dict(status=0, name='abc', errout='', output='',
                     command=['foo', 'bar'],
                     type='test_the_test') ]
-    k = coord.add_results('120.0.0.127', client_info, results)
+    (k, _) = coord.add_results('120.0.0.127', client_info, results)
     receipt, client_info, results_list = db[k]
-    receipt['time'] = 0
+    receipt['time'] = time.time() - 60*60*24 * 2      # -- 2 days ago
     db[k] = receipt, client_info, results_list
 
     del coord
@@ -63,7 +63,7 @@ def test_package_index():
     go(testutil._server_url)
     code(200)
     
-    go('./p/test-underway/')
+    go('/p/test-underway/')
     title('Build summary for')
     code(200)
     show()
@@ -73,15 +73,12 @@ def test_package_index():
     code(200)
     show()
 
-    follow('inspect raw record')
-    code(200)
-    show()
 
 def test_package_stale():
     go(testutil._server_url)
     code(200)
     
-    go('./p/test-stale/')
+    go('/p/test-stale/')
     title('Build summary for')
     code(200)
     show()
