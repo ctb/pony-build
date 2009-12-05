@@ -1,5 +1,6 @@
 import os
 import shelve
+import time
 
 import testutil
 from twill.commands import *

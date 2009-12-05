@@ -3,6 +3,8 @@ from optparse import OptionParser
 from .. import qx_web
 
 if __name__ == '__main__':
+    import figleaf
+    figleaf.start()
     import sys
     parser = OptionParser()
 

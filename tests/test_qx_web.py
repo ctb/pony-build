@@ -1,8 +1,11 @@
 import os
 import time
+import warnings
 
 import testutil
-from twill.commands import *
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from twill.commands import *
 
 from pony_build import coordinator, dbsqlite
 
@@ -17,16 +20,23 @@ def make_db(filename=DB_TEST_FILE):
     db = coordinator.IntDictWrapper(db)
     coord = coordinator.PonyBuildCoordinator(db)
 
+    ## CTB: note, make sure to add items to the database in the correct
+    ## order: most recently received ==> last.
+
+    # mangle the receipt time in the database, in order to test expiration
     client_info = dict(success=True,
                        tags=['a_tag'],
-                       package='test-underway',
+                       package='test-expire',
                        duration=0.1,
                        host='testhost',
                        arch='fooarch')
     results = [ dict(status=0, name='abc', errout='', output='',
                     command=['foo', 'bar'],
                     type='test_the_test') ]
-    coord.add_results('120.0.0.127', client_info, results)
+    (k, _) = coord.add_results('127.0.0.1', client_info, results)
+    receipt, client_info, results_list = db[k]
+    receipt['time'] = time.time() - 60*60*24 * 10     # -- 10 days ago
+    db[k] = receipt, client_info, results_list
 
     # mangle the receipt time in the database, in order to test stale flag.
     client_info = dict(success=True,
@@ -38,10 +48,22 @@ def make_db(filename=DB_TEST_FILE):
     results = [ dict(status=0, name='abc', errout='', output='',
                     command=['foo', 'bar'],
                     type='test_the_test') ]
-    (k, _) = coord.add_results('120.0.0.127', client_info, results)
+    (k, _) = coord.add_results('127.0.0.1', client_info, results)
     receipt, client_info, results_list = db[k]
     receipt['time'] = time.time() - 60*60*24 * 2      # -- 2 days ago
     db[k] = receipt, client_info, results_list
+
+    # also add a fresh result
+    client_info = dict(success=True,
+                       tags=['a_tag'],
+                       package='test-underway',
+                       duration=0.1,
+                       host='testhost',
+                       arch='fooarch')
+    results = [ dict(status=0, name='abc', errout='', output='',
+                    command=['foo', 'bar'],
+                    type='test_the_test') ]
+    (k, _) = coord.add_results('127.0.0.1', client_info, results)
 
     del coord
     db.close()
@@ -84,3 +106,14 @@ def test_package_stale():
     show()
 
     find("Stale build")
+
+def test_package_expired():
+    go(testutil._server_url)
+    code(200)
+    
+    go('/p/test-expire/')
+    title('Build summary for')
+    code(200)
+    show()
+
+    notfind('view details')

@@ -64,9 +64,6 @@ def build_tagset(client_info, no_arch=False, no_host=False):
 
 class PonyBuildCoordinator(object):
     def __init__(self, db=None):
-        if db is None:
-            db = IntDictWrapper({})
-
         self.db = db
 
         self._process_results()
@@ -133,13 +130,10 @@ class PonyBuildCoordinator(object):
             diff = now - last_t
 
             if not requested:
-                last_duration = DEFAULT_BUILD_DURATION
+                requested = DEFAULT_BUILD_DURATION
                 if tagset in last_build:
-                    try:
-                        last_duration = last_build[tagset][1]['duration']
-                    except KeyError:
-                        pass
-                requested = last_duration
+                    requested = last_build[tagset][1].get('duration',
+                                                          requested)
             requested = timedelta(0, requested) # seconds
 
             if diff < requested:

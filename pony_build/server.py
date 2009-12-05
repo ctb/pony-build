@@ -17,6 +17,7 @@ from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
      SimpleXMLRPCDispatcher
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
      ServerHandler
+import figleaf
 
 try:
     from urlparse import parse_qs
@@ -147,6 +148,12 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         self._send_html_response(code, message)
 
     def handle(self):
+        try:
+            self._handle()
+        finally:
+            figleaf.write_coverage('.figleaf')
+
+    def _handle(self):
         """
         Handle:
           /xmlrpc => SimpleXMLRPCServer
