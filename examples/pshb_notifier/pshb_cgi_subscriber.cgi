@@ -7,7 +7,7 @@ Developed for use in dumb pony-build notifiers.
 import sys
 
 MAIL_SERVER = 'localhost'
-MAIL_FROM = 'pony-noreply'
+MAIL_FROM = 'pony-noreply@lyorn.idyll.org'
 MAIL_TO = 'titus@idyll.org'
 
 import quixote
