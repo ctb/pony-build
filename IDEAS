@@ -313,3 +313,5 @@ Context vs TempDirContext problems
 notify next-time-run
 
 trust-metric for leaderboard
+
+fill in unfilled project details from e.g. github webhook notify?

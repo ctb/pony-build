@@ -25,7 +25,7 @@ canonical URLs
 import datetime
 import traceback
 from cStringIO import StringIO
-from .PyRSS2Gen import RSS2, RSSItem, _element, Guid
+from .PyRSS2Gen import RSS2, RSSItem, _element, Guid, Source
 from .pubsubhubbub_publish import publish as pshb_publish, PublishError
 
 build_snoopers = {}
@@ -113,7 +113,8 @@ class PackageSnooper(BuildSnooper):
         return "Report on %s builds for package '%s'" % (modifier,
                                                          self.package_name,)
 
-    def generate_rss(self, pb_coord, package_url, per_result_url):
+    def generate_rss(self, pb_coord, package_url, per_result_url,
+                     source_url=''):
         packages = pb_coord.get_unique_tagsets_for_package(self.package_name)
 
         def sort_by_timestamp(a, b):
@@ -160,11 +161,16 @@ class PackageSnooper(BuildSnooper):
 
             link = per_result_url % dict(result_key=result_key,
                                          package=self.package_name)
+
+            source_obj = Source('package build & test information for "%s"' % self.package_name, source_url)
+            
             item = RSSItem(title=title,
                            link=link,
                            description=description,
                            guid=Guid(link),
-                           pubDate=pubDate)
+                           pubDate=pubDate,
+                           source=source_obj)
+
             rss_items.append(item)
 
         rss = PSHB_RSS2(

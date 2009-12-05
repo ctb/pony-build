@@ -158,8 +158,15 @@ class RSS2FeedDirectory(Directory):
 
         package_url = urls.base_url + '/' + urls.package_url_template
         per_result_url = urls.base_url + '/' + urls.per_result_url_template
+        source_url = urls.base_url + '/rss2/' + component
 
-        return snooper.generate_rss(self.coord, package_url, per_result_url)
+        xml = snooper.generate_rss(self.coord, package_url, per_result_url,
+                                   source_url=source_url)
+        
+        response = quixote.get_response()
+        response.set_content_type('text/xml')
+        
+        return xml
 
 class RSS2_GenericFeeds(Directory):
     """
@@ -223,8 +230,11 @@ class RSS2_GenericPackageFeeds(Directory):
 
         package_url = urls.base_url + '/' + urls.package_url_template
         per_result_url = urls.base_url + '/' + urls.per_result_url_template
+        source_url = urls.base_url + '/rss2/_generic/%s/%s' % \
+                     (self.package, component)
 
-        xml = snooper.generate_rss(self.coord, package_url, per_result_url)
+        xml = snooper.generate_rss(self.coord, package_url, per_result_url,
+                                   source_url=source_url)
 
         response = quixote.get_response()
         response.set_content_type('text/xml')
