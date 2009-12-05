@@ -7,7 +7,7 @@ url = urlparse(sys.argv[1])
 
 print url.hostname, url.port, url.path
 
-data = open('pygr.rss').read()
+data = open('rss-test-example.rss').read()
 h = httplib.HTTPConnection(url.hostname, url.port)
 h.request('POST', url.path, data)
 print h.getresponse().read()
