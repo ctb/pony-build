@@ -17,6 +17,7 @@ from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
      SimpleXMLRPCDispatcher
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
      ServerHandler
+import json                             # requires python2.6
 #import figleaf
 
 try:
@@ -113,8 +114,10 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         self.wfile.close()
 
     def _handle_upload(self):
-        url, qs = self.path.split('?', 1)
-        qs = parse_qs(qs)
+        qs = {}
+        if '?' in self.path:
+            url, qs = self.path.split('?', 1)
+            qs = parse_qs(qs)
 
         try:
             description = qs.get('description')[0]
@@ -146,6 +149,36 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             message = 'upload attempt, but no upload content?!'
 
         self._send_html_response(code, message)
+
+    def _handle_notify(self):
+        data = ''
+        
+        content_length = self.headers.getheader('content-length')
+        if content_length:
+            content_length = int(content_length)
+            data = self.rfile.read(content_length)
+
+        qs = {}
+        if '?' in self.path:
+            url, qs = self.path.split('?', 1)
+            qs = parse_qs(qs)
+
+        format = 'unknown'
+        try:
+            format = qs.get('format')[0]
+        except (TypeError, ValueError, KeyError):
+            pass
+
+        if format == 'github':
+            post_d = parse_qs(data)
+            payload = post_d.get('payload')[0]
+            payload = json.loads(payload)
+
+            print '***', format, payload
+        else:
+            print '***', format, data
+
+        self._send_html_response(200, "received")
 
     def handle(self):
         try:
@@ -187,6 +220,9 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         
         elif self.path.startswith('/upload?'):
             return self._handle_upload()
+
+        elif self.path.startswith('/notify'):
+            return self._handle_notify()
 
         ## else:
 
