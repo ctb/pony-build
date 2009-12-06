@@ -27,12 +27,20 @@ def teardown():
 def test_basic():
     go(testutil._server_url)
     go('./notify')
-    code(200)
-    find('received')
+    code(400)
 
 def test_github_notify():
-    fp = urllib.urlopen(testutil._server_url + 'notify?format=github',
+    fp = urllib.urlopen(testutil._server_url + \
+                        'notify?format=github&package=pygr',
                         urllib.urlencode(github_data))
 
     received = fp.read()
     assert received == 'received', (received,)
+
+def test_nopackage_notify():
+    fp = urllib.urlopen(testutil._server_url + 'notify?format=github',
+                        urllib.urlencode(github_data))
+
+    assert fp.getcode() == 400
+    received = fp.read()
+    assert received.startswith('missing'), received

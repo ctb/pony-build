@@ -164,10 +164,15 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             qs = parse_qs(qs)
 
         format = 'unknown'
+        package = ''
         try:
             format = qs.get('format')[0]
+            package = qs.get('package')[0]
         except (TypeError, ValueError, KeyError):
             pass
+
+        if not package:
+            self._send_html_response(400, "missing 'package' parameter on notification")
 
         if format == 'github':
             post_d = parse_qs(data)
@@ -176,7 +181,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
 
             data = payload
 
-        _coordinator.notify_of_changes(format, data)
+        _coordinator.notify_of_changes(package, format, data)
 
         self._send_html_response(200, "received")
 

@@ -235,8 +235,8 @@ class PonyBuildCoordinator(object):
 
         return True
 
-    def notify_of_changes(self, format, change_info):
-        print 'XXX', format, change_info
+    def notify_of_changes(self, package, format, change_info):
+        print 'XXX', package, format, change_info
 
     def get_files_for_result(self, key):
         return self.files.get(key, [])
