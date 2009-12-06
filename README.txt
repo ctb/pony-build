@@ -134,9 +134,10 @@ someone else deal with translating those into e-mail alerts, etc.
 
 All of the RSS feeds that pony-build makes available can be posted to
 pubsubhubbub with the proper configuration (see -P and -S options to
-``pony_build.qx_web.run``).  A simple example CGI callback script is
-in ``examples/pshb_cgi_subscriber.cgi`` in the pony-build source
-distribution.
+``pony_build.qx_web.run``).  A simple example CGI callback script that
+sends an e-mail is available in
+``examples/push-cgi/notifier/push-subscriber.cgi`` in the pony-build
+source distribution.
 
 Note that there are also utility functions in ``pony_build.rss`` for
 helping to create RSS2 feeds and notify pubsubhubbub servers of
