@@ -1,10 +1,9 @@
 from optparse import OptionParser
-#['http://pubsubhubbub.appspot.com']
 from .. import qx_web
 
 if __name__ == '__main__':
-    import figleaf
-    figleaf.start()
+#    import figleaf
+#    figleaf.start()
     import sys
     parser = OptionParser()
 
