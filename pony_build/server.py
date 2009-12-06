@@ -174,9 +174,9 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             payload = post_d.get('payload')[0]
             payload = json.loads(payload)
 
-            print '***', format, payload
-        else:
-            print '***', format, data
+            data = payload
+
+        _coordinator.notify_of_changes(format, data)
 
         self._send_html_response(200, "received")
 
