@@ -58,16 +58,18 @@ def run_server(DB_FILE, PORT=None):
     if PORT is None:
         PORT = int(os.environ.get('TWILL_TEST_PORT', DEFAULT_PORT))
 
-    outfd = tempfile.mkstemp('twilltst')[0]
-
     print 'STARTING:', sys.executable, 'pony_build.qx_web.run', os.getcwd()
     process = subprocess.Popen([sys.executable, '-u',
                                 '-m', 'pony_build.qx_web.run', DB_FILE,
                                 '-p', str(PORT)],
                                stderr=subprocess.STDOUT,
-                               stdout=outfd)
+                               stdout=subprocess.PIPE)
    
-    time.sleep(1)
+    time.sleep(0.5)
+
+    if process.poll() is not None:
+        print 'process exited unexpectedly! status:', process.returncode
+        print 'stdout/stderr is:', (process.stdout.read(),)
 
     _server_url = 'http://localhost:%d/' % (PORT,)
 	
