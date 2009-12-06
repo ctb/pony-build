@@ -34,9 +34,10 @@ From: pony-build notifier <pony-noreply>
 To: %(mail_to)s
 Subject: %(package)s build on %(build arch)s: %(status)s
 
-Info: %(title)s
+summary: %(title)s
 
-Link: %(link)s
+more info:
+    %(link)s
 
 status: %(status)s
 arch: %(build arch)s
