@@ -26,11 +26,17 @@ def do_notify(content):
 
     values = dict(values)
     values['mail_to'] = MAIL_TO
+    values['title'] = entry.title_detail.value
+    values['link'] = entry.link
 
     message = """\
 From: pony-build notifier <pony-noreply>
 To: %(mail_to)s
 Subject: %(package)s build on %(build arch)s: %(status)s
+
+Info: %(title)s
+
+Link: %(link)s
 
 status: %(status)s
 arch: %(build arch)s

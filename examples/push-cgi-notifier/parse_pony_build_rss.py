@@ -38,4 +38,11 @@ if __name__ == '__main__':
     import sys
 
     p = PonyBuildRSSParser()
-    print p.consume_feed(open(sys.argv[1]))
+    dt, entry, values = p.consume_feed(open(sys.argv[1]))
+
+    print dt
+    print entry
+    print values
+
+    print entry.title_detail.value
+    print entry.link
