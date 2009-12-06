@@ -7,6 +7,8 @@ import urllib
 import testutil
 from twill.commands import *
 
+from pony_build.coordinator import PonyBuildCoordinator
+
 ###
 
 rpc_url = None
@@ -44,3 +46,24 @@ def test_nopackage_notify():
     assert fp.getcode() == 400
     received = fp.read()
     assert received.startswith('missing'), received
+
+def test_coordinator_interface():
+    pbc = PonyBuildCoordinator({})
+
+
+    class ProcessChange(object):
+        def __init__(self, package_name):
+            self.got_change = False
+            self.package_name = package_name
+        def __call__(self, package, format, info):
+            self.got_change = True
+            assert self.package_name == package, (package, self.package_name,)
+
+    package_name = 'thepackage'
+    consumer = ProcessChange(package_name)
+    pbc.add_change_consumer(package_name, consumer)
+
+    # this should ultimately call 'consumer'
+    pbc.notify_of_changes(package_name, 'generic', None)
+    assert consumer.got_change
+    

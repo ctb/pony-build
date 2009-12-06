@@ -70,6 +70,7 @@ class PonyBuildCoordinator(object):
         self.request_build = {}
         self.is_building = {}
         self.listeners = []
+        self.change_consumers = {}
 
         # @CTB another database hack; yay?
         self.files = IntDictWrapper(get_file_catalog())
@@ -236,7 +237,22 @@ class PonyBuildCoordinator(object):
         return True
 
     def notify_of_changes(self, package, format, change_info):
+        x = self.change_consumers.get(package)
+        if x:
+            for consumer in x:
+                try:
+                    consumer(package, format, change_info)
+                except:
+                    print 'ERROR on calling', consumer
+                    print 'parameters:', package, format
+                    traceback.print_exc()
+            
         print 'XXX', package, format, change_info
+
+    def add_change_consumer(self, package, consumer):
+        x = self.change_consumers.get(package, [])
+        x.append(consumer)
+        self.change_consumers[package] = x
 
     def get_files_for_result(self, key):
         return self.files.get(key, [])
