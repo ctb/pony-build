@@ -302,6 +302,25 @@ class PythonPackageEgg(BaseCommand):
                                            filename,
                                            'an egg installation file',
                                            visible=True)
+class PythonPackageMSI(BaseCommand):
+    command_type = 'package'
+    command_name = 'bdist_msi'
+
+    def __init__(self, python_exe='python'):
+        BaseCommand.__init__(self, [python_exe, 'setup.py', 'bdist_msi'],
+                             name='build an MSI')
+
+    def run(self, context):
+        BaseCommand.run(self, context)
+        if self.status == 0:            # success?
+            eggfiles = os.path.join('dist', '*.msi')
+            eggfiles = glob.glob(eggfiles)
+
+            for filename in eggfiles:
+                context.add_file_to_upload(os.path.basename(filename),
+                                           filename,
+                                           'an MSI installation file',
+                                           visible=True)
             
             
 class GitClone(SetupCommand):

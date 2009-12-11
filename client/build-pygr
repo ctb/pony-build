@@ -3,7 +3,7 @@ import sys
 import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
      TempDirectoryContext, SetupCommand, GitClone, check, parse_cmdline, \
-     PythonPackageEgg
+     PythonPackageEgg, PythonPackageMSI
 
 options, args = parse_cmdline()
 
@@ -29,7 +29,7 @@ commands = [ GitClone(repo_url, name='checkout'),
                           name='compile'),
              TestCommand([python_exe, 'runtest.py'],
                          name='run tests', run_cwd='tests'),
-             PythonPackageEgg()]
+             PythonPackageEgg(), PythonPackageMSI()]
 
 results = do(name, commands, context=context)
 client_info, reslist, files = results
