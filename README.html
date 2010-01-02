@@ -302,6 +302,14 @@ to install, easy to hack, and not overly constraining.  Two out of
 three ain't bad ;).</p>
 <p>Also see <a class="reference" href="http://buildbot.sf.net/">buildbot</a>.</p>
 <div class="section">
+<h1><a id="links" name="links">Links</a></h1>
+<p>pony-build is hosted on github.</p>
+<p>pony-build central repository: <a class="reference" href="http://github.com/ctb/pony-build">http://github.com/ctb/pony-build</a></p>
+<p>pony-build issue tracking: <a class="reference" href="http://github.com/ctb/pony-build/issues">http://github.com/ctb/pony-build/issues</a></p>
+<p>pony-build wiki: <a class="reference" href="http://wiki.github.com/ctb/pony-build">http://wiki.github.com/ctb/pony-build</a></p>
+<p>pony-build mailing list: <a class="reference" href="http://lists.idyll.org/listinfo/pony-build">http://lists.idyll.org/listinfo/pony-build</a></p>
+</div>
+<div class="section">
 <h1><a id="requirements" name="requirements">Requirements</a></h1>
 <dl class="docutils">
 <dt>Server side:</dt>
@@ -405,9 +413,10 @@ to publish them via RSS2, push them to a pubsubhubbub server, and let
 someone else deal with translating those into e-mail alerts, etc.</p>
 <p>All of the RSS feeds that pony-build makes available can be posted to
 pubsubhubbub with the proper configuration (see -P and -S options to
-<tt class="docutils literal"><span class="pre">pony_build.qx_web.run</span></tt>).  A simple example CGI callback script is
-in <tt class="docutils literal"><span class="pre">examples/pshb_cgi_subscriber.cgi</span></tt> in the pony-build source
-distribution.</p>
+<tt class="docutils literal"><span class="pre">pony_build.qx_web.run</span></tt>).  A simple example CGI callback script that
+sends an e-mail is available in
+<tt class="docutils literal"><span class="pre">examples/push-cgi/notifier/push-subscriber.cgi</span></tt> in the pony-build
+source distribution.</p>
 <p>Note that there are also utility functions in <tt class="docutils literal"><span class="pre">pony_build.rss</span></tt> for
 helping to create RSS2 feeds and notify pubsubhubbub servers of
 new results</p>

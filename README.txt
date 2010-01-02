@@ -14,6 +14,19 @@ three ain't bad ;).
 
 Also see `buildbot <http://buildbot.sf.net/>`__.
 
+Links
+=====
+
+pony-build is hosted on github.
+
+pony-build central repository: http://github.com/ctb/pony-build
+
+pony-build issue tracking: http://github.com/ctb/pony-build/issues
+
+pony-build wiki: http://wiki.github.com/ctb/pony-build
+
+pony-build mailing list: http://lists.idyll.org/listinfo/pony-build
+
 Requirements
 ============
 

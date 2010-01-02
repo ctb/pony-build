@@ -9,23 +9,24 @@ tagset documentation
 
 one super-client that can detect setup.py, run tests/communicate results, etc.
 
+---
+
 datastore stuff/archival:
  - get all tagsets
  - get all updates by tagset
  - 'flush tagset'?
-
 everything else can be "within last month"
 
-organize reports with FAILURES at top (unless marked otherwise)
+some sort of history ("8 of last 8 succeeded") + flush history
+  - keep (configurable) 1 month on display?
 
-organize git clone/copy etc, hg clone/copy, svn clone/copy.
+---
+
+organize reports with FAILURES at top (unless marked otherwise)
 
 concatenated output, etc? for GitClone?
 
 a conf.d?
-
-some sort of history ("8 of last 8 succeeded") + flush history
-  - keep (configurable) 1 month on display?
 
 client logfile that's communicated back to server @ end.
 
@@ -33,21 +34,11 @@ file upload/download?
 
 integrate TAP?
 
-explain tagsets
-
-anti-DoS: set a default limit on upload size; and/or require package/password.
-
 authentication ^^^ for results submission
 
 separate? authentication for thru-Web configuration
 
-sqlite-based db?
-
-persistent conn?
-
-FIX client_ip nonsense
-
-is_building, request_build => persist
+make is_building, request_build flags persistent
 
 crashing client still needs to report, esp with is_building
 
@@ -62,23 +53,11 @@ move check code into client.
 
 hierarchical tree of reports, instead of list-of-lists?  (think git stuff)
 
-rename svnclone to svncheckout; have git clone and svncheckout create the
-cachedirectory if possible.
-
 client scripts should be much friendlier about one-script-for-multiple-machines.
 
 a directory of public pony-build master servers URLs built-in...? or
 retrievable via XML-RPC from my server? or available via a file?  with
 short names?
-
-a (hierarchical?) list of projects w/config info, e.g.
-
-   python/cpython2-trunk - svn, co from here, run these commands
-
-so that you can refer via a nice name and not have to configure stuff
-yourself?  make it an SHA-signed, downloadable file...? or servered?
-make it a SEPARATE, or can-be-included, server from the straight
-pony-build server?
 
 subprocess incremental reporting.
 
@@ -106,32 +85,19 @@ allow setting builds that SHOULD ALWAYS BE DISPLAYED, even if out of
 quickstart guide
 architecture diagram
 
-svn/git/etc. version!
-
 relative times, or times in viewer timezone, or ...?
 
 importable client/API improvement (pbc)
 
-file upload API? maybe specify another server for upload via
-   ftp, etc?
-
 JSON format (both client output AND server output)
-
-"opinionated software"
 
 sort on column in various summary views.
 
 database schema should include package name and time submitted.
 
-GPG-based leaderboard?
-
-revision info
-
 switch to python3?
 
 look at http://codespeak.net:8099/summary
-
-http://blip.tv/file/2518623/
 
 http://build.chromium.org/buildbot/waterfall/console
 
@@ -151,9 +117,6 @@ separate control channel for "generic" Python package building, etc.
 post VCS to server as part of tagset, if available; or have server use
 it, if it's available.  obviates tags like 'experimental' for pygr...
 
-start sprucing up web interface... in particular, package search, and
-projects under /p/, etc.
-
 time/date on submissions
 package name on submissions
 
@@ -168,6 +131,9 @@ http://seanmcgrath.blogspot.com/2009/08/software-application-architecture.html
  A software variation on a theme by Antoine de Saint Exupéry:
 
 "A software application architecture is finished when there is nothing left to take out. A software application design is finished when there is nothing left to add." 
+
+"opinionated software"
+
 ---
 
 static URLs that point to the most recent result for a particular machine type?
@@ -197,12 +163,6 @@ also integrate Virtual mem reporting for processes under linux?
 
 --
 
-tonite:
- - cleanup temp dir flag
- - svn info/git status
-
----
-
 before release:
 
  - set a better default server url
@@ -224,8 +184,6 @@ screencast!!
 
 ---
 
-soonest, figure out file uploads for nightly builds
-
 also provide protocol/setuptools ext/setup.py info for pony-build
 
 ---
@@ -245,20 +203,9 @@ integrate jacob's virtualenv fix.
 
 tests for build steps?
 
-implement file uploads (POST); e-mail notify?
-
-be able to create RSS feed for one or more packages that lets you:
-
-RSS feed ideas:
- - be notified if there has been no build within a particular time
-
-
-should we generically RSS feed *all* builds or just the latest?  Probably
-truer to RSS to do all... but...?
+add "stale notify" RSS feed
 
 feed for all builds?
-
-remove/clean up builds; don't show > 30 days.
 
 move to a multithreaded web server?
 
@@ -270,7 +217,7 @@ RESTish interface
 
 show how to integrate with buildbot
 
-document pbc values
+document pbc expected values
 
 coverage return?
 
@@ -290,20 +237,10 @@ two clients, one lite one heavy?
 
 files visible flag
 
-gae version of pony-build?
-
 'latest' magic component, 'latest='tags magic component
 'latest files' magic component, also with tags (so, latest egg from win32)
 
-a build "DSL" that multiple build systems can use, controlling
-  not only build params (easy in python) but coverage reporting/etc.
-
-http://github.com/stefanv/scikits.image
-
-protect against , in tags
-
-ucosp ideas:
- - leaderboard stuff
+try out http://github.com/stefanv/scikits.image
 
 tagtranslator
 directorycopy
@@ -312,8 +249,33 @@ Context vs TempDirContext problems
 
 notify next-time-run
 
-trust-metric for leaderboard
-
 fill in unfilled project details from e.g. github webhook notify?
 
 separate upload, etc stuff to WSGI & mount
+
+allow people (auth?) to annotate, post-hoc tag build results -> search
+
+SEARCH
+
+brett: 
+ @ctitusbrown Like the concept of a (cached)"prove it" link for
+  packages to show they actually run under the OS/version pairs listed
+  on PyPI.
+  
+ @ctitusbrown Trust ring is good idea, but might get tricky if PyPI
+  alts pop up, making proving identity tough. Might need OpenID for
+  this.
+
+---
+
+a (hierarchical?) list of projects w/config info, e.g.
+
+   python/cpython2-trunk - svn, co from here, run these commands
+
+so that you can refer via a nice name and not have to configure stuff
+yourself?  make it an SHA-signed, downloadable file...? or servered?
+make it a SEPARATE, or can-be-included, server from the straight
+pony-build server?
+
+gae version of pony-build?
+
