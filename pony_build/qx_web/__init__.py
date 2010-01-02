@@ -35,17 +35,17 @@ class QuixoteWebApp(Directory):
     _q_exports = [ '', 'css', 'exit', 'recv_file', 'rss2', 'p', 'test',
                    'img']
 
-    def __init__(self, coord, pshb_list=[]):
+    def __init__(self, coord, push_list=[]):
         self.coord = coord            # PonyBuildCoordinator w/results etc.
 
         # get notified of new results by the coordinator...
         self.coord.add_listener(self)
 
-        if pshb_list:
-            print '** PuSH servers:', pshb_list
+        if push_list:
+            print '** PuSH servers:', push_list
         else:
             print '** PuSH disabled'
-        self.pshb_list = list(pshb_list)
+        self.push_list = list(push_list)
         self.rss2 = RSS2FeedDirectory(coord)
         self.p = PackageDirectory(coord)
         self.img = StaticDirectory(os.path.join(templatesdir, 'img'))
@@ -85,8 +85,8 @@ class QuixoteWebApp(Directory):
 
         # finally, NOTIFY pubsubhubbub servers of the changed URLs.
         feed_urls = list(feed_urls)
-        for pshb_server in self.pshb_list:
-            rss.notify_pubsubhubbub_server(pshb_server, *feed_urls)
+        for push_server in self.push_list:
+            rss.notify_pubsubhubbub_server(push_server, *feed_urls)
 
     def _q_index(self):
         packages = self.coord.get_all_packages()
@@ -96,11 +96,11 @@ class QuixoteWebApp(Directory):
         return template.render(locals())
 
 def create_publisher(coordinator, pubsubhubbub_server=None):
-    pshb_list = []
+    push_list = []
     if pubsubhubbub_server:
-        pshb_list.append(pubsubhubbub_server)
+        push_list.append(pubsubhubbub_server)
         
-    qx_app = QuixoteWebApp(coordinator, pshb_list)
+    qx_app = QuixoteWebApp(coordinator, push_list)
     
     # sets global Quixote publisher
     Publisher(qx_app, display_exceptions='plain')

@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_option('-P', '--use-pubsubhubbub', dest='use_pubsubhubbub',
                       help='notify a pubsubhubbub server of changed RSS feeds',
                       action='store_true', default=False)
-    parser.add_option('-S', '--set-pubsubhubbub-server', dest='pshb_server',
+    parser.add_option('-S', '--set-pubsubhubbub-server', dest='push_server',
                       help='set the pubsubhubbub server to use',
                       type='str', default='http://pubsubhubbub.appspot.com/')
     
@@ -24,9 +24,9 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     dbfile=args[0]
 
-    pshb_server = None
+    push_server = None
     if options.use_pubsubhubbub:
-        pshb_server = options.pshb_server
+        push_server = options.push_server
 
     qx_web.run(options.interface, options.port, dbfile, public_url=options.url,
-               pubsubhubbub_server=pshb_server)
+               pubsubhubbub_server=push_server)

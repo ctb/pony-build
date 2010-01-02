@@ -227,8 +227,6 @@ rotating file repo with max size limit
 
 put a red flag next to builds that have failed within last 24 hrs
 
-PuSH instead of pshb
-
 http://chris.prather.org/everybody-wants-some--cpan.html
 
 http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/

@@ -26,7 +26,7 @@ import datetime
 import traceback
 from cStringIO import StringIO
 from .PyRSS2Gen import RSS2, RSSItem, _element, Guid, Source
-from .pubsubhubbub_publish import publish as pshb_publish, PublishError
+from .pubsubhubbub_publish import publish as push_publish, PublishError
 
 build_snoopers = {}
 build_snoopers_rev = {}
@@ -83,11 +83,11 @@ def notify_pubsubhubbub_server(server, *rss_urls):
     
     """
     try:
-        pshb_publish(server, *rss_urls)
-        print '*** notifying pshb server: %s' % server, rss_urls
+        push_publish(server, *rss_urls)
+        print '*** notifying PuSH server: %s' % server, rss_urls
         return True
     except PublishError, e:
-        print 'error notifying pshb server %s' % (server,)
+        print 'error notifying PuSH server %s' % (server,)
         traceback.print_exc()
         
     return False
@@ -173,7 +173,7 @@ class PackageSnooper(BuildSnooper):
 
             rss_items.append(item)
 
-        rss = PSHB_RSS2(
+        rss = PuSH_RSS2(
             title = "pony-build feed for %s" % (self.package_name,),
             link = package_url % dict(package=self.package_name),
             description = 'package build & test information for "%s"' \
@@ -199,7 +199,7 @@ class PackageSnooper(BuildSnooper):
 
 ###
 
-class PSHB_RSS2(RSS2):
+class PuSH_RSS2(RSS2):
     def publish_extensions(self, handler):
         pass
         # is this necessary? it breaks Firefoxes RSS reader...
