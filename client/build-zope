@@ -8,22 +8,24 @@ options, args = parse_cmdline()
 if args:
 	print 'ignoring args: ', args
 
+python_exe = 'python'
 name = 'build-zope'
 repo_url = 'http://svn.zope.org/repos/main/Zope/trunk/'
-server_url = options.server_url
+ server_url = options.server_url
 hostname = 'testbed'
 tags = ['zope']
-"""
+
 if not options.force_build:
     if not check(name, server_url, tags=tags, hostname=hostname):
         print 'check build says no need to build; bye'
         sys.exit(0)
-"""
+
 context = TempDirectoryContext()
 
 commands = [ SvnUpdate('Zope', repo_url, name='checkout'),
-	     BuildCommand(['python', 'setup.py', 'install'])
-	     ]
+	     BuildCommand(['python', 'setup.py', 'install']),
+	     TestCommand([python_exe, 'src/Testing/tests/test_makerequest.py'], name='test')
+ ]
 
 
 results = do(name, commands, context=context, stop_if_failure=False)
