@@ -11,7 +11,7 @@ if args:
 python_exe = 'python'
 name = 'build-zope'
 repo_url = 'http://svn.zope.org/repos/main/Zope/trunk/'
- server_url = options.server_url
+server_url = options.server_url
 
 tags = ['zope']
 
