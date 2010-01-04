@@ -8,7 +8,7 @@ options, args = parse_cmdline()
 if args:
     print 'ignoring command line args: ', args
 
-repo_url = 'https://twill.googlecode.com/svn/branches/0.9.2-dev/twill'
+repo_url = 'http://twill.googlecode.com/svn/branches/0.9.2-dev/twill'
 
 python_exe = 'python2.5'
 if args:
