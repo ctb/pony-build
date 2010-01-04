@@ -12,11 +12,11 @@ python_exe = 'python'
 name = 'build-zope'
 repo_url = 'http://svn.zope.org/repos/main/Zope/trunk/'
  server_url = options.server_url
-hostname = 'testbed'
+
 tags = ['zope']
 
 if not options.force_build:
-    if not check(name, server_url, tags=tags, hostname=hostname):
+    if not check(name, server_url, tags=tags):
         print 'check build says no need to build; bye'
         sys.exit(0)
 
@@ -33,7 +33,7 @@ client_info, reslist, files_to_upload = results
  
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)
-    send(server_url, results, hostname=hostname, tags=tags)
+    send(server_url, results, tags=tags)
 else:
  
     print 'build result:'
