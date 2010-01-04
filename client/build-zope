@@ -1,0 +1,46 @@
+#! /usr/bin/env python
+import sys
+from pony_client import BuildCommand, TestCommand, do, send, check, \
+	TempDirectoryContext, SetupCommand, SvnUpdate,  parse_cmdline, \
+	 UploadAFile
+
+options, args = parse_cmdline()
+if args:
+	print 'ignoring args: ', args
+
+name = 'build-zope'
+repo_url = 'http://svn.zope.org/repos/main/Zope/trunk/'
+server_url = options.server_url
+hostname = 'testbed'
+tags = ['zope']
+"""
+if not options.force_build:
+    if not check(name, server_url, tags=tags, hostname=hostname):
+        print 'check build says no need to build; bye'
+        sys.exit(0)
+"""
+context = TempDirectoryContext()
+
+commands = [ SvnUpdate('Zope', repo_url, name='checkout'),
+	     BuildCommand(['python', 'setup.py', 'install'])
+	     ]
+
+
+results = do(name, commands, context=context, stop_if_failure=False)
+client_info, reslist, files_to_upload = results
+ 
+if options.report:
+    print 'result: %s; sending' % (client_info['success'],)
+    send(server_url, results, hostname=hostname, tags=tags)
+else:
+ 
+    print 'build result:'
+ 
+    import pprint
+    pprint.pprint(client_info)
+    pprint.pprint(reslist)
+    
+    print '(NOT SENDING BUILD RESULT TO SERVER)'
+ 
+if not client_info['success']:
+    sys.exit(-1)
