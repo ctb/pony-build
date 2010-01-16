@@ -14,10 +14,10 @@ python_exe = 'python'
 if args:
     python_exe = args[0]
 
-name = 'testenv'
+name = 'build-pb-env'
 repo_url = 'git://github.com/ctb/pony-build.git'
-server_url = 'http://localhost:8080/xmlrpc'
-tags = ['testing']
+server_url = options.server_url
+tags = ['pb', 'env']
 
 context = VirtualenvContext(True, ['Jinja2', 'Quixote', 'twill', 'nose'])
 
