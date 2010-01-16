@@ -31,6 +31,8 @@ Requirements
 ============
 
 Server side:
+  Requires Python 2.6 or above.
+
   Jinja2 (easy_installable).
 
   For the Quixote Web UI, Quixote 2.6 (also easy_installable).
