@@ -23,6 +23,10 @@ for dirpath, dirnames, filenames in os.walk(templates_dir):
         fullpaths = [os.path.join(dirpath, f) for f in filenames ]
         data_files.append([dirpath, fullpaths])
 
+# a hack to get the 'pony_client' file into the right place for top-level
+# (non-package) imports:
+data_files.append(['', ['client/pony_client.py']])
+
 setup(name='pony-build',
       version='0.5+20100116',
       description='pony-build, a simple Continuous Integration framework',
@@ -33,5 +37,4 @@ setup(name='pony-build',
       packages = ['pony_build', 'pony_build.qx_web'],
       data_files = data_files,
       test_suite = 'nose.collector',
-#      py_modules = ['client/pony_build_client'],
       )
