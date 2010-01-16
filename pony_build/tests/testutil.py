@@ -49,27 +49,31 @@ def run_server(DB_FILE, PORT=None):
     """
     Run a Quixote simple_server on localhost:PORT with subprocess.
     All output is captured & thrown away.
-
-    The parent process returns the URL on which the server is running.
     """
+    global process
+    
     import time, tempfile
     global _server_url
 
     if PORT is None:
-        PORT = int(os.environ.get('TWILL_TEST_PORT', DEFAULT_PORT))
+        PORT = int(os.environ.get('PB_TEST_PORT', DEFAULT_PORT))
 
     print 'STARTING:', sys.executable, 'pony_build.qx_web.run', os.getcwd()
+    print [sys.executable, '-u',
+                                '-m', 'pony_build.qx_web.run', DB_FILE,
+                                '-p', str(PORT)],
     process = subprocess.Popen([sys.executable, '-u',
                                 '-m', 'pony_build.qx_web.run', DB_FILE,
                                 '-p', str(PORT)],
                                stderr=subprocess.STDOUT,
                                stdout=subprocess.PIPE)
-   
+
     time.sleep(0.5)
 
     if process.poll() is not None:
         print 'process exited unexpectedly! status:', process.returncode
-        print 'stdout/stderr is:', (process.stdout.read(),)
+        x = process.stdout.read()
+        print 'stdout/stderr is:', x
 
     _server_url = 'http://localhost:%d/' % (PORT,)
 	

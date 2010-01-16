@@ -17,7 +17,7 @@ import pony_client as pbc
 ###
 
 rpc_url = None
-DB_TEST_FILE='tests/tests.db'
+DB_TEST_FILE=os.path.join(os.path.dirname(__file__), 'tests.db')
 
 ###
 

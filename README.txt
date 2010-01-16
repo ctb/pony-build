@@ -187,6 +187,15 @@ In combination with authentication, we should put a default cap on the
 total amount of data that can be dumped by an unauthenticated client.
 Otherwise warez sites will be hosted inside of pony-build ;)
 
+Development
+===========
+
+pony-build is hosted on github, at: http://github.com/ctb/pony-build
+
+To run the tests::
+
+   python -m pony_build.tests.run
+
 Design and Ideas for the Future
 ===============================
 

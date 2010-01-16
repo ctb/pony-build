@@ -313,7 +313,8 @@ three ain't bad ;).</p>
 <h1><a id="requirements" name="requirements">Requirements</a></h1>
 <dl class="docutils">
 <dt>Server side:</dt>
-<dd><p class="first">Jinja2 (easy_installable).</p>
+<dd><p class="first">Requires Python 2.6 or above.</p>
+<p>Jinja2 (easy_installable).</p>
 <p class="last">For the Quixote Web UI, Quixote 2.6 (also easy_installable).</p>
 </dd>
 <dt>Client side:</dt>
@@ -443,6 +444,14 @@ good, I think.</p>
 <p>In combination with authentication, we should put a default cap on the
 total amount of data that can be dumped by an unauthenticated client.
 Otherwise warez sites will be hosted inside of pony-build ;)</p>
+</div>
+<div class="section">
+<h1><a id="development" name="development">Development</a></h1>
+<p>pony-build is hosted on github, at: <a class="reference" href="http://github.com/ctb/pony-build">http://github.com/ctb/pony-build</a></p>
+<p>To run the tests:</p>
+<pre class="literal-block">
+python -m pony_build.tests.run
+</pre>
 </div>
 <div class="section">
 <h1><a id="design-and-ideas-for-the-future" name="design-and-ideas-for-the-future">Design and Ideas for the Future</a></h1>
