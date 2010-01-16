@@ -9,7 +9,7 @@ from pony_build import coordinator, dbsqlite
 
 ###
 import sys
-clientlib = os.path.join(os.path.dirname(__file__), '../client')
+clientlib = os.path.join(os.path.dirname(__file__), '..', '..', 'client')
 clientlib = os.path.abspath(clientlib)
 sys.path.insert(0, clientlib)
 
