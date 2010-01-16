@@ -18,7 +18,6 @@ from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
      ServerHandler
 import json                             # requires python2.6
-#import figleaf
 
 try:
     from urlparse import parse_qs
@@ -28,6 +27,15 @@ except ImportError:
 ##
 
 from .remote_api import XmlRpcFunctions
+
+###
+
+# various error message:
+
+too_big_message = "403 FORBIDDEN: You're trying to upload %d bytes; we only allow %d per request."
+missing_package = "missing 'package' parameter on notification"
+no_auth_upload = "you are not authorized to upload files!"
+missing_upload_data = 'upload attempt, but missing filename, description, or auth_key!?'
 
 #
 # The PonyBuildServer class just pulls together the WSGIServer and the
@@ -43,10 +51,14 @@ class PonyBuildServer(WSGIServer, SimpleXMLRPCDispatcher):
 #
 # The RequestHandler class handles all of the file upload, UI and
 # XML-RPC Web calls.  It does so by first checking to see if a Web
-# call is to the XML-RPC URL or file upload fn, and, if not, then passes
-# it on to the WSGI handler.
+# call is to the XML-RPC URL, file upload fn, or notify, and, if not,
+# then passes it on to the WSGI handler.
 #
-# See the _handle function for more information.
+# The object is to make it really easy to write a new UI without messing
+# with the basic server functionality, which includes things like security
+# measures to block DoS by uploading large files.
+#
+# See the handle function for more information.
 #
 
 class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
@@ -55,6 +67,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
     MAX_CONTENT_LENGTH = 5*1000*1000    # allow only 5 mb at a time.
 
     def _send_html_response(self, code, message):
+        """Send an HTTP response."""
         self.send_response(code)
         self.send_header('Content-type', 'text/html')
         self.send_header('Content-length', str(len(message)))
@@ -64,6 +77,8 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         self.wfile.close()
 
     def _handle_upload(self):
+        """Handle file upload via POST."""
+        
         qs = {}
         if '?' in self.path:
             url, qs = self.path.split('?', 1)
@@ -75,8 +90,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             auth_key = qs.get('auth_key')[0]
             visible = qs.get('visible', ['no'])[0] == 'yes'
         except (TypeError, ValueError, KeyError):
-            message = 'upload attempt, but missing filename, description, or auth_key!?'
-            self._send_html_response(400, message)
+            self._send_http_response(400, missing_upload_data)
             return
 
         content_length = self.headers.getheader('content-length')
@@ -85,7 +99,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             data = self.rfile.read(content_length)
             
             code = 401
-            message = "you are not auth to upload files!"
+            message = no_auth_upload
 
             if _coordinator.db_add_uploaded_file(auth_key,
                                                  filename,
@@ -101,6 +115,8 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         self._send_html_response(code, message)
 
     def _handle_notify(self):
+        """Handle webhook notification, currently only from github."""
+        
         data = ''
         
         content_length = self.headers.getheader('content-length')
@@ -122,9 +138,9 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             pass
 
         if not package:
-            self._send_html_response(400, "missing 'package' parameter on notification")
+            self._send_html_response(400, missing_package)
 
-        if format == 'github':
+        if format == 'github':          # @CTB hardcoded github webhook...!
             post_d = parse_qs(data)
             payload = post_d.get('payload')[0]
             payload = json.loads(payload)
@@ -136,25 +152,17 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         self._send_html_response(200, "received")
 
     def handle(self):
-        try:
-            self._handle()
-        finally:
-            #figleaf.write_coverage('.figleaf')
-            pass
-
-    def _handle(self):
         """
         Handle:
           /xmlrpc => SimpleXMLRPCServer
           /upload => self._handle_upload
+          /notify => self._handle_notify
           all else => WSGI app for Web UI
         """
         self.raw_requestline = self.rfile.readline()
         if not self.parse_request(): # An error code has been sent, just exit
             return
 
-        print "SERVER HANDLE: path is '%s'" % self.path
-        
         content_length = self.headers.getheader('content-length')
         if not content_length:
             content_length = 0
@@ -163,7 +171,8 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         print 'content length is:', content_length
 
         if content_length > self.MAX_CONTENT_LENGTH:
-            message = "403 FORBIDDEN: You're trying to upload %d bytes; we only allow %d per request." % (content_length, self.MAX_CONTENT_LENGTH)
+            message = too_big_message % (content_length,
+                                         self.MAX_CONTENT_LENGTH)
             self._send_html_response(403, message)
             return
 
@@ -186,6 +195,9 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         handler.run(self.server.get_app())
 
     def _dispatch(self, method, params):
+        """
+        Handle all XML-RPC dispatch (see do_POST call, above).
+        """
         client_ip = self.client_address[0]
         
         fn_obj = XmlRpcFunctions(_coordinator, client_ip)
