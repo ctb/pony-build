@@ -4,5 +4,5 @@ results.pickle
 build
 dist
 pony_build.egg-info
-tests/tests.db
+pony_build/tests/tests.db
 .files
