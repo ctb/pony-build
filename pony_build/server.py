@@ -25,79 +25,29 @@ try:
 except ImportError:
     from cgi import parse_qs
 
-### public XML-RPC API.
+##
 
-client_ip = None
-_coordinator = None
-def add_results(client_info, results):
-    """
-    Add build results to the server.
+from .remote_api import XmlRpcFunctions
 
-    'client_info' is a dictionary of client information; 'results' is
-    a list of dictionaries, with each dict containing build/test info
-    for a single step.
-    """
-    # assert that they have the right methods ;)
-    client_info.keys()
-    for d in results:
-        d.keys()
-
-    try:
-        key = _coordinator.add_results(client_ip, client_info, results)
-    except:
-        traceback.print_exc()
-        raise
-
-    return key
-
-def get_results(results_key):
-    x = _coordinator.db_get_result_info(results_key)
-    (receipt, client_info, results) = x
-
-    return x
-
-def check_should_build(client_info, reserve_build=True, build_allowance=0):
-    """
-    Should a client build, according to the server?
-
-    Returns a tuple (flag, reason).  'flag' is bool; 'reason' is a
-    human-readable string.
-
-    A 'yes' (True) could be for several reasons, including no build
-    result for this tagset, a stale build result (server
-    configurable), or a request to force-build.
-    """
-    flag, reason = _coordinator.check_should_build(client_info)
-    print (flag, reason)
-    if flag:
-        if reserve_build:
-            print 'RESERVING BUILD'
-            _coordinator.notify_build(client_info['package'],
-                                      client_info, build_allowance)
-        return True, reason
-    return False, reason
-
-def get_tagsets_for_package(package):
-    """
-    Get the list of tagsets containing build results for the given package.
-    """
-    return [ list(x) for x in _coordinator.get_tagsets_for_package(package) ]
-
-def get_last_result_for_tagset(package, tagset):
-    """
-    Get the most recent result for the given package/tagset combination.
-    """
-    return _coordinator.get_last_result_for_tagset(package, tagset)
-
-###
-
-_coordinator = None
+#
+# The PonyBuildServer class just pulls together the WSGIServer and the
+# SimpleXMLRPCDispatcher so that a single Web server can handle both
+# XML-RPC and WSGI duties.
+#
 
 class PonyBuildServer(WSGIServer, SimpleXMLRPCDispatcher):
     def __init__(self, *args, **kwargs):
         WSGIServer.__init__(self, *args, **kwargs)
         SimpleXMLRPCDispatcher.__init__(self, False, None)
 
+#
+# The RequestHandler class handles all of the file upload, UI and
+# XML-RPC Web calls.  It does so by first checking to see if a Web
+# call is to the XML-RPC URL or file upload fn, and, if not, then passes
+# it on to the WSGI handler.
+#
+# See the _handle function for more information.
+#
 
 class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
     rpc_paths = ('/xmlrpc',)
@@ -218,9 +168,6 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             return
 
         if SimpleXMLRPCRequestHandler.is_rpc_path_valid(self):
-            # @CTB hack hack hack, I should be ashamed of myself.
-            global client_ip
-            client_ip = self.client_address[0]
             return SimpleXMLRPCRequestHandler.do_POST(self)
         
         elif self.path.startswith('/upload?'):
@@ -238,6 +185,17 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         handler.request_handler = self      # backpointer for logging
         handler.run(self.server.get_app())
 
+    def _dispatch(self, method, params):
+        client_ip = self.client_address[0]
+        
+        fn_obj = XmlRpcFunctions(_coordinator, client_ip)
+        fn = getattr(fn_obj, method)
+        return fn(*params)
+
+###
+
+_coordinator = None
+
 def get_coordinator():
     global _coordinator
     return _coordinator
@@ -250,11 +208,5 @@ def create(interface, port, pbs_coordinator, wsgi_app):
     
     server.set_app(wsgi_app)
     _coordinator = pbs_coordinator
-    
-    server.register_function(add_results)
-    server.register_function(get_results)
-    server.register_function(check_should_build)
-    server.register_function(get_tagsets_for_package)
-    server.register_function(get_last_result_for_tagset)
     
     return server
