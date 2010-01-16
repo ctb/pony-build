@@ -277,3 +277,10 @@ pony-build server?
 
 gae version of pony-build?
 
+---
+
+"standard" setup: test a package under 23, 24, 25, 26, 27b, 31, etc.?
+
+---
+
+auto-spawn EC2 instance to test from a snapshot?

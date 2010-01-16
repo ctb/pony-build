@@ -2,20 +2,20 @@
 import sys
 import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
-     TempDirectoryContext, SetupCommand, SvnUpdate, check, parse_cmdline
+     TempDirectoryContext, SetupCommand, GitClone, check, parse_cmdline, \
+     PythonPackageEgg
 
 options, args = parse_cmdline()
-if args:
-    print 'ignoring command line args: ', args
-
-repo_url = 'http://twill.googlecode.com/svn/branches/0.9.2-dev/twill'
 
 python_exe = 'python2.5'
 if args:
     python_exe = args[0]
 
-name = 'twill'
+repo_url = 'git://github.com/ctb/figleaf.git'
+
 tags = [python_exe]
+name = 'figleaf'
+
 server_url = options.server_url
 
 if not options.force_build:
@@ -23,11 +23,13 @@ if not options.force_build:
         print 'check build says no need to build; bye'
         sys.exit(0)
 
-commands = [ SvnUpdate('twill', repo_url, name='checkout'),
-             BuildCommand([python_exe, 'setup.py', 'test'])
-             ]
-
 context = TempDirectoryContext()
+commands = [ GitClone(repo_url, name='checkout'),
+             BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
+                          name='compile'),
+             TestCommand([python_exe, 'setup.py', 'test'], name='run tests'),
+             PythonPackageEgg(python_exe)]
+
 results = do(name, commands, context=context)
 client_info, reslist, files = results
 

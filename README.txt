@@ -31,6 +31,8 @@ Requirements
 ============
 
 Server side:
+  Requires Python 2.6 or above.
+
   Jinja2 (easy_installable).
 
   For the Quixote Web UI, Quixote 2.6 (also easy_installable).
@@ -66,7 +68,7 @@ Build scripts
 
 Client build scripts are just scripts that set up & run a list of commands: ::
 
-  from pony_build_client import BuildCommand, TestCommand, do, send
+  from pony_client import BuildCommand, TestCommand, do, send
 
   name = 'example'
   server_url = 'http://localhost:8080/xmlrpc'
@@ -86,6 +88,9 @@ C project (checkout, configure, make, run tests).
 
 See ``client/build-pony-build`` for an example of building a Git-based
 Python project (clone, build, run tests).
+
+Note that 'pony_client' doesn't depend on the rest of pony-build, so you
+can distribute it with other packages if you want.
 
 Client query scripts
 --------------------
@@ -181,6 +186,15 @@ good, I think.
 In combination with authentication, we should put a default cap on the
 total amount of data that can be dumped by an unauthenticated client.
 Otherwise warez sites will be hosted inside of pony-build ;)
+
+Development
+===========
+
+pony-build is hosted on github, at: http://github.com/ctb/pony-build
+
+To run the tests::
+
+   python -m pony_build.tests.run
 
 Design and Ideas for the Future
 ===============================

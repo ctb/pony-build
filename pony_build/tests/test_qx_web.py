@@ -9,7 +9,8 @@ with warnings.catch_warnings():
 
 from pony_build import coordinator, dbsqlite
 
-DB_TEST_FILE='tests/tests.db'
+DB_TEST_FILE=os.path.join(os.path.dirname(__file__), 'tests.db')
+
 def make_db(filename=DB_TEST_FILE):
     try:
         os.unlink(filename)
