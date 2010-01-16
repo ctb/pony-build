@@ -343,7 +343,7 @@ below), based on the package name ('name', below).</p>
 <h2><a id="build-scripts" name="build-scripts">Build scripts</a></h2>
 <p>Client build scripts are just scripts that set up &amp; run a list of commands:</p>
 <pre class="literal-block">
-from pony_build_client import BuildCommand, TestCommand, do, send
+from pony_client import BuildCommand, TestCommand, do, send
 
 name = 'example'
 server_url = 'http://localhost:8080/xmlrpc'
@@ -361,6 +361,8 @@ must be able to reach the server via the HTTP protocol.</p>
 C project (checkout, configure, make, run tests).</p>
 <p>See <tt class="docutils literal"><span class="pre">client/build-pony-build</span></tt> for an example of building a Git-based
 Python project (clone, build, run tests).</p>
+<p>Note that 'pony_client' doesn't depend on the rest of pony-build, so you
+can distribute it with other packages if you want.</p>
 </div>
 <div class="section">
 <h2><a id="client-query-scripts" name="client-query-scripts">Client query scripts</a></h2>

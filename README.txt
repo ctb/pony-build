@@ -66,7 +66,7 @@ Build scripts
 
 Client build scripts are just scripts that set up & run a list of commands: ::
 
-  from pony_build_client import BuildCommand, TestCommand, do, send
+  from pony_client import BuildCommand, TestCommand, do, send
 
   name = 'example'
   server_url = 'http://localhost:8080/xmlrpc'
@@ -86,6 +86,9 @@ C project (checkout, configure, make, run tests).
 
 See ``client/build-pony-build`` for an example of building a Git-based
 Python project (clone, build, run tests).
+
+Note that 'pony_client' doesn't depend on the rest of pony-build, so you
+can distribute it with other packages if you want.
 
 Client query scripts
 --------------------
