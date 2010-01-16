@@ -71,7 +71,7 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
 
     if verbose:
         print 'status:', ret
-    print 'status: ', out
+    
     return (ret, out, err)
 
 class FileToUpload(object):
@@ -167,11 +167,6 @@ class VirtualenvContext(Context):
 	self.x =os.environ['PATH']
 
 	os.environ['PATH'] = self.tempdir + os.path.join('/bin') + os.pathsep + self.x
-
-
-	if os.environ['PATH']:
-		print 'path: ' + os.environ['PATH']	
-
 
     def initialize(self):
         Context.initialize(self)
