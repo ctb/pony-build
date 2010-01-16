@@ -58,7 +58,7 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
     if verbose:
         print 'CWD', os.getcwd()
         print 'running in ->', cwd
-        
+
     try:
         p = subprocess.Popen(command_list, cwd=cwd, **default_kwargs)
 
@@ -71,16 +71,16 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
 
     if verbose:
         print 'status:', ret
-
+    
     return (ret, out, err)
 
 class FileToUpload(object):
     def __init__(self, filename, location, description, visible):
         """
-        filename - name to publish as
-        location - full location on build system (not sent to server)
-        description - brief description of file/arch for server
-        """
+filename - name to publish as
+location - full location on build system (not sent to server)
+description - brief description of file/arch for server
+"""
         self.data = open(location, 'rb').read()
         self.filename = filename
         self.description = description
@@ -96,13 +96,13 @@ class Context(object):
         self.start_time = self.end_time = None
         self.build_dir = None
         self.files = []
-        
+
     def initialize(self):
         self.start_time = time.time()
 
     def finish(self):
         self.end_time = time.time()
-        
+
     def start_command(self, command):
         if self.build_dir:
             os.chdir(self.build_dir)
@@ -126,23 +126,24 @@ class TempDirectoryContext(Context):
         Context.initialize(self)
         self.tempdir = tempfile.mkdtemp()
         self.cwd = os.getcwd()
-        
+
         print 'changing to temp directory:', self.tempdir
         os.chdir(self.tempdir)
 
-    def finish(self):
-        os.chdir(self.cwd)
-        try:
-            Context.finish(self)
-        finally:
-            if self.cleanup:
-                print 'removing', self.tempdir
-                shutil.rmtree(self.tempdir, ignore_errors=True)
+def finish(self):
+    os.chdir(self.cwd)
+    try:
+        Context.finish(self)
+    finally:
+        if self.cleanup:
+            print 'removing', self.tempdir
+            shutil.rmtree(self.tempdir, ignore_errors=True)
 
-    def update_client_info(self, info):
+def update_client_info(self, info):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
 
+#jacobian's implamentation
 class VirtualenvContext(Context):
     def __init__(self, always_cleanup=True, dependencies=[]):
         Context.__init__(self)
@@ -152,23 +153,27 @@ class VirtualenvContext(Context):
         # Create the virtualenv. Have to do this here so that commands can use
         # VirtualenvContext.python (etc) to get at the right python.
         import virtualenv
-        
+
         self.tempdir = tempfile.mkdtemp()
-        
+
         print 'creating virtualenv'
         _run_command(['virtualenv', '--no-site-packages', self.tempdir])
-        
+
         # calculate where a few things live so we can easily shell out to 'em
         self.python = os.path.join(self.tempdir, 'bin', 'python')
         self.easy_install = os.path.join(self.tempdir, 'bin', 'easy_install')
         self.pip = os.path.join(self.tempdir, 'bin', 'pip')
+	
+	self.x =os.environ['PATH']
+
+	os.environ['PATH'] = self.tempdir + os.path.join('/bin') + os.pathsep + self.x
 
     def initialize(self):
         Context.initialize(self)
         print 'changing to temp directory:', self.tempdir
         self.cwd = os.getcwd()
         os.chdir(self.tempdir)
-        
+         
         # install pip, then use it to install any packages desired
         print 'installing pip'
         _run_command([self.easy_install, '-U', 'pip'])
@@ -189,11 +194,13 @@ class VirtualenvContext(Context):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
         info['virtualenv'] = True
+	info['dependencies'] = self.dependencies
+
 
 class UploadAFile(object):
     """
-    @CTB add glob support
-    """
+@CTB add glob support
+"""
     def __init__(self, filepath, public_name, description, visible=True):
         self.filepath = os.path.realpath(filepath)
         self.public_name = public_name
@@ -212,12 +219,12 @@ class UploadAFile(object):
             filesize = os.path.getsize(self.filepath)
         except OSError:
             filesize = -1
-            
+
         results = dict(type='file_upload',
                        description=self.description,
                        filesize=filesize,
-                       errout="",       # @CTB should be unnecessary!
-                       status=0)        # @CTB should be unnecessary!
+                       errout="", # @CTB should be unnecessary!
+                       status=0) # @CTB should be unnecessary!
         return results
 
 class BaseCommand(object):
@@ -228,14 +235,14 @@ class BaseCommand(object):
         if name:
             self.command_name = name
         self.run_cwd = run_cwd
-        
+
         self.status = None
         self.output = None
         self.errout = None
         self.duration = None
 
         self.variables = None
-        
+
         self.subprocess_kwargs = {}
         if subprocess_kwargs:
             self.subprocess_kwargs = dict(subprocess_kwargs)
@@ -248,14 +255,14 @@ class BaseCommand(object):
 
     def set_variables(self, v):
         self.variables = dict(v)
-        
+
     def run(self, context):
         start = time.time()
         (ret, out, err) = _run_command(self.command_list, cwd=self.run_cwd,
                                        variables=self.variables,
                                        extra_kwargs=self.subprocess_kwargs,
                                        verbose=self.verbose)
-        
+
         self.status = ret
         self.output = out
         self.errout = err
@@ -283,7 +290,7 @@ class SetupCommand(BaseCommand):
 class BuildCommand(BaseCommand):
     command_type = 'build'
     command_name = 'build'
-        
+
 class TestCommand(BaseCommand):
     command_type = 'test'
     command_name = 'test'
@@ -298,7 +305,7 @@ class PythonPackageEgg(BaseCommand):
 
     def run(self, context):
         BaseCommand.run(self, context)
-        if self.status == 0:            # success?
+        if self.status == 0: # success?
             eggfiles = os.path.join('dist', '*.egg')
             eggfiles = glob.glob(eggfiles)
 
@@ -307,11 +314,11 @@ class PythonPackageEgg(BaseCommand):
                                            filename,
                                            'an egg installation file',
                                            visible=True)
-            
-            
+
+
 class GitClone(SetupCommand):
     command_name = 'checkout'
-    
+
     def __init__(self, repository, branch='master', cache_dir=None,
                  use_cache=True, **kwargs):
         SetupCommand.__init__(self, [], **kwargs)
@@ -327,7 +334,7 @@ class GitClone(SetupCommand):
         self.version_info = ''
 
         self.results_dict = {}
-        
+
     def run(self, context):
         # first, guess the co dir name
         p = urlparse.urlparse(self.repository) # what about Windows path names?
@@ -343,7 +350,7 @@ class GitClone(SetupCommand):
             cache_dir = self.cache_dir
             if not cache_dir:
                 cache_dir = guess_cache_dir(dirname)
-                
+
         ##
 
         if self.use_cache and cache_dir:
@@ -356,7 +363,7 @@ class GitClone(SetupCommand):
             self.results_dict['cache_update'] = \
                      dict(status=ret, output=out, errout=err,
                           command=str(cmdlist))
-            
+
             if ret != 0:
                 return
 
@@ -370,10 +377,10 @@ class GitClone(SetupCommand):
         location = self.repository
         if cache_dir:
             location = cache_dir
-            
+
         cmdlist = ['git', 'clone', self.repository]
         (ret, out, err) = _run_command(cmdlist)
-        
+
         self.results_dict['clone'] = \
                  dict(status=ret, output=out, errout=err,
                       command=str(cmdlist))
@@ -383,7 +390,7 @@ class GitClone(SetupCommand):
         print cmdlist, out
 
         if not os.path.exists(dirname) and os.path.isdir(dirname):
-            print 'wrong guess; %s does not exist.  whoops' % (dirname,)
+            print 'wrong guess; %s does not exist. whoops' % (dirname,)
             self.status = -1
             return
 
@@ -438,9 +445,9 @@ class GitClone(SetupCommand):
         self.results_dict['version_type'] = 'git'
         if self.version_info:
             self.results_dict['version_info'] = self.version_info
-        
+
         return self.results_dict
-            
+
 class SvnUpdate(SetupCommand):
     command_name = 'checkout'
 
@@ -453,7 +460,7 @@ class SvnUpdate(SetupCommand):
             self.cache_dir = os.path.expanduser(cache_dir)
         self.duration = -1
         self.dirname = dirname
-        
+
     def run(self, context):
         dirname = self.dirname
 
@@ -495,15 +502,15 @@ class SvnUpdate(SetupCommand):
                 self.status = -1
                 self.output = ''
                 self.errout = 'pony-build-client cannot find expected svn dir: %s' % (dirname,)
-            
-                print 'wrong guess; %s does not exist.  whoops' % (dirname,)
+
+                print 'wrong guess; %s does not exist. whoops' % (dirname,)
                 return
 
             os.chdir(dirname)
 
         ##
 
-        self.status = 0                 # success
+        self.status = 0 # success
         self.output = ''
         self.errout = ''
 
@@ -527,7 +534,7 @@ def _send(server, info, results):
 
 def _upload_file(server_url, fileobj, auth_key):
     # @CTB make sure files can't be uploaded from elsewhere on system?
-    
+
     # @CTB hack hack
     assert server_url.endswith('xmlrpc')
     upload_url = server_url[:-6] + 'upload'
@@ -578,7 +585,7 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
 
     client_info = dict(package=name, arch=arch, success=success)
     files_to_upload = None
-    
+
     if context:
         context.update_client_info(client_info)
 
@@ -608,10 +615,10 @@ def send(server_url, x, hostname=None, tags=()):
 def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
     if hostname is None:
         hostname = get_hostname()
-        
+
     if arch is None:
         arch = get_arch()
-        
+
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     server_url = get_server_url(server_url)
     s = xmlrpclib.ServerProxy(server_url, allow_none=True)
@@ -622,7 +629,7 @@ def get_server_url(server_name):
     try_url = urlparse.urlparse(server_name)
     if try_url.scheme:
         server_url = server_name
-    else:                               # not a URL?
+    else: # not a URL?
         server_url = pb_servers[server_name]
 
     return server_url
@@ -639,11 +646,11 @@ def parse_cmdline(argv=[]):
     cmdline.add_option('-f', '--force-build', dest='force_build',
                        action='store_true', default=False,
                        help="run a build whether or not it's stale")
-    
+
     cmdline.add_option('-n', '--no-report', dest='report',
                        action='store_false', default=True,
                        help="do not report build results to server")
-    
+
     cmdline.add_option('-N', '--no-clean-temp', dest='cleanup_temp',
                        action='store_false', default=True,
                        help='do not clean up the temp directory')
@@ -672,7 +679,7 @@ def get_python_config(options, args):
     else:
         python_ver = args[0]
         print 'setting python version:', python_ver
-        
+
     tags = [python_ver]
 
     if len(args) > 1:
@@ -702,7 +709,7 @@ recipes = {
                          Python_package_egg
              ]),
     'twill' : (get_python_config,
-               [ SvnUpdate('twill', 'https://twill.googlecode.com/svn/branches/0.9.2-dev/twill', cache_dir='~/.pony-build/twill'),
+               [ SvnUpdate('twill', 'http://twill.googlecode.com/svn/branches/0.9.2-dev/twill', cache_dir='~/.pony-build/twill'),
                  PythonBuild,
                  PythonTest
              ]),
@@ -712,7 +719,7 @@ recipes = {
 
 if __name__ == '__main__':
     options, args = parse_cmdline()
-    
+
     package = args[0]
     (config_fn, recipe) = recipes[package]
     variables = config_fn(options, args[1:])
@@ -725,7 +732,7 @@ if __name__ == '__main__':
     ###
 
     server_url = options.server_url
-    
+
     if not options.force_build:
         if not check(package, server_url, tags=tags):
             print 'check build says no need to build; bye'
@@ -734,7 +741,7 @@ if __name__ == '__main__':
     context = TempDirectoryContext()
     results = do(package, recipe, context=context, stop_if_failure=False)
     client_info, reslist, files_list = results
-    
+
     if options.report:
         print 'result: %s; sending' % (client_info['success'],)
         send(server_url, results, tags=tags)
@@ -748,6 +755,6 @@ if __name__ == '__main__':
     if not client_info['success']:
         print 'build failed.'
         sys.exit(-1)
-        
+
     print 'build succeeded.'
     sys.exit(0)
