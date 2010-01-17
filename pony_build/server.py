@@ -18,86 +18,48 @@ from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, \
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, \
      ServerHandler
 import json                             # requires python2.6
-#import figleaf
 
 try:
     from urlparse import parse_qs
 except ImportError:
     from cgi import parse_qs
 
-### public XML-RPC API.
+##
 
-client_ip = None
-_coordinator = None
-def add_results(client_info, results):
-    """
-    Add build results to the server.
-
-    'client_info' is a dictionary of client information; 'results' is
-    a list of dictionaries, with each dict containing build/test info
-    for a single step.
-    """
-    # assert that they have the right methods ;)
-    client_info.keys()
-    for d in results:
-        d.keys()
-
-    try:
-        key = _coordinator.add_results(client_ip, client_info, results)
-    except:
-        traceback.print_exc()
-        raise
-
-    return key
-
-def get_results(results_key):
-    x = _coordinator.db_get_result_info(results_key)
-    (receipt, client_info, results) = x
-
-    return x
-
-def check_should_build(client_info, reserve_build=True, build_allowance=0):
-    """
-    Should a client build, according to the server?
-
-    Returns a tuple (flag, reason).  'flag' is bool; 'reason' is a
-    human-readable string.
-
-    A 'yes' (True) could be for several reasons, including no build
-    result for this tagset, a stale build result (server
-    configurable), or a request to force-build.
-    """
-    flag, reason = _coordinator.check_should_build(client_info)
-    print (flag, reason)
-    if flag:
-        if reserve_build:
-            print 'RESERVING BUILD'
-            _coordinator.notify_build(client_info['package'],
-                                      client_info, build_allowance)
-        return True, reason
-    return False, reason
-
-def get_tagsets_for_package(package):
-    """
-    Get the list of tagsets containing build results for the given package.
-    """
-    return [ list(x) for x in _coordinator.get_tagsets_for_package(package) ]
-
-def get_last_result_for_tagset(package, tagset):
-    """
-    Get the most recent result for the given package/tagset combination.
-    """
-    return _coordinator.get_last_result_for_tagset(package, tagset)
+from .remote_api import XmlRpcFunctions
 
 ###
 
-_coordinator = None
+# various error message:
+
+too_big_message = "403 FORBIDDEN: You're trying to upload %d bytes; we only allow %d per request."
+missing_package = "missing 'package' parameter on notification"
+no_auth_upload = "you are not authorized to upload files!"
+missing_upload_data = 'upload attempt, but missing filename, description, or auth_key!?'
+
+#
+# The PonyBuildServer class just pulls together the WSGIServer and the
+# SimpleXMLRPCDispatcher so that a single Web server can handle both
+# XML-RPC and WSGI duties.
+#
 
 class PonyBuildServer(WSGIServer, SimpleXMLRPCDispatcher):
     def __init__(self, *args, **kwargs):
         WSGIServer.__init__(self, *args, **kwargs)
         SimpleXMLRPCDispatcher.__init__(self, False, None)
 
+#
+# The RequestHandler class handles all of the file upload, UI and
+# XML-RPC Web calls.  It does so by first checking to see if a Web
+# call is to the XML-RPC URL, file upload fn, or notify, and, if not,
+# then passes it on to the WSGI handler.
+#
+# The object is to make it really easy to write a new UI without messing
+# with the basic server functionality, which includes things like security
+# measures to block DoS by uploading large files.
+#
+# See the handle function for more information.
+#
 
 class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
     rpc_paths = ('/xmlrpc',)
@@ -105,6 +67,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
     MAX_CONTENT_LENGTH = 5*1000*1000    # allow only 5 mb at a time.
 
     def _send_html_response(self, code, message):
+        """Send an HTTP response."""
         self.send_response(code)
         self.send_header('Content-type', 'text/html')
         self.send_header('Content-length', str(len(message)))
@@ -114,6 +77,8 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         self.wfile.close()
 
     def _handle_upload(self):
+        """Handle file upload via POST."""
+        
         qs = {}
         if '?' in self.path:
             url, qs = self.path.split('?', 1)
@@ -125,8 +90,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             auth_key = qs.get('auth_key')[0]
             visible = qs.get('visible', ['no'])[0] == 'yes'
         except (TypeError, ValueError, KeyError):
-            message = 'upload attempt, but missing filename, description, or auth_key!?'
-            self._send_html_response(400, message)
+            self._send_http_response(400, missing_upload_data)
             return
 
         content_length = self.headers.getheader('content-length')
@@ -135,7 +99,7 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             data = self.rfile.read(content_length)
             
             code = 401
-            message = "you are not auth to upload files!"
+            message = no_auth_upload
 
             if _coordinator.db_add_uploaded_file(auth_key,
                                                  filename,
@@ -151,6 +115,8 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         self._send_html_response(code, message)
 
     def _handle_notify(self):
+        """Handle webhook notification, currently only from github."""
+        
         data = ''
         
         content_length = self.headers.getheader('content-length')
@@ -172,9 +138,9 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             pass
 
         if not package:
-            self._send_html_response(400, "missing 'package' parameter on notification")
+            self._send_html_response(400, missing_package)
 
-        if format == 'github':
+        if format == 'github':          # @CTB hardcoded github webhook...!
             post_d = parse_qs(data)
             payload = post_d.get('payload')[0]
             payload = json.loads(payload)
@@ -186,25 +152,17 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         self._send_html_response(200, "received")
 
     def handle(self):
-        try:
-            self._handle()
-        finally:
-            #figleaf.write_coverage('.figleaf')
-            pass
-
-    def _handle(self):
         """
         Handle:
           /xmlrpc => SimpleXMLRPCServer
           /upload => self._handle_upload
+          /notify => self._handle_notify
           all else => WSGI app for Web UI
         """
         self.raw_requestline = self.rfile.readline()
         if not self.parse_request(): # An error code has been sent, just exit
             return
 
-        print "SERVER HANDLE: path is '%s'" % self.path
-        
         content_length = self.headers.getheader('content-length')
         if not content_length:
             content_length = 0
@@ -213,14 +171,12 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         print 'content length is:', content_length
 
         if content_length > self.MAX_CONTENT_LENGTH:
-            message = "403 FORBIDDEN: You're trying to upload %d bytes; we only allow %d per request." % (content_length, self.MAX_CONTENT_LENGTH)
+            message = too_big_message % (content_length,
+                                         self.MAX_CONTENT_LENGTH)
             self._send_html_response(403, message)
             return
 
         if SimpleXMLRPCRequestHandler.is_rpc_path_valid(self):
-            # @CTB hack hack hack, I should be ashamed of myself.
-            global client_ip
-            client_ip = self.client_address[0]
             return SimpleXMLRPCRequestHandler.do_POST(self)
         
         elif self.path.startswith('/upload?'):
@@ -238,6 +194,20 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         handler.request_handler = self      # backpointer for logging
         handler.run(self.server.get_app())
 
+    def _dispatch(self, method, params):
+        """
+        Handle all XML-RPC dispatch (see do_POST call, above).
+        """
+        client_ip = self.client_address[0]
+        
+        fn_obj = XmlRpcFunctions(_coordinator, client_ip)
+        fn = getattr(fn_obj, method)
+        return fn(*params)
+
+###
+
+_coordinator = None
+
 def get_coordinator():
     global _coordinator
     return _coordinator
@@ -250,11 +220,5 @@ def create(interface, port, pbs_coordinator, wsgi_app):
     
     server.set_app(wsgi_app)
     _coordinator = pbs_coordinator
-    
-    server.register_function(add_results)
-    server.register_function(get_results)
-    server.register_function(check_should_build)
-    server.register_function(get_tagsets_for_package)
-    server.register_function(get_last_result_for_tagset)
     
     return server

@@ -58,7 +58,9 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
     if verbose:
         print 'CWD', os.getcwd()
         print 'running in ->', cwd
-
+        print 'command_list:', command_list
+        print 'default kwargs:', default_kwargs
+        
     try:
         p = subprocess.Popen(command_list, cwd=cwd, **default_kwargs)
 
