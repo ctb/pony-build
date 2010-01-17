@@ -145,12 +145,18 @@ def update_client_info(self, info):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
 
-#jacobian's implamentation
 class VirtualenvContext(Context):
-    def __init__(self, always_cleanup=True, dependencies=[]):
+    """
+    A context that creates a new virtualenv and does everything within that
+    environment.
+
+    VirtualenvContext works by modifying the 
+    """
+    def __init__(self, always_cleanup=True, dependencies=[], python='python'):
         Context.__init__(self)
         self.cleanup = always_cleanup
         self.dependencies = dependencies
+        self.python = python
 
         # Create the virtualenv. Have to do this here so that commands can use
         # VirtualenvContext.python (etc) to get at the right python.
@@ -159,16 +165,17 @@ class VirtualenvContext(Context):
         self.tempdir = tempfile.mkdtemp()
 
         print 'creating virtualenv'
-        _run_command(['virtualenv', '--no-site-packages', self.tempdir])
+        _run_command([python, '-m', 'virtualenv', '--no-site-packages',
+                      self.tempdir])
 
         # calculate where a few things live so we can easily shell out to 'em
-        self.python = os.path.join(self.tempdir, 'bin', 'python')
-        self.easy_install = os.path.join(self.tempdir, 'bin', 'easy_install')
-        self.pip = os.path.join(self.tempdir, 'bin', 'pip')
+        bindir = os.path.join(self.tempdir, 'bin')
+        
+        self.python = os.path.join(bindir, 'python')
+        self.easy_install = os.path.join(bindir, 'easy_install')
+        self.pip = os.path.join(bindir, 'pip')
 	
-	self.x =os.environ['PATH']
-
-	os.environ['PATH'] = self.tempdir + os.path.join('/bin') + os.pathsep + self.x
+	os.environ['PATH'] = bindir + os.pathsep + os.environ['PATH']
 
     def initialize(self):
         Context.initialize(self)
@@ -181,7 +188,7 @@ class VirtualenvContext(Context):
         _run_command([self.easy_install, '-U', 'pip'])
         for dep in self.dependencies:
             print "installing", dep
-            _run_command([self.pip, 'install', '-U', '-I'] + dep.split())
+            _run_command([self.pip, 'install', '-U', '-I'] + [dep])
 
     def finish(self):
         os.chdir(self.cwd)
