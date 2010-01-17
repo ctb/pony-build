@@ -457,6 +457,126 @@ class GitClone(SetupCommand):
 
         return self.results_dict
 
+class HgClone(SetupCommand):
+    command_name = 'checkout'
+
+    def __init__(self, repository, branch='default', cache_dir=None,
+                 use_cache=True, **kwargs):
+        SetupCommand.__init__(self, [], **kwargs)
+        self.repository = repository
+        self.branch = branch
+        assert branch == 'default'
+
+        self.use_cache = use_cache
+        self.cache_dir = cache_dir
+        if cache_dir:
+            self.cache_dir = os.path.expanduser(cache_dir)
+
+        self.duration = -1
+        self.version_info = ''
+
+        self.results_dict = {}
+
+    def run(self, context):
+        # first, guess the co dir name
+        p = urlparse.urlparse(self.repository) # what about Windows path names?
+        path = p.path
+
+        dirname = path.rstrip('/').split('/')[-1]
+
+        print 'hg checkout dirname guessed as: %s' % (dirname,)
+
+        if self.use_cache:
+            cache_dir = self.cache_dir
+            if not cache_dir:
+                cache_dir = guess_cache_dir(dirname)
+
+        ##
+
+        if self.use_cache and cache_dir:
+            cwd = os.getcwd()
+            if os.path.isdir(dirname):
+                os.chdir(cache_dir)
+                cmdlist = ['hg', 'pull']
+                (ret, out, err) = _run_command(cmdlist)
+
+                self.results_dict['cache_pull'] = \
+                     dict(status=ret, output=out, errout=err,
+                          command=str(cmdlist))
+
+                if ret != 0:
+                    return
+
+                cmdlist = ['hg', 'update', '-C']
+                (ret, out, err) = _run_command(cmdlist)
+                
+                self.results_dict['cache_update'] = \
+                     dict(status=ret, output=out, errout=err,
+                          command=str(cmdlist))
+                
+
+                if ret != 0:
+                    return
+            else:
+                assert 0
+
+            os.chdir(cwd)
+
+        ##
+
+        print cmdlist, out
+
+        # now, do a clone, from either the parent OR the local cache
+        location = self.repository
+        if cache_dir:
+            location = cache_dir
+
+        cmdlist = ['hg', 'checkout', self.repository]
+        (ret, out, err) = _run_command(cmdlist)
+
+        self.results_dict['checkout'] = \
+                 dict(status=ret, output=out, errout=err,
+                      command=str(cmdlist))
+        if ret != 0:
+            return
+
+        print cmdlist, out
+
+        if not os.path.exists(dirname) and os.path.isdir(dirname):
+            print 'wrong guess; %s does not exist. whoops' % (dirname,)
+            self.status = -1
+            return
+
+        ##
+
+        # get some info on what our HEAD is
+#        cmdlist = ['git', 'log', '-1', '--pretty=oneline']
+#        (ret, out, err) = _run_command(cmdlist, dirname)
+
+#        assert ret == 0, (cmdlist, ret, out, err)
+
+#        self.version_info = out.strip()
+
+        self.status = 0
+
+        # set the build directory, too.
+        context.build_dir = os.path.join(os.getcwd(),
+                                         dirname)
+
+    def get_results(self):
+        self.results_dict['out'] = self.results_dict['errout'] = ''
+        self.results_dict['command'] = 'HgCheckout(%s, %s)' % (self.repository,
+                                                               self.branch)
+        self.results_dict['status'] = self.status
+        self.results_dict['type'] = self.command_type
+        self.results_dict['name'] = self.command_name
+
+        self.results_dict['version_type'] = 'hg'
+        if self.version_info:
+            self.results_dict['version_info'] = self.version_info
+
+        return self.results_dict
+
 class SvnUpdate(SetupCommand):
     command_name = 'checkout'
 
