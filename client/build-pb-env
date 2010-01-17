@@ -19,13 +19,12 @@ repo_url = 'git://github.com/ctb/pony-build.git'
 server_url = options.server_url
 tags = ['pb', 'env']
 
-context = VirtualenvContext(True, ['Jinja2', 'Quixote', 'twill', 'nose'])
-
-
+context = VirtualenvContext(dependencies=['Jinja2', 'Quixote', 'twill','nose'],
+                            python=python_exe)
 
 commands = [ GitClone(repo_url, name='checkout'),            
-	    BuildCommand(['python', 'setup.py', 'install']),
-	    BuildCommand(['python', '-m', 'pony_build.tests.run']) 
+             BuildCommand(['python', 'setup.py', 'install'], name='install'),
+             BuildCommand(['python', '-m', 'pony_build.tests.run']) 
 ]
 
 
