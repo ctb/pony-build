@@ -404,7 +404,7 @@ class GitClone(SetupCommand):
 
         # now, do a clone, from either the parent OR the local cache
         location = self.repository
-        if cache_dir:
+        if tmp_cache_dir:
             location = tmp_cache_dir
 	if not ran_already:
         	cmdlist = ['git', 'clone', location]
