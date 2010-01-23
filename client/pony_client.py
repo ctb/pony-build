@@ -358,13 +358,19 @@ class GitClone(SetupCommand):
         if self.use_cache:
             cache_dir = self.cache_dir
             if not cache_dir:
-                cache_dir = guess_cache_dir(dirname)
-
+                tmp_cache_dir = guess_cache_dir(dirname)
+		cache_dir = tmp_cache_dir
+		packlen = len(dirname)
+		cache_dir = cache_dir[:-packlen]
+		print 'cache_dir is: ' + cache_dir
+		print 'repo cache is: ' + tmp_cache_dir
+		ran_already = False
         ##
 
-        if self.use_cache and cache_dir:
+        if self.use_cache and os.path.exists(tmp_cache_dir):
             cwd = os.getcwd()
-            os.chdir(cache_dir)
+            os.chdir(tmp_cache_dir)
+	    print 'changed to: ' + tmp_cache_dir + ' to do fetch.'
             branchspec = '%s:%s' % (self.branch, self.branch)
             cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
             (ret, out, err) = _run_command(cmdlist)
@@ -377,7 +383,21 @@ class GitClone(SetupCommand):
                 return
 
             os.chdir(cwd)
-
+	else:
+	    if not os.path.isdir(cache_dir):
+                print 'trying: ' + cache_dir
+                os.mkdir(cache_dir)
+                os.chdir(cache_dir)
+                print 'had to make a new cache_dir: ' + cache_dir
+                cmdlist = ['git', 'clone', self.repository]
+                (ret, out, err) = _run_command(cmdlist)
+                ran_already=True
+            else:
+                print 'changing to: ' + cache_dir + ' to make new repo dir'
+                os.chdir(cache_dir)
+                cmdlist = ['git', 'clone', self.repository]
+	        (ret, out, err) = _run_command(cmdlist)
+                ran_already=True
         ##
 
         print cmdlist, out
@@ -385,16 +405,16 @@ class GitClone(SetupCommand):
         # now, do a clone, from either the parent OR the local cache
         location = self.repository
         if cache_dir:
-            location = cache_dir
+            location = tmp_cache_dir
+	if not ran_already:
+        	cmdlist = ['git', 'clone', location]
+        	(ret, out, err) = _run_command(cmdlist)
 
-        cmdlist = ['git', 'clone', self.repository]
-        (ret, out, err) = _run_command(cmdlist)
-
-        self.results_dict['clone'] = \
-                 dict(status=ret, output=out, errout=err,
-                      command=str(cmdlist))
-        if ret != 0:
-            return
+        	self.results_dict['clone'] = \
+                	 dict(status=ret, output=out, errout=err,
+                      		command=str(cmdlist))
+        	if ret != 0:
+                	return
 
         print cmdlist, out
 
