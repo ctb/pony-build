@@ -366,8 +366,6 @@ class GitClone(SetupCommand):
 		cache_dir = cache_dir[:-packlen]
 		print 'cache_dir is: ' + cache_dir
 		print 'repo cache is: ' + tmp_cache_dir
-		# just a toggle so that we dont do two clones in the following steps, move to __init__ later
-		ran_already = False
         ##
 
         if self.use_cache and os.path.exists(tmp_cache_dir):
@@ -388,38 +386,38 @@ class GitClone(SetupCommand):
             os.chdir(cwd)
 	else:
 	    if not os.path.isdir(cache_dir):
+		cwd = os.getcwd()
             	# if ~/.pony-build doesnt exist, create it, then change to it and do a initial clone
-	    	print 'trying: ' + cache_dir
+		print 'trying: ' + cache_dir
                 os.mkdir(cache_dir)
                 os.chdir(cache_dir)
                 print 'had to make a new cache_dir: ' + cache_dir
                 cmdlist = ['git', 'clone', self.repository]
                 (ret, out, err) = _run_command(cmdlist)
-                ran_already=True
+		os.chdir(cwd)
             else:
+		cwd = os.getcwd()
 		# if cache_dir already exists, just do a clone to create the repo
                 print 'changing to: ' + cache_dir + ' to make new repo dir'
                 os.chdir(cache_dir)
                 cmdlist = ['git', 'clone', self.repository]
 	        (ret, out, err) = _run_command(cmdlist)
-                ran_already=True
+		os.chdir(cwd)
         ##
-
         print cmdlist, out
 
         # now, do a clone, from either the parent OR the local cache
         location = self.repository
         if tmp_cache_dir:
             location = tmp_cache_dir
-	if not ran_already:
-        	cmdlist = ['git', 'clone', location]
-        	(ret, out, err) = _run_command(cmdlist)
+       	cmdlist = ['git', 'clone', location]
+        (ret, out, err) = _run_command(cmdlist)
 
-        	self.results_dict['clone'] = \
-                	 dict(status=ret, output=out, errout=err,
-                      		command=str(cmdlist))
-        	if ret != 0:
-                	return
+       	self.results_dict['clone'] = \
+               	 dict(status=ret, output=out, errout=err,
+                    	command=str(cmdlist))
+       	if ret != 0:
+               	return
 
         print cmdlist, out
 
