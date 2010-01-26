@@ -358,20 +358,18 @@ class GitClone(SetupCommand):
         if self.use_cache:
             cache_dir = self.cache_dir
             if not cache_dir:
-		#setup some variables for cache folder locations
-                tmp_cache_dir = guess_cache_dir(dirname)
-		cache_dir = tmp_cache_dir
-		packlen = len(dirname)
-		#trim the pckg name so can create the cache_dir and not the repo dir
-		cache_dir = cache_dir[:-packlen]
-		print 'cache_dir is: ' + cache_dir
-		print 'repo cache is: ' + tmp_cache_dir
+		# setup some variables for cache folder locations
+                repo_dir = guess_cache_dir(dirname)
+		cache_dir = repo_dir
+		pkglen = len(dirname)
+		# trim the pkg name so can create the cache_dir and not the repo dir
+		cache_dir = cache_dir[:-pkglen]
         ##
 
-        if self.use_cache and os.path.exists(tmp_cache_dir):
+        if self.use_cache and os.path.exists(repo_dir):
             cwd = os.getcwd()
-            os.chdir(tmp_cache_dir)
-	    print 'changed to: ' + tmp_cache_dir + ' to do fetch.'
+            os.chdir(repo_dir)
+	    print 'changed to: ' + repo_dir + ' to do fetch.'
             branchspec = '%s:%s' % (self.branch, self.branch)
             cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
             (ret, out, err) = _run_command(cmdlist)
@@ -388,7 +386,6 @@ class GitClone(SetupCommand):
 	    if not os.path.isdir(cache_dir):
 		cwd = os.getcwd()
             	# if ~/.pony-build doesnt exist, create it, then change to it and do a initial clone
-		print 'trying: ' + cache_dir
                 os.mkdir(cache_dir)
                 os.chdir(cache_dir)
                 print 'had to make a new cache_dir: ' + cache_dir
@@ -408,8 +405,8 @@ class GitClone(SetupCommand):
 
         # now, do a clone, from either the parent OR the local cache
         location = self.repository
-        if tmp_cache_dir:
-            location = tmp_cache_dir
+        if os.path.isdir(repo_dir):
+            location = repo_dir
        	cmdlist = ['git', 'clone', location]
         (ret, out, err) = _run_command(cmdlist)
 
