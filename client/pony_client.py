@@ -11,6 +11,7 @@ import tempfile
 import shutil
 import os, os.path
 import time
+import errno
 import urlparse
 import urllib
 import traceback
@@ -26,6 +27,8 @@ pb_servers['default'] = pb_servers['pb-dev']
 
 ###
 
+
+
 DEFAULT_CACHE_DIR='~/.pony-build'
 def guess_cache_dir(dirname):
     parent = os.environ.get('PONY_BUILD_CACHE', DEFAULT_CACHE_DIR)
@@ -33,6 +36,17 @@ def guess_cache_dir(dirname):
     result = os.path.join(parent, dirname)
 
     return result
+
+def check_cache_dir(cache_dir, dirname):
+    pkglen = len(dirname)
+    # trim the pkg name so can create the main cache_dir and not the repo dir
+    tmp_cache_dir = cache_dir[:-pkglen]
+    try:
+        if os.path.isdir(tmp_cache_dir):
+            pass
+        else:
+            os.mkdir(tmp_cache_dir)
+    except OSError
 
 ###
 
@@ -359,11 +373,8 @@ class GitClone(SetupCommand):
             cache_dir = self.cache_dir
             if not cache_dir:
 		# setup some variables for cache folder locations
-                repo_dir = guess_cache_dir(dirname)
-		cache_dir = repo_dir
-		pkglen = len(dirname)
-		# trim the pkg name so can create the cache_dir and not the repo dir
-		cache_dir = cache_dir[:-pkglen]
+                repo_dir = guess_cache_dir(dirname)        
+                check_cache_dir(repo_dir, dirname)
         ##
 
         if self.use_cache and os.path.exists(repo_dir):
