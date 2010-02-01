@@ -372,9 +372,12 @@ class GitClone(SetupCommand):
         if self.use_cache:
             cache_dir = self.cache_dir
             if not cache_dir:
-		# setup some variables for cache folder locations
+		# setup some variables for cache folder locations/check if cache_dir exists
                 repo_dir = guess_cache_dir(dirname)        
                 check_cache_dir(repo_dir, dirname)
+                # trim repo so we know where the users cache is
+                pkglength = len(dirname)
+                cache_dir = repo_dir[:-pkglength]
         ##
 
         if self.use_cache and os.path.exists(repo_dir):
@@ -394,23 +397,13 @@ class GitClone(SetupCommand):
 
             os.chdir(cwd)
 	else:
-	    if not os.path.isdir(cache_dir):
-		cwd = os.getcwd()
-            	# if ~/.pony-build doesnt exist, create it, then change to it and do a initial clone
-                os.mkdir(cache_dir)
-                os.chdir(cache_dir)
-                print 'had to make a new cache_dir: ' + cache_dir
-                cmdlist = ['git', 'clone', self.repository]
-                (ret, out, err) = _run_command(cmdlist)
-		os.chdir(cwd)
-            else:
-		cwd = os.getcwd()
-		# if cache_dir already exists, just do a clone to create the repo
-                print 'changing to: ' + cache_dir + ' to make new repo dir'
-                os.chdir(cache_dir)
-                cmdlist = ['git', 'clone', self.repository]
-	        (ret, out, err) = _run_command(cmdlist)
-		os.chdir(cwd)
+            cwd = os.getcwd()
+            # do a clone to create the repo dir
+            print 'changing to: ' + cache_dir + ' to make new repo dir'
+            os.chdir(cache_dir)
+            cmdlist = ['git', 'clone', self.repository]
+            (ret, out, err) = _run_command(cmdlist)
+            os.chdir(cwd)
         ##
         print cmdlist, out
 
