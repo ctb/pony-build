@@ -26,9 +26,8 @@ if not options.force_build:
 context = TempDirectoryContext()
 commands = [ GitClone(repo_url, name='checkout'),
              BuildCommand([python_exe, 'setup.py', 'install'],
-                          name='compile'),
-             TestCommand([python_exe, 'setup.py', 'test'], name='run tests'),
-             PythonPackageEgg(python_exe)]
+                          name='compile')]#,
+             #PythonPackageEgg(python_exe)]
 
 results = do(name, commands, context=context)
 client_info, reslist, files = results
@@ -36,7 +35,7 @@ client_info, reslist, files = results
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)
     #send(server_url, results, tags=tags)
-    send("http://localhost:5000/xmlrpc", results, tags=tags)
+    send("http://localhost:8080/xmlrpc", results, tags=tags)
 else:
     print 'build result:'
     pprint.pprint(client_info)
