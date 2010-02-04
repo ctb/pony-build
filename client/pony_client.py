@@ -48,8 +48,8 @@ def check_cache_dir(cache_dir, dirname):
         else:
             os.mkdir(tmp_cache_dir)
     except OSError, err:
-    # if cache_dir already exists grab error and print
-	if err.errno == errno.EEXIST:
+    # if can't create cache_dir then print out
+	if err.errno == errno.EACCES:
             print err.args
 
 ###
