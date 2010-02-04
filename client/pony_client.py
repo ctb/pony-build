@@ -39,14 +39,18 @@ def guess_cache_dir(dirname):
 
 def check_cache_dir(cache_dir, dirname):
     pkglen = len(dirname)
-    # trim the pkg name so can create the main cache_dir and not the repo dir
+    # trim the pkg name so can create the main cache_dir and not the 
+    # repo dir
     tmp_cache_dir = cache_dir[:-pkglen]
     try:
         if os.path.isdir(tmp_cache_dir):
             pass
         else:
             os.mkdir(tmp_cache_dir)
-    except OSError
+    except OSError, err:
+    # if cache_dir already exists grab error and print
+	if err.errno == errno.EEXIST:
+            print err.args
 
 ###
 
