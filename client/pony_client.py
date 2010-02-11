@@ -700,6 +700,15 @@ def parse_cmdline(argv=[]):
 
 ###
 
+
+def testPythonVersion(python_exe):
+    result = os.popen(python_exe + " -c \"print 'hello, world'\"", "r").read()
+    if result != "hello, world\n":
+        return False
+    return True
+
+###
+
 def get_python_config(options, args):
     if not len(args):
         python_ver = 'python2.5'
