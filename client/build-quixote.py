@@ -5,28 +5,13 @@ from pony_client import BuildCommand, TestCommand, do, send, \
      TempDirectoryContext, SetupCommand, GitClone, check, parse_cmdline, \
      PythonPackageEgg
 
-options, args = parse_cmdline()
-
-
-#print "************ OPTIONS:"
-#print options
-#print "************ ARGS:"
-##print args
-
-#print "************ type of options:"
-#print dir(options)
-
-#if args:
-#    python_exe = args[0]
-
-#if options.python_executable == None:
-#    python_exe = 'python' # try default python version
+options, _ = parse_cmdline()
 
 python_exe = options.python_executable
 
 repo_url = 'git://quixote.ca/quixote'
 
-tags = [python_exe]
+tags = [python_exe] + options.tagset
 name = 'quixote'
 
 server_url = options.server_url
@@ -38,9 +23,7 @@ if not options.force_build:
 
 context = TempDirectoryContext()
 commands = [ GitClone(repo_url, name='checkout'),
-             BuildCommand([python_exe, 'setup.py', 'install'],
-                          name='compile')]#,
-             #PythonPackageEgg(python_exe)]
+             BuildCommand([python_exe, 'setup.py', 'install'], name='compile')]
 
 results = do(name, commands, context=context)
 client_info, reslist, files = results

@@ -676,14 +676,18 @@ def parse_cmdline(argv=[]):
                        action='store', default='python',
                        help='override the version of python used to build with')
                        
-    #cmdline.add_option('-t', '--tagset', dest='python_executable',
-    #                   action='store', default=None,
-    #                   help='comma-delimited list of tags to be applied')
+    cmdline.add_option('-t', '--tagset', dest='tagset',
+                       action='store', default=[],
+                       help='comma-delimited list of tags to be applied')
 
     if not argv:
         (options, args) = cmdline.parse_args()
     else:
         (options, args) = cmdline.parse_args(argv)
+        
+    # parse the tagset
+    if options.tagset != []:
+        options.tagset = options.tagset.split(',')
         
     # there should be nothing in args.
     # if there is, print a warning, then crash and burn.
