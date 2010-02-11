@@ -671,11 +671,25 @@ def parse_cmdline(argv=[]):
     cmdline.add_option('-v', '--verbose', dest='verbose',
                        action='store_true', default=False,
                        help='set verbose reporting')
+                       
+    cmdline.add_option('-e', '--python-executable', dest='python_executable',
+                       action='store', default='python',
+                       help='override the version of python used to build with')
+                       
+    #cmdline.add_option('-t', '--tagset', dest='python_executable',
+    #                   action='store', default=None,
+    #                   help='comma-delimited list of tags to be applied')
 
     if not argv:
         (options, args) = cmdline.parse_args()
     else:
         (options, args) = cmdline.parse_args(argv)
+        
+    # there should be nothing in args.
+    # if there is, print a warning, then crash and burn.
+    if args:
+        print "Error--unknown arguments detected.  Failing..."
+        sys.exit(0)
 
     return options, args
 

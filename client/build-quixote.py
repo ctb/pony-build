@@ -7,9 +7,22 @@ from pony_client import BuildCommand, TestCommand, do, send, \
 
 options, args = parse_cmdline()
 
-python_exe = 'python2.5'
-if args:
-    python_exe = args[0]
+
+#print "************ OPTIONS:"
+#print options
+#print "************ ARGS:"
+##print args
+
+#print "************ type of options:"
+#print dir(options)
+
+#if args:
+#    python_exe = args[0]
+
+#if options.python_executable == None:
+#    python_exe = 'python' # try default python version
+
+python_exe = options.python_executable
 
 repo_url = 'git://quixote.ca/quixote'
 
