@@ -216,9 +216,9 @@ class VirtualenvContext(Context):
             index = out.find(search)
            # print 'index is:', index
             if str(index) == '40':
-                print 'we messed up dude'
+                print ' we messed up dude'
             else:
-                print 'we good dude'
+                print ' we good dude'
     def finish(self):
         os.chdir(self.cwd)
         try:
