@@ -44,12 +44,14 @@ def check_cache_dir(cache_dir, dirname):
     tmp_cache_dir = cache_dir[:-pkglen]
     try:
         if os.path.isdir(tmp_cache_dir):
+            print 'exists already'
             pass
         else:
             os.mkdir(tmp_cache_dir)
+            print 'had to create cache'
     except OSError, err:
     # if can't create cache_dir then print out
-	if err.errno == errno.EACCES:
+	if err.errno == errno.EACCES or err.errno == errno.EPERM:
             print err.args
 
 ###
@@ -170,10 +172,13 @@ class VirtualenvContext(Context):
 
     VirtualenvContext works by modifying the 
     """
-    def __init__(self, always_cleanup=True, dependencies=[], python='python'):
+    def __init__(self, always_cleanup=True, reqdependencies=[], nonreqdependencies=[], python='python'):
         Context.__init__(self)
         self.cleanup = always_cleanup
-        self.dependencies = dependencies
+        # list of essential deps
+        self.reqdependencies = reqdependencies
+        # list of non essential deps
+        self.nonreqdependencies = nonreqdependencies
         self.python = python
 
         # Create the virtualenv. Have to do this here so that commands can use
@@ -204,10 +209,16 @@ class VirtualenvContext(Context):
         # install pip, then use it to install any packages desired
         print 'installing pip'
         _run_command([self.easy_install, '-U', 'pip'])
-        for dep in self.dependencies:
+        for dep in self.reqdependencies:
             print "installing", dep
-            _run_command([self.pip, 'install', '-U', '-I'] + [dep])
-
+            (ret, out, err) =  _run_command([self.pip, 'install', '-U', '-I'] + [dep])
+            search = 'not'
+            index = out.find(search)
+           # print 'index is:', index
+            if str(index) == '40':
+                print 'we messed up dude'
+            else:
+                print 'we good dude'
     def finish(self):
         os.chdir(self.cwd)
         try:
@@ -221,7 +232,7 @@ class VirtualenvContext(Context):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
         info['virtualenv'] = True
-	info['dependencies'] = self.dependencies
+	info['reqdependencies'] = self.reqdependencies
 
 
 class UploadAFile(object):
@@ -377,7 +388,7 @@ class GitClone(SetupCommand):
             cache_dir = self.cache_dir
             if not cache_dir:
 		# setup some variables for cache folder locations/check if cache_dir exists
-                repo_dir = guess_cache_dir(dirname)        
+                repo_dir = guess_cache_dir(dirname)
                 check_cache_dir(repo_dir, dirname)
                 # trim repo so we know where the users cache is
                 pkglength = len(dirname)
