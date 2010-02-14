@@ -224,12 +224,12 @@ class VirtualenvContext(Context):
            # print 'index is:', index
            # ToDo: Implement just OSError(maybe subprocess failure)
             if str(index) == '40':
-                print 'we messed up dude'
+                print 'One of the Required packages does not exist!'
                 # we need to cleanup tempdir still
                 VirtualenvContext.finish(self)
                 sys.exit(out)
             else:
-                print 'we good dude'
+                print dep, ' was installed fine!'
     def finish(self):
         os.chdir(self.cwd)
         try:
