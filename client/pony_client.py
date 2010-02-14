@@ -39,19 +39,26 @@ def guess_cache_dir(dirname):
 
 def check_cache_dir(cache_dir, dirname):
     pkglen = len(dirname)
-    # trim the pkg name so can create the main cache_dir and not the 
-    # repo dir
+    ''' 
+    trim the pkg name so we can create the main cache_dir and not the 
+    repo dir. I believe it has to be done this way to handle different
+    user PATH setup (OS's, custom stuff etc) 
+    '''
     tmp_cache_dir = cache_dir[:-pkglen]
     try:
         if os.path.isdir(tmp_cache_dir):
-            print 'exists already'
+            print 'cache_dir exists already!'
             pass
         else:
             os.mkdir(tmp_cache_dir)
-            print 'had to create cache'
+            print 'had to create a new cache_dir!'
     except OSError, err:
     # if can't create cache_dir then print out
 	if err.errno == errno.EACCES or err.errno == errno.EPERM:
+            print ' Access Error'
+            print err.args
+        else:
+            print 'Error occured'
             print err.args
 
 ###
@@ -215,10 +222,14 @@ class VirtualenvContext(Context):
             search = 'not'
             index = out.find(search)
            # print 'index is:', index
+           # ToDo: Implement just OSError(maybe subprocess failure)
             if str(index) == '40':
-                print ' we messed up dude'
+                print 'we messed up dude'
+                # we need to cleanup tempdir still
+                VirtualenvContext.finish(self)
+                sys.exit(out)
             else:
-                print ' we good dude'
+                print 'we good dude'
     def finish(self):
         os.chdir(self.cwd)
         try:
@@ -390,7 +401,8 @@ class GitClone(SetupCommand):
 		# setup some variables for cache folder locations/check if cache_dir exists
                 repo_dir = guess_cache_dir(dirname)
                 check_cache_dir(repo_dir, dirname)
-                # trim repo so we know where the users cache is
+                # trim repo so we know where the users cache should be
+                # so we can change to for git stuff later
                 pkglength = len(dirname)
                 cache_dir = repo_dir[:-pkglength]
         ##
