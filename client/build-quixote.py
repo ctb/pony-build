@@ -3,13 +3,13 @@ import sys
 import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
      TempDirectoryContext, SetupCommand, GitClone, check, parse_cmdline, \
-     PythonPackageEgg, testPythonVersion
+     PythonPackageEgg, test_python_version
 
 options, _ = parse_cmdline()
 
 python_exe = options.python_executable
 
-if not testPythonVersion(python_exe):
+if not test_python_version(python_exe):
     print "Unable to find " + python_exe + ".  Failing..."
     sys.exit(1)
 

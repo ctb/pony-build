@@ -686,7 +686,7 @@ def parse_cmdline(argv=[]):
         (options, args) = cmdline.parse_args(argv)
         
     # parse the tagset
-    if options.tagset != []:
+    if options.tagset:
         options.tagset = options.tagset.split(',')
         
     # there should be nothing in args.
@@ -701,7 +701,7 @@ def parse_cmdline(argv=[]):
 ###
 
 
-def testPythonVersion(python_exe):
+def test_python_version(python_exe):
     result = os.popen(python_exe + " -c \"print 'hello, world'\"", "r").read()
     if result != "hello, world\n":
         return False
