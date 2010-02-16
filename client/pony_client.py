@@ -37,29 +37,21 @@ def guess_cache_dir(dirname):
 
     return result
 
-def check_cache_dir(cache_dir, dirname):
-    pkglen = len(dirname)
-    ''' 
-    trim the pkg name so we can create the main cache_dir and not the 
-    repo dir. I believe it has to be done this way to handle different
-    user PATH setup (OS's, custom stuff etc) 
-    '''
+def create_cache_dir(cache_dir, dirname):
+    pkglen = len(dirname) 
+    # trim the pkg name so we can create the main cache_dir and not the 
+    # repo dir. I believe it has to be done this way to handle different
+    # user PATH setup (OS's, custom stuff etc) 
     tmp_cache_dir = cache_dir[:-pkglen]
-    try:
-        if os.path.isdir(tmp_cache_dir):
-            print 'cache_dir exists already!'
-            pass
-        else:
+    if os.path.isdir(tmp_cache_dir):
+        print 'cache_dir exists already!'
+        pass
+    else:
+        try:
             os.mkdir(tmp_cache_dir)
-            print 'had to create a new cache_dir!'
-    except OSError, err:
-    # if can't create cache_dir then print out
-	if err.errno == errno.EACCES or err.errno == errno.EPERM:
-            print ' Access Error'
-            print err.args
-        else:
-            print 'Error occured'
-            print err.args
+            print 'Had to create a new cache_dir!'
+        except OSError, err:
+            
 
 ###
 
@@ -221,8 +213,8 @@ class VirtualenvContext(Context):
             (ret, out, err) =  _run_command([self.pip, 'install', '-U', '-I'] + [dep])
             search = 'not'
             index = out.find(search)
-           # print 'index is:', index
-           # ToDo: Implement just OSError(maybe subprocess failure)
+            # print 'index is:', index
+            # ToDo: Implement just OSError(maybe subprocess failure)
             if str(index) == '40':
                 print 'One of the Required packages does not exist!'
                 # we need to cleanup tempdir still
@@ -398,9 +390,10 @@ class GitClone(SetupCommand):
         if self.use_cache:
             cache_dir = self.cache_dir
             if not cache_dir:
-		# setup some variables for cache folder locations/check if cache_dir exists
+		# setup some variables for cache folder locations/create cache_dir
+                # if it does not exist
                 repo_dir = guess_cache_dir(dirname)
-                check_cache_dir(repo_dir, dirname)
+                create_cache_dir(repo_dir, dirname)
                 # trim repo so we know where the users cache should be
                 # so we can change to for git stuff later
                 pkglength = len(dirname)
@@ -438,6 +431,7 @@ class GitClone(SetupCommand):
         location = self.repository
         if os.path.isdir(repo_dir):
             location = repo_dir
+            print 'Using the local cache for cloning'
        	cmdlist = ['git', 'clone', location]
         (ret, out, err) = _run_command(cmdlist)
 
