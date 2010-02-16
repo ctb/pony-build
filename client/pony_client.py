@@ -171,13 +171,10 @@ class VirtualenvContext(Context):
 
     VirtualenvContext works by modifying the 
     """
-    def __init__(self, always_cleanup=True, reqdependencies=[], nonreqdependencies=[], python='python'):
+    def __init__(self, always_cleanup=True, dependencies=[], python='python'):
         Context.__init__(self)
         self.cleanup = always_cleanup
-        # list of essential deps
-        self.reqdependencies = reqdependencies
-        # list of non essential deps
-        self.nonreqdependencies = nonreqdependencies
+        self.dependencies = dependencies
         self.python = python
 
         # Create the virtualenv. Have to do this here so that commands can use
@@ -210,18 +207,8 @@ class VirtualenvContext(Context):
         _run_command([self.easy_install, '-U', 'pip'])
         for dep in self.reqdependencies:
             print "installing", dep
-            (ret, out, err) =  _run_command([self.pip, 'install', '-U', '-I'] + [dep])
-            search = 'not'
-            index = out.find(search)
-            # print 'index is:', index
-            # ToDo: Implement just OSError(maybe subprocess failure)
-            if str(index) == '40':
-                print 'One of the Required packages does not exist!'
-                # we need to cleanup tempdir still
-                VirtualenvContext.finish(self)
-                sys.exit(out)
-            else:
-                print dep, ' was installed fine!'
+             _run_command([self.pip, 'install', '-U', '-I'] + [dep])
+
     def finish(self):
         os.chdir(self.cwd)
         try:
