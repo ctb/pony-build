@@ -11,7 +11,6 @@ import tempfile
 import shutil
 import os, os.path
 import time
-import errno
 import urlparse
 import urllib
 import traceback
@@ -50,8 +49,8 @@ def create_cache_dir(cache_dir, dirname):
         try:
             os.mkdir(tmp_cache_dir)
             print 'Had to create a new cache_dir!'
-        except OSError, err:
-            
+        except OSError:
+            print 'Unable to create the cache_dir!!'
 
 ###
 
