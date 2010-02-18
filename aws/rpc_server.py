@@ -37,8 +37,8 @@ def create_server():
     return server
 
 if __name__ == '__main__':
-    assert os.path.isdir('./client'), "must run in pony-build top dir"
-    assert os.path.exists('./client/pony_client.py')
+    assert os.path.isdir('../client'), "must run in pony-build top dir"
+    assert os.path.exists('../client/pony_client.py')
     
     server = create_server()
     server.serve_forever()

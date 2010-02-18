@@ -1,4 +1,5 @@
 #! /usr/bin/env python2.6
+import sys
 import paramiko
 import xmlrpclib
 
@@ -6,6 +7,23 @@ import socket
 import select
 import SocketServer
 import time
+import threading
+
+###
+
+#hostname = 'lyorn.idyll.org'
+#key_filename='/Users/t/.ssh/id_dsa'
+#username = 't'
+
+hostname = 'ec2-75-101-168-104.compute-1.amazonaws.com'
+key_filename = '/Users/t/.aws/default.pem'
+username = 'root'
+
+addr = '127.0.0.1'
+src_port = 8899
+dest_port = 8811
+
+###
 
 def verbose(x):
     #print x
@@ -70,35 +88,50 @@ def forward_tunnel(local_port, remote_host, remote_port, transport):
 
 ###
 
-hostname = 'lyorn.idyll.org'
-key_filename='/Users/t/.ssh/id_dsa'
-username = 't'
+def install_stuff(hostname, key_filename, username='root'):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, username=username, key_filename=key_filename)
 
-hostname = 'ec2-75-101-168-104.compute-1.amazonaws.com'
-key_filename = '/Users/t/.aws/default.pem'
-username = 'root'
+    _, stdout, stderr = ssh.exec_command('apt-get update')
+    print stdout.readlines()
 
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect(hostname, username=username, key_filename=key_filename)
+    _, stdout, stderr = ssh.exec_command('apt-get -y install git-core')
+    print stdout.readlines()
 
-addr = '127.0.0.1'
-src_port = 8899
-dest_port = 8811
+    _, stdout, stderr = ssh.exec_command('git clone git://github.com/ctb/pony-build.git')
+    print stdout.readlines()
 
-transport = ssh.get_transport()
+    _, stdout, stderr = ssh.exec_command('cd pony-build && git pull origin rpc')
+    print stdout.readlines()
 
-import threading
-args = (src_port, addr, dest_port, transport)
-threading.Thread(target=forward_tunnel, args=args).start()
+    _, stdout, stderr = ssh.exec_command('cd pony-build && python aws/rpc_server.py >& rpc_server.out &')
+    print stdout.readlines()
+
+def establish_pony_client_rpc(hostname, key_filename, username='root'):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, username=username, key_filename=key_filename)
+
+    transport = ssh.get_transport()
+
+    args = (src_port, addr, dest_port, transport)
+    threading.Thread(target=forward_tunnel, args=args).start()
 
 def conn():
     s = xmlrpclib.ServerProxy('http://localhost:8899')
     print s.hello("world")
     print s.runscript("upload-example")
 
-try:
-    conn()
-finally:
-    #print 'signaling DEATH'
-    _server.die_horribly = True
+
+if __name__ == '__main__':
+    assert len(sys.argv[1])
+    
+    hostname = sys.argv[1]
+    install_stuff(hostname, key_filename)
+    establish_pony_client_rpc(hostname, key_filename)
+    try:
+        conn()
+    finally:
+        #print 'signaling DEATH'
+        _server.die_horribly = True
