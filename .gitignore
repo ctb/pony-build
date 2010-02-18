@@ -6,3 +6,4 @@ dist
 pony_build.egg-info
 pony_build/tests/tests.db
 .files
+aws/secret.py
