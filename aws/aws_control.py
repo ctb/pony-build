@@ -3,6 +3,8 @@ import boto
 import paramiko
 from secret import aws_id, aws_key
 from boto.ec2.connection import EC2Connection
+import sys
+import socket
 
 def connect_ec2():
     conn = EC2Connection(aws_id, aws_key)
@@ -73,12 +75,56 @@ def install_stuff(ssh):
     _, stdout, stderr = ssh.exec_command('cd pony-build && python rpc_server.py >& rpc_server.out &')
     print stdout.readlines()
 
-conn = connect_ec2()
-instance = get_running_instance(conn)
-if instance:
-    print 'instance: %s (%s)' % (instance, instance.update())
+def go(startup=True, retry_ssh_connect=5):
+    conn = connect_ec2()
+    instance = get_running_instance(conn)
 
-    ssh = connect_ssh(instance)
+    print 'running instance?', instance
 
-##
+    if not instance and startup:
+        instance = start_instance(conn)
 
+        while instance.update() != 'running':
+            print instance, instance.update()
+            time.sleep(1)
+    
+    ssh = None
+    if instance:
+        print 'instance: %s (%s)' % (instance, instance.update())
+
+        for i in range(retry_ssh_connect):
+            try:
+                ssh = connect_ssh(instance)
+                break
+            except socket.error:
+                print 'waiting for sshd connection'
+
+            time.sleep(1)
+
+    return ssh
+
+if __name__ == '__main__':
+    args = sys.argv[1:]
+
+    if len(args) == 0:
+        print 'commands: connect, shutdown_all, start'
+        sys.exit(0)
+
+    assert len(args) == 1
+    command = args[0]
+
+    if command == 'connect':
+        ssh = go(startup=False)
+        print ssh
+    elif command == 'shutdown_all':
+        conn = connect_ec2()
+        
+        instance = get_running_instance(conn)
+        while instance:
+            print 'shutting down', instance
+            instance.stop()
+            instance = get_running_instance(conn)
+            
+    elif command == 'start':
+        ssh = go()
+        print ssh
