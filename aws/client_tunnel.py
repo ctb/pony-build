@@ -105,8 +105,9 @@ def install_stuff(hostname, key_filename, username='root'):
     _, stdout, stderr = ssh.exec_command('cd pony-build && git pull origin rpc')
     print stdout.readlines()
 
-    _, stdout, stderr = ssh.exec_command('cd pony-build && python aws/rpc_server.py >& rpc_server.out &')
+    _, stdout, stderr = ssh.exec_command('cd pony-build/aws && python rpc_server.py >& rpc_server.out &')
     print stdout.readlines()
+    print stderr.readlines()
 
 def establish_pony_client_rpc(hostname, key_filename, username='root'):
     ssh = paramiko.SSHClient()
