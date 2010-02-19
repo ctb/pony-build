@@ -51,11 +51,7 @@ def create_cache_dir(cache_dir, dirname):
             print 'Had to create a new cache_dir!'
         except OSError:
             print 'Unable to create the cache_dir!!'
-<<<<<<< HEAD
             pass
-=======
-
->>>>>>> d39c3c26dd61746e880747d4309c05db947c63a9
 ###
 
 def _replace_variables(cmd, variables_d):
