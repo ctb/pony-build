@@ -221,7 +221,7 @@ class VirtualenvContext(Context):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
         info['virtualenv'] = True
-	info['reqdependencies'] = self.reqdependencies
+	info['dependencies'] = self.dependencies
 
 
 class UploadAFile(object):
