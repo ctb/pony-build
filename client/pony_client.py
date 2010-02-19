@@ -51,7 +51,8 @@ def create_cache_dir(cache_dir, dirname):
             os.mkdir(tmp_cache_dir)
             print 'Had to create a new cache_dir!'
         except OSError, err:
-            
+            print 'Unable to create the cache_dir!!'
+            pass
 
 ###
 
@@ -171,13 +172,13 @@ class VirtualenvContext(Context):
 
     VirtualenvContext works by modifying the 
     """
-    def __init__(self, always_cleanup=True, reqdependencies=[], nonreqdependencies=[], python='python'):
+    def __init__(self, always_cleanup=True, required=[], optional=[], python='python'):
         Context.__init__(self)
         self.cleanup = always_cleanup
         # list of essential deps
-        self.reqdependencies = reqdependencies
+        self.required = required
         # list of non essential deps
-        self.nonreqdependencies = nonreqdependencies
+        self.optional = optional
         self.python = python
 
         # Create the virtualenv. Have to do this here so that commands can use
@@ -235,7 +236,8 @@ class VirtualenvContext(Context):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
         info['virtualenv'] = True
-	info['reqdependencies'] = self.reqdependencies
+	info['required'] = self.required
+        info['optional'] = self.optional
 
 
 class UploadAFile(object):
