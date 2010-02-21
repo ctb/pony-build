@@ -702,8 +702,9 @@ def parse_cmdline(argv=[]):
 
 
 def test_python_version(python_exe):
-    result = os.popen(python_exe + " -c \"print 'hello, world'\"", "r").read()
-    if result != "hello, world\n":
+    result = subprocess.Popen(python_exe + " -c \"print 'hello, world'\"", shell=True, \
+                    stdout=subprocess.PIPE).communicate()
+    if result[0] != "hello, world\n":
         return False
     return True
 
