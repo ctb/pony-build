@@ -214,13 +214,15 @@ class VirtualenvContext(Context):
             (ret, out, err) =  _run_command([self.pip, 'install', '-U', '-I'] + [dep])
             search = 'not'
             index = out.find(search)
-            # print 'index is:', index
-            # ToDo: Implement just OSError(maybe subprocess failure)
+            # catch pkg not existing by looking for 'not' in certain place
             if str(index) == '40':
                 print 'One of the Required packages does not exist!'
-                # we need to cleanup tempdir still
+                # we need to cleanup tempdir still some how
                 VirtualenvContext.finish(self)
                 sys.exit(out)
+            # ToDo: Implement catching pip failing for some other reason
+            elif len(err) > 0:
+                print 'we messed up dude....badly'
             else:
                 print dep, ' was installed fine!'
     def finish(self):
