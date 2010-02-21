@@ -209,7 +209,7 @@ class VirtualenvContext(Context):
         # install pip, then use it to install any packages desired
         print 'installing pip'
         _run_command([self.easy_install, '-U', 'pip'])
-        for dep in self.reqdependencies:
+        for dep in self.required:
             print "installing", dep
             (ret, out, err) =  _run_command([self.pip, 'install', '-U', '-I'] + [dep])
             search = 'not'
