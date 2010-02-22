@@ -207,7 +207,7 @@ VirtualenvContext works by modifying the
         _run_command([self.easy_install, '-U', 'pip'])
         for dep in self.reqdependencies:
             print "installing", dep
-             _run_command([self.pip, 'install', '-U', '-I'] + [dep])
+            _run_command([self.pip, 'install', '-U', '-I'] + [dep])
 
     def finish(self):
         os.chdir(self.cwd)
@@ -532,44 +532,44 @@ class HgClone(SetupCommand):
 
         ##
 
-        if self.use_cache and os.path.exists(repo_dir):
-            cwd = os.getcwd()
-            #if os.path.isdir(dirname):
-            os.chdir(cache_dir)
-            print 'changed to: ' + repo_dir + 'to do fetch. '
-            cmdlist = ['hg', 'pull']
-            (ret, out, err) = _run_command(cmdlist)
+        if self.use_cache:
+            if os.path.exists(repo_dir):
+                cwd = os.getcwd()
+                #if os.path.isdir(dirname):
+                os.chdir(cache_dir)
+                print 'changed to: ' + repo_dir + 'to do fetch. '
+                cmdlist = ['hg', 'pull']
+                (ret, out, err) = _run_command(cmdlist)
 
-            self.results_dict['cache_pull'] = \
-                 dict(status=ret, output=out, errout=err,
-                      command=str(cmdlist))
+                self.results_dict['cache_pull'] = \
+                     dict(status=ret, output=out, errout=err,
+                          command=str(cmdlist))
 
-            if ret != 0:
-                return
+                if ret != 0:
+                    return
 
-            cmdlist = ['hg', 'update', '-C']
-            (ret, out, err) = _run_command(cmdlist)
+                cmdlist = ['hg', 'update', '-C']
+                (ret, out, err) = _run_command(cmdlist)
 
-            self.results_dict['cache_update'] = \
-                 dict(status=ret, output=out, errout=err,
-                      command=str(cmdlist))
+                self.results_dict['cache_update'] = \
+                     dict(status=ret, output=out, errout=err,
+                          command=str(cmdlist))
 
 
-            if ret != 0:
-                return
-        else:
-            cwd = os.getcwd()
-            #do a clone to create repo_dir
-            print 'changing to:' + cache_dir + ' to make new repo_dir'
-            os.chdir(cache_dir)
-            cmdlist = ['hg', 'clone', self.repository]
-            (ret, out, err) = _run_command(cmdlist)
+                if ret != 0:
+                    return
+            else:
+                cwd = os.getcwd()
+                #do a clone to create repo_dir
+                print 'changing to:' + cache_dir + ' to make new repo_dir'
+                os.chdir(cache_dir)
+                cmdlist = ['hg', 'clone', self.repository]
+                (ret, out, err) = _run_command(cmdlist)
+                print cmdlist, out
 
-            os.chdir(cwd)
+                os.chdir(cwd)
 
         ##
-
-        print cmdlist, out
 
         # now, do a clone, from either the parent OR the local cache
         location = self.repository
