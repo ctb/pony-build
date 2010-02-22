@@ -26,6 +26,8 @@ pb_servers['default'] = pb_servers['pb-dev']
 
 ###
 
+
+
 DEFAULT_CACHE_DIR='~/.pony-build'
 def guess_cache_dir(dirname):
     parent = os.environ.get('PONY_BUILD_CACHE', DEFAULT_CACHE_DIR)
@@ -33,6 +35,22 @@ def guess_cache_dir(dirname):
     result = os.path.join(parent, dirname)
 
     return result
+
+def create_cache_dir(cache_dir, dirname):
+    pkglen = len(dirname)
+    # trim the pkg name so we can create the main cache_dir and not the
+    # repo dir. I believe it has to be done this way to handle different
+    # user PATH setup (OS's, custom stuff etc)
+    tmp_cache_dir = cache_dir[:-pkglen]
+    if os.path.isdir(tmp_cache_dir):
+        print 'cache_dir exists already!'
+        pass
+    else:
+        try:
+            os.mkdir(tmp_cache_dir)
+            print 'Had to create a new cache_dir!'
+        except OSError:
+            print 'Unable to create the cache_dir!!'
 
 ###
 
@@ -60,7 +78,7 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
         print 'running in ->', cwd
         print 'command_list:', command_list
         print 'default kwargs:', default_kwargs
-        
+
     try:
         p = subprocess.Popen(command_list, cwd=cwd, **default_kwargs)
 
@@ -73,7 +91,7 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
 
     if verbose:
         print 'status:', ret
-    
+
     return (ret, out, err)
 
 class FileToUpload(object):
@@ -142,16 +160,16 @@ def finish(self):
             shutil.rmtree(self.tempdir, ignore_errors=True)
 
 def update_client_info(self, info):
-        Context.update_client_info(self, info)
-        info['tempdir'] = self.tempdir
+    Context.update_client_info(self, info)
+    info['tempdir'] = self.tempdir
 
 class VirtualenvContext(Context):
     """
-    A context that creates a new virtualenv and does everything within that
-    environment.
+A context that creates a new virtualenv and does everything within that
+environment.
 
-    VirtualenvContext works by modifying the 
-    """
+VirtualenvContext works by modifying the
+"""
     def __init__(self, always_cleanup=True, dependencies=[], python='python'):
         Context.__init__(self)
         self.cleanup = always_cleanup
@@ -170,23 +188,23 @@ class VirtualenvContext(Context):
 
         # calculate where a few things live so we can easily shell out to 'em
         bindir = os.path.join(self.tempdir, 'bin')
-        
+
         self.python = os.path.join(bindir, 'python')
         self.easy_install = os.path.join(bindir, 'easy_install')
         self.pip = os.path.join(bindir, 'pip')
-	
-	os.environ['PATH'] = bindir + os.pathsep + os.environ['PATH']
+
+        os.environ['PATH'] = bindir + os.pathsep + os.environ['PATH']
 
     def initialize(self):
         Context.initialize(self)
         print 'changing to temp directory:', self.tempdir
         self.cwd = os.getcwd()
         os.chdir(self.tempdir)
-         
+
         # install pip, then use it to install any packages desired
         print 'installing pip'
         _run_command([self.easy_install, '-U', 'pip'])
-        for dep in self.dependencies:
+        for dep in self.reqdependencies:
             print "installing", dep
             _run_command([self.pip, 'install', '-U', '-I'] + [dep])
 
@@ -203,7 +221,7 @@ class VirtualenvContext(Context):
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
         info['virtualenv'] = True
-	info['dependencies'] = self.dependencies
+        info['reqdependencies'] = self.reqdependencies
 
 
 class UploadAFile(object):
@@ -358,13 +376,22 @@ class GitClone(SetupCommand):
         if self.use_cache:
             cache_dir = self.cache_dir
             if not cache_dir:
-                cache_dir = guess_cache_dir(dirname)
-
+# setup some variables for cache folder locations/create cache_dir
+                # if it does not exist
+                repo_dir = guess_cache_dir(dirname)
+                create_cache_dir(repo_dir, dirname)
+                # trim repo so we know where the users cache should be
+                # so we can change to for git stuff later
+                pkglength = len(dirname)
+                cache_dir = repo_dir[:-pkglength]
         ##
 
-        if self.use_cache and cache_dir:
+        if self.use_cache and os.path.exists(repo_dir):
             cwd = os.getcwd()
-            os.chdir(cache_dir)
+            os.chdir(repo_dir)
+
+            print 'changed to: ' + repo_dir + ' to do fetch.'
+
             branchspec = '%s:%s' % (self.branch, self.branch)
             cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
             (ret, out, err) = _run_command(cmdlist)
@@ -377,22 +404,28 @@ class GitClone(SetupCommand):
                 return
 
             os.chdir(cwd)
-
+        else :
+            cwd = os.getcwd()
+            # do a clone to create the repo dir
+            print 'changing to: ' + cache_dir + ' to make new repo dir'
+            os.chdir(cache_dir)
+            cmdlist = ['git', 'clone', self.repository]
+            (ret, out, err) = _run_command(cmdlist)
+            os.chdir(cwd)
         ##
-
         print cmdlist, out
 
         # now, do a clone, from either the parent OR the local cache
         location = self.repository
-        if cache_dir:
-            location = cache_dir
-
-        cmdlist = ['git', 'clone', self.repository]
+        if os.path.isdir(repo_dir):
+            location = repo_dir
+            print 'Using the local cache for cloning'
+        cmdlist = ['git', 'clone', location]
         (ret, out, err) = _run_command(cmdlist)
 
         self.results_dict['clone'] = \
-                 dict(status=ret, output=out, errout=err,
-                      command=str(cmdlist))
+                dict(status=ret, output=out, errout=err,
+                     command=str(cmdlist))
         if ret != 0:
             return
 
@@ -489,36 +522,47 @@ class HgClone(SetupCommand):
         if self.use_cache:
             cache_dir = self.cache_dir
             if not cache_dir:
-                cache_dir = guess_cache_dir(dirname)
+                repo_dir = guess_cache_dir(dirname)
+                #repo_dir= os.path.normpath(repo_dir)
+                print "Here guessed repo_dir before creating "+ repo_dir
+                create_cache_dir(repo_dir,dirname)
+                pkglength = len(dirname)
+                cache_dir = repo_dir[:-pkglength]
 
         ##
 
-        if self.use_cache and cache_dir:
+        if self.use_cache and os.path.exists(repo_dir):
             cwd = os.getcwd()
-            if os.path.isdir(dirname):
-                os.chdir(cache_dir)
-                cmdlist = ['hg', 'pull']
-                (ret, out, err) = _run_command(cmdlist)
+            #if os.path.isdir(dirname):
+            os.chdir(cache_dir)
+            print 'changed to: ' + repo_dir + 'to do fetch. '
+            cmdlist = ['hg', 'pull']
+            (ret, out, err) = _run_command(cmdlist)
 
-                self.results_dict['cache_pull'] = \
-                     dict(status=ret, output=out, errout=err,
-                          command=str(cmdlist))
+            self.results_dict['cache_pull'] = \
+                 dict(status=ret, output=out, errout=err,
+                      command=str(cmdlist))
 
-                if ret != 0:
-                    return
+            if ret != 0:
+                return
 
-                cmdlist = ['hg', 'update', '-C']
-                (ret, out, err) = _run_command(cmdlist)
-                
-                self.results_dict['cache_update'] = \
-                     dict(status=ret, output=out, errout=err,
-                          command=str(cmdlist))
-                
+            cmdlist = ['hg', 'update', '-C']
+            (ret, out, err) = _run_command(cmdlist)
 
-                if ret != 0:
-                    return
-            else:
-                assert 0
+            self.results_dict['cache_update'] = \
+                 dict(status=ret, output=out, errout=err,
+                      command=str(cmdlist))
+
+
+            if ret != 0:
+                return
+        else:
+            cwd = os.getcwd()
+            #do a clone to create repo_dir
+            print 'changing to:' + cache_dir + ' to make new repo_dir'
+            os.chdir(cache_dir)
+            cmdlist = ['hg', 'clone', self.repository]
+            (ret, out, err) = _run_command(cmdlist)
 
             os.chdir(cwd)
 
@@ -528,13 +572,13 @@ class HgClone(SetupCommand):
 
         # now, do a clone, from either the parent OR the local cache
         location = self.repository
-        if cache_dir:
-            location = cache_dir
-
-        cmdlist = ['hg', 'checkout', self.repository]
+        if os.path.isdir(repo_dir):
+            location = repo_dir
+            print 'Using the local cache for cloning'
+        cmdlist = ['hg', 'clone', self.repository]
         (ret, out, err) = _run_command(cmdlist)
 
-        self.results_dict['checkout'] = \
+        self.results_dict['clone'] = \
                  dict(status=ret, output=out, errout=err,
                       command=str(cmdlist))
         if ret != 0:
@@ -550,12 +594,12 @@ class HgClone(SetupCommand):
         ##
 
         # get some info on what our HEAD is
-#        cmdlist = ['git', 'log', '-1', '--pretty=oneline']
-#        (ret, out, err) = _run_command(cmdlist, dirname)
+        cmdlist = ['hg', 'log', ]
+        (ret, out, err) = _run_command(cmdlist, dirname)
 
-#        assert ret == 0, (cmdlist, ret, out, err)
+        assert ret == 0, (cmdlist, ret, out, err)
 
-#        self.version_info = out.strip()
+        self.version_info = out.strip()
 
         self.status = 0
 
