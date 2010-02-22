@@ -26,6 +26,8 @@ pb_servers['default'] = pb_servers['pb-dev']
 
 ###
 
+
+
 DEFAULT_CACHE_DIR='~/.pony-build'
 def guess_cache_dir(dirname):
     parent = os.environ.get('PONY_BUILD_CACHE', DEFAULT_CACHE_DIR)
@@ -34,6 +36,22 @@ def guess_cache_dir(dirname):
 
     return result
 
+def create_cache_dir(cache_dir, dirname):
+    pkglen = len(dirname) 
+    # trim the pkg name so we can create the main cache_dir and not the 
+    # repo dir. I believe it has to be done this way to handle different
+    # user PATH setup (OS's, custom stuff etc) 
+    tmp_cache_dir = cache_dir[:-pkglen]
+    if os.path.isdir(tmp_cache_dir):
+        print 'cache_dir exists already!'
+        pass
+    else:
+        try:
+            os.mkdir(tmp_cache_dir)
+            print 'Had to create a new cache_dir!'
+        except OSError:
+            print 'Unable to create the cache_dir!!'
+            pass
 ###
 
 def _replace_variables(cmd, variables_d):
@@ -188,7 +206,7 @@ class VirtualenvContext(Context):
         _run_command([self.easy_install, '-U', 'pip'])
         for dep in self.dependencies:
             print "installing", dep
-            _run_command([self.pip, 'install', '-U', '-I'] + [dep])
+             _run_command([self.pip, 'install', '-U', '-I'] + [dep])
 
     def finish(self):
         os.chdir(self.cwd)
@@ -358,20 +376,20 @@ class GitClone(SetupCommand):
         if self.use_cache:
             cache_dir = self.cache_dir
             if not cache_dir:
-		#setup some variables for cache folder locations
-                tmp_cache_dir = guess_cache_dir(dirname)
-		cache_dir = tmp_cache_dir
-		packlen = len(dirname)
-		#trim the pckg name so can create the cache_dir and not the repo dir
-		cache_dir = cache_dir[:-packlen]
-		print 'cache_dir is: ' + cache_dir
-		print 'repo cache is: ' + tmp_cache_dir
+		# setup some variables for cache folder locations/create cache_dir
+                # if it does not exist
+                repo_dir = guess_cache_dir(dirname)
+                create_cache_dir(repo_dir, dirname)
+                # trim repo so we know where the users cache should be
+                # so we can change to for git stuff later
+                pkglength = len(dirname)
+                cache_dir = repo_dir[:-pkglength]
         ##
 
-        if self.use_cache and os.path.exists(tmp_cache_dir):
+        if self.use_cache and os.path.exists(repo_dir):
             cwd = os.getcwd()
-            os.chdir(tmp_cache_dir)
-	    print 'changed to: ' + tmp_cache_dir + ' to do fetch.'
+            os.chdir(repo_dir)
+	    print 'changed to: ' + repo_dir + ' to do fetch.'
             branchspec = '%s:%s' % (self.branch, self.branch)
             cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
             (ret, out, err) = _run_command(cmdlist)
@@ -385,31 +403,21 @@ class GitClone(SetupCommand):
 
             os.chdir(cwd)
 	else:
-	    if not os.path.isdir(cache_dir):
-		cwd = os.getcwd()
-            	# if ~/.pony-build doesnt exist, create it, then change to it and do a initial clone
-		print 'trying: ' + cache_dir
-                os.mkdir(cache_dir)
-                os.chdir(cache_dir)
-                print 'had to make a new cache_dir: ' + cache_dir
-                cmdlist = ['git', 'clone', self.repository]
-                (ret, out, err) = _run_command(cmdlist)
-		os.chdir(cwd)
-            else:
-		cwd = os.getcwd()
-		# if cache_dir already exists, just do a clone to create the repo
-                print 'changing to: ' + cache_dir + ' to make new repo dir'
-                os.chdir(cache_dir)
-                cmdlist = ['git', 'clone', self.repository]
-	        (ret, out, err) = _run_command(cmdlist)
-		os.chdir(cwd)
+            cwd = os.getcwd()
+            # do a clone to create the repo dir
+            print 'changing to: ' + cache_dir + ' to make new repo dir'
+            os.chdir(cache_dir)
+            cmdlist = ['git', 'clone', self.repository]
+            (ret, out, err) = _run_command(cmdlist)
+            os.chdir(cwd)
         ##
         print cmdlist, out
 
         # now, do a clone, from either the parent OR the local cache
         location = self.repository
-        if tmp_cache_dir:
-            location = tmp_cache_dir
+        if os.path.isdir(repo_dir):
+            location = repo_dir
+            print 'Using the local cache for cloning'
        	cmdlist = ['git', 'clone', location]
         (ret, out, err) = _run_command(cmdlist)
 
