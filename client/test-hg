@@ -13,6 +13,13 @@ shutil.rmtree('pony-build-hg-test')
 (ret, out, err) = _run_command(['hg', 'clone', url])
 assert ret == 0, (out, err)
 
+# check out revision 0
+(ret, out, err) = _run_command(['hg', 'checkout', '0'],
+                               cwd='pony-build-hg-test')
+assert ret == 0, (out, err)
+assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
+assert not os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
+
 # now, run the HgClone command and verify that it Does the Right Thing
 command = HgClone(url)
 command.run(context)
