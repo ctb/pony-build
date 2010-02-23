@@ -91,7 +91,8 @@ def _run_command(command_list, timeout=None, cwd=None, variables=None, extra_kwa
         start_time = datetime.time.now()
         p = subprocess.Popen(command_list, cwd=cwd, **default_kwargs)
         while p.poll() is None:
-            # temp suspend execution for .1 second
+            # temp suspend execution for .1 second,
+            # i like .1 seconds.
             time.sleep(0.1)
             # get current time
             current_time = datetime.time.now()
