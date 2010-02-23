@@ -399,6 +399,20 @@ class PythonPackageEgg(BaseCommand):
                                            visible=True)
 
 class _VersionControlClientBase(SetupCommand):
+    """
+    Base class for version control clients.
+
+    Subclasses should define:
+
+      - get_dirname()
+      - update_repository()
+      - create_repository(url, dirname, step='stepname')
+      - record_repository_info(dirname)
+
+    and optionally override 'get_results()'.
+    
+    """
+    
     def __init__(self, use_cache=True, **kwargs):
         SetupCommand.__init__(self, [], **kwargs)
         self.use_cache = use_cache
@@ -406,6 +420,59 @@ class _VersionControlClientBase(SetupCommand):
         self.duration = -1
         self.version_info = ''
         self.results_dict = {}
+
+    def run(self, context):
+        # dirname is the directory created by a succesful checkout.
+        dirname = self.get_dirname()
+
+        # cwd is the directory we're going to ultimately put dirname under.
+        cwd = os.getcwd()
+
+        # NOTE: we flat out don't like the situation where the
+        # directory already exists.  Force a clean checkout.
+        assert not os.path.exists(dirname)
+        
+        if self.use_cache:
+            # 'repo_dir' is the full cache directory containing the repo.
+            # this will be something like '~/.pony-build/<dirname>'.
+            #
+            # 'cache_dir' is the parent dir.
+            
+            cache_dir, repo_dir = guess_cache_dir(dirname)
+            
+            # does the repo already exist?
+            if os.path.exists(repo_dir):              # YES
+                os.chdir(repo_dir)
+                log_info('changed to: ', repo_dir, 'to do fetch.')
+                self.update_repository()
+            else:                                     # NO
+                # do a clone to create the repo dir
+                log_info('changing to: ' + cache_dir + ' to make new repo dir')
+                os.chdir(cache_dir)
+
+                self.create_repository(self.repository, dirname,
+                                       step='create cache')
+                assert os.path.isdir(repo_dir)
+                
+            os.chdir(cwd)
+
+            log_info('Using the local cache at %s for cloning' % repo_dir)
+            location = repo_dir
+        else:
+            location = self.repository
+
+        self.create_repository(location, dirname, step='clone')
+
+        if not os.path.exists(dirname) and os.path.isdir(dirname):
+            log_critical('wrong guess; %s does not exist. whoops' % (dirname,))
+            raise Exception
+
+        # get some info on what our repository version is
+        self.record_repository_info(dirname)
+        # record the build directory, too.
+        context.build_dir = os.path.join(os.getcwd(), dirname)
+        # signal success!
+        self.status = 0
 
     def get_results(self):
         self.results_dict['out'] = self.results_dict['errout'] = ''
@@ -490,61 +557,6 @@ class GitClone(_VersionControlClientBase):
 
         self.version_info = out.strip()
 
-    def run(self, context):
-        # dirname is the directory created by a succesful checkout.
-        dirname = self.get_dirname()
-
-        # cwd is the directory we're going to ultimately put dirname under.
-        cwd = os.getcwd()
-
-        # NOTE: we flat out don't like the situation where the
-        # directory already exists.  Force a clean checkout.
-        assert not os.path.exists(dirname)
-        
-        if self.use_cache:
-            # 'repo_dir' is the full cache directory containing the repo.
-            # this will be something like '~/.pony-build/<dirname>'.
-            #
-            # 'cache_dir' is the parent dir.
-            
-            cache_dir, repo_dir = guess_cache_dir(dirname)
-            
-            # does the repo already exist?
-            if os.path.exists(repo_dir):              # YES
-                os.chdir(repo_dir)
-                log_info('changed to: ', repo_dir, 'to do fetch.')
-                self.update_repository()
-            else:                                     # NO
-                # do a clone to create the repo dir
-                log_info('changing to: ' + cache_dir + ' to make new repo dir')
-                os.chdir(cache_dir)
-
-                self.create_repository(self.repository, dirname,
-                                       step='create cache')
-                assert os.path.isdir(repo_dir)
-                
-            os.chdir(cwd)
-
-            log_info('Using the local cache at %s for cloning' % repo_dir)
-            location = repo_dir
-        else:
-            location = self.repository
-
-        self.create_repository(location, dirname, step='clone')
-
-        if not os.path.exists(dirname) and os.path.isdir(dirname):
-            log_critical('wrong guess; %s does not exist. whoops' % (dirname,))
-            raise Exception
-
-        # get some info on what our repository version is
-        self.record_repository_info(dirname)
-
-        # success!
-        self.status = 0
-
-        # set the build directory, too.
-        context.build_dir = os.path.join(os.getcwd(), dirname)
-
     def get_results(self):
         # first, update basic
         _VersionControlClientBase.get_results(self)
@@ -558,116 +570,70 @@ class GitClone(_VersionControlClientBase):
 
         return self.results_dict
 
-class HgClone(SetupCommand):
+class HgClone(_VersionControlClientBase):
     command_name = 'checkout'
 
-    def __init__(self, repository, branch='default', cache_dir=None,
-                 use_cache=True, **kwargs):
-        SetupCommand.__init__(self, [], **kwargs)
+    def __init__(self, repository, branch='default', use_cache=True, **kwargs):
+        _VersionControlClientBase.__init__(self, use_cache=use_cache, **kwargs)
         self.repository = repository
         self.branch = branch
         assert branch == 'default'
 
-        self.use_cache = use_cache
-
-        self.duration = -1
-        self.version_info = ''
-
-        self.results_dict = {}
-
-    def run(self, context):
-        # first, guess the checkout dir name
+    def get_dirname(self):
+        "Calculate the directory name resulting from a successful checkout."
         p = urlparse.urlparse(self.repository)
-        path = p[2]                            # urlparse -> path
+        path = p[2]                     # urlparse -> path
 
         dirname = path.rstrip('/').split('/')[-1]
+        log_info('git checkout dirname guessed as: %s' % (dirname,))
+        return dirname
 
-        log_info('hg checkout dirname guessed as: %s' % (dirname,))
-
-        if self.use_cache:
-            cache_dir, repo_dir = guess_cache_dir(dirname)
-
-        if self.use_cache:
-            cwd = os.getcwd()
-            
-            if os.path.exists(repo_dir):
-                #if os.path.isdir(dirname):
-                os.chdir(repo_dir)
-                cmdlist = ['hg', 'pull', self.repository]
-                (ret, out, err) = _run_command(cmdlist)
-
-                self.results_dict['cache_pull'] = \
-                     dict(status=ret, output=out, errout=err,
-                          command=str(cmdlist))
-
-                if ret != 0:
-                    return
-
-                cmdlist = ['hg', 'update', '-C']
-                (ret, out, err) = _run_command(cmdlist)
-
-                self.results_dict['cache_update'] = \
-                     dict(status=ret, output=out, errout=err,
-                          command=str(cmdlist))
-
-                if ret != 0:
-                    raise Exception
-            else:
-                os.chdir(cache_dir)
-                cmdlist = ['hg', 'clone', self.repository]
-                (ret, out, err) = _run_command(cmdlist)
-
-                if ret != 0:
-                    raise Exception
-
-            os.chdir(cwd)
-
-        ##
-
-        # now, do a clone, from either the parent OR the local cache
-        location = self.repository
-        if self.use_cache and os.path.isdir(repo_dir):
-            location = repo_dir
-            log_info('Using the local cache for cloning')
-            
-        cmdlist = ['hg', 'clone', location]
+    def update_repository(self):
+        cmdlist = ['hg', 'pull', self.repository]
         (ret, out, err) = _run_command(cmdlist)
 
-        self.results_dict['clone'] = \
-                 dict(status=ret, output=out, errout=err,
-                      command=str(cmdlist))
-        
+        self.results_dict['cache_pull'] = dict(status=ret, output=out,
+                                               errout=err,
+                                               command=str(cmdlist))
+
         if ret != 0:
-            raise Exception
+            raise Exception, "cannot pull from %s" % self.repository
 
-        if not os.path.exists(dirname) and os.path.isdir(dirname):
-            log_critical('wrong guess; %s does not exist. whoops' % (dirname,))
-            raise Exception
+        cmdlist = ['hg', 'update', '-C']
+        (ret, out, err) = _run_command(cmdlist)
 
-        ##
+        self.results_dict['cache_update'] = \
+             dict(status=ret, output=out, errout=err,
+                  command=str(cmdlist))
 
+        assert ret == 0, (out, err)
+
+    def create_repository(self, url, dirname, step='clone'):
+        cmdlist = ['hg', 'clone', url]
+        (ret, out, err) = _run_command(cmdlist)
+
+       	self.results_dict[step] = dict(status=ret, output=out, errout=err,
+                                       command=str(cmdlist))
+
+        if ret != 0:
+            cwd = os.getcwd()
+            raise Exception("cannot clone repository %s in %s" % (url, cwd))
+
+        # @CTB branch stuff unimplemented
+            
+    def record_repository_info(self, repo_dir):
         # get some info on what our HEAD is
         cmdlist = ['hg', 'id', '-nib']
-        (ret, out, err) = _run_command(cmdlist, dirname)
-
+        (ret, out, err) = _run_command(cmdlist, repo_dir)
         assert ret == 0, (cmdlist, ret, out, err)
-
         self.version_info = out.strip()
 
-        self.status = 0
-
-        # set the build directory, too.
-        context.build_dir = os.path.join(os.getcwd(),
-                                         dirname)
-
     def get_results(self):
-        self.results_dict['out'] = self.results_dict['errout'] = ''
+        # first, update basic
+        _VersionControlClientBase.get_results(self)
+        
         self.results_dict['command'] = 'HgCheckout(%s, %s)' % (self.repository,
                                                                self.branch)
-        self.results_dict['status'] = self.status
-        self.results_dict['type'] = self.command_type
-        self.results_dict['name'] = self.command_name
-
         self.results_dict['version_type'] = 'hg'
         if self.version_info:
             self.results_dict['version_info'] = self.version_info
