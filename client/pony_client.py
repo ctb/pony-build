@@ -398,37 +398,49 @@ class GitClone(SetupCommand):
                 cache_dir = repo_dir[:-pkglength]
         ##
 
-        if self.use_cache and os.path.exists(repo_dir):
+        if self.use_cache:
             cwd = os.getcwd()
-            os.chdir(repo_dir)
-	    print 'changed to: ', repo_dir, 'to do fetch.'
+            if os.path.exists(repo_dir):
+                os.chdir(repo_dir)
+                print 'changed to: ', repo_dir, 'to do fetch.'
 
-            branchspec = '%s:%s' % (self.branch, self.branch)
-            cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
-            (ret, out, err) = _run_command(cmdlist)
+                branchspec = '%s:%s' % (self.branch, self.branch)
+                cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
+                (ret, out, err) = _run_command(cmdlist)
 
-            self.results_dict['cache_update'] = \
-                     dict(status=ret, output=out, errout=err,
-                          command=str(cmdlist))
+                self.results_dict['cache_update'] = \
+                         dict(status=ret, output=out, errout=err,
+                              command=str(cmdlist))
 
-            if ret != 0:
-                return
+                if ret != 0:
+                    raise Exception("cannot update cache: %s" % repo_dir)
 
+                cmdlist = ['git', 'checkout', '-f', self.branch]
+                (ret, out, err) = _run_command(cmdlist)
+
+                self.results_dict['cache_checkout_head'] = \
+                         dict(status=ret, output=out, errout=err,
+                              command=str(cmdlist))
+
+                if ret != 0:
+                    raise Exception("cannot reset cache: %s" % repo_dir)
+
+            else:                       # need to create repo_dir
+                # do a clone to create the repo dir
+                print 'changing to: ' + cache_dir + ' to make new repo dir'
+                os.chdir(cache_dir)
+                cmdlist = ['git', 'clone', self.repository]
+                (ret, out, err) = _run_command(cmdlist)
+
+                if ret != 0:
+                    raise Exception("cannot create cache in %s" % cache_dir)
+                
             os.chdir(cwd)
-        else:
-            cwd = os.getcwd()
-            # do a clone to create the repo dir
-            print 'changing to: ' + cache_dir + ' to make new repo dir'
-            os.chdir(cache_dir)
-            cmdlist = ['git', 'clone', self.repository]
-            (ret, out, err) = _run_command(cmdlist)
-            os.chdir(cwd)
-        ##
-        print cmdlist, out
-
+            ##
+                
         # now, do a clone, from either the parent OR the local cache
         location = self.repository
-        if os.path.isdir(repo_dir):
+        if self.use_cache and os.path.isdir(repo_dir):
             location = repo_dir
             print 'Using the local cache for cloning'
 
