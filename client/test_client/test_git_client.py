@@ -76,7 +76,7 @@ class Test_GitCachingCheckout(object):
         self.context.finish()
         del os.environ['PONY_BUILD_CACHE']
 
-        shutil.rmtree(self.cache_parent)
+        shutil.rmtree(self.cache_parent, ignore_errors=True)
 
     def test_basic(self):
         "Run the GitClone command and verify that it produces the right repo."
@@ -86,9 +86,13 @@ class Test_GitCachingCheckout(object):
 
         pprint.pprint(command.get_results()) # debugging output
 
+        cwd = os.getcwd()
         os.chdir(self.context.tempdir)
-        assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
-        assert os.path.exists(os.path.join('pony-build-git-test', 'test2'))
+        try:
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test2'))
+        finally:
+            os.chdir(cwd)
 
 
 class Test_GitCachingUpdate(object):
@@ -128,7 +132,7 @@ class Test_GitCachingUpdate(object):
         self.context.finish()
         del os.environ['PONY_BUILD_CACHE']
 
-        shutil.rmtree(self.cache_parent)
+        shutil.rmtree(self.cache_parent, ignore_errors=True)
 
     def test_basic(self):
         "Run the GitClone command and verify that it produces an updated repo."
@@ -138,10 +142,13 @@ class Test_GitCachingUpdate(object):
 
         pprint.pprint(command.get_results()) # debugging output
 
+        cwd = os.getcwd()
         os.chdir(self.context.tempdir)
-        assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
-        assert os.path.exists(os.path.join('pony-build-git-test', 'test2'))
-
+        try:
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test2'))
+        finally:
+            os.chdir(cwd)
         
 
         
