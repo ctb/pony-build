@@ -30,6 +30,7 @@ pb_servers['default'] = pb_servers['pb-dev']
 
 DEFAULT_CACHE_DIR='~/.pony-build'
 def guess_cache_dir(dirname):
+    """Return the full path of the VCS cache directory for the given pkg."""
     parent = os.environ.get('PONY_BUILD_CACHE', DEFAULT_CACHE_DIR)
     parent = os.path.expanduser(parent)
     result = os.path.join(parent, dirname)
@@ -37,21 +38,24 @@ def guess_cache_dir(dirname):
     return result
 
 def create_cache_dir(cache_dir, dirname):
-    pkglen = len(dirname) 
     # trim the pkg name so we can create the main cache_dir and not the 
     # repo dir. I believe it has to be done this way to handle different
     # user PATH setup (OS's, custom stuff etc)
+
+    # @CTB can't we use os.path.split here, instead?
+    # @CTB refactor create_cache_dir to check to see if it exists, maybe?
     
-    tmp_cache_dir = cache_dir[:-pkglen]
-    if os.path.isdir(tmp_cache_dir):
-        print 'cache_dir exists already!'
-        pass
+    pkglen = len(dirname) 
+    cache_dir = cache_dir[:-pkglen]
+    
+    if os.path.isdir(cache_dir):
+        print 'cache_dir %s exists already!' % cache_dir
     else:
         try:
-            os.mkdir(tmp_cache_dir)
             print 'Had to create a new cache_dir!'
+            os.mkdir(cache_dir)
         except OSError:
-            print 'Unable to create the cache_dir!!'
+            raise Exception('Unable to create VCS cache_dir: %s' % cache_dir)
 
 ###
 
@@ -372,8 +376,8 @@ class GitClone(SetupCommand):
 
     def run(self, context):
         # first, guess the co dir name
-        p = urlparse.urlparse(self.repository) # what about Windows path names?
-        path = p.path
+        p = urlparse.urlparse(self.repository)
+        path = p[2]                     # urlparse -> path
 
         dirname = path.rstrip('/').split('/')[-1]
         if dirname.endswith('.git'):
@@ -519,9 +523,7 @@ class HgClone(SetupCommand):
         self.results_dict = {}
 
     def run(self, context):
-        # first, guess the co dir name
-        
-        # @CTB does this work for Windows?
+        # first, guess the checkout dir name
         p = urlparse.urlparse(self.repository)
         path = p[2]                            # urlparse -> path
 
