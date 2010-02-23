@@ -28,7 +28,6 @@ class Test_GitNonCachingCheckout(object):
     def test_basic(self):
         "Run the GitClone command w/o caching and verify it."
         command = GitClone(self.repository_url, use_cache=False)
-        command.verbose = True
         command.run(self.context)
 
         pprint.pprint(command.get_results()) # debugging output
@@ -36,6 +35,25 @@ class Test_GitNonCachingCheckout(object):
         os.chdir(self.context.tempdir)
         assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
         assert os.path.exists(os.path.join('pony-build-git-test', 'test2'))
+        
+    def test_other_branch(self):
+        "Run the GitClone command for another branch."
+        
+        command = GitClone(self.repository_url, branch='other',
+                           use_cache=False)
+        command.run(self.context)
+
+        pprint.pprint(command.get_results()) # debugging output
+
+        cwd = os.getcwd()
+        os.chdir(self.context.tempdir)
+        try:
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
+            assert not os.path.exists(os.path.join('pony-build-git-test',
+                                                   'test2'))
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test3'))
+        finally:
+            os.chdir(cwd)
 
 
 def create_cache_location(repository_url):
@@ -81,7 +99,6 @@ class Test_GitCachingCheckout(object):
     def test_basic(self):
         "Run the GitClone command and verify that it produces the right repo."
         command = GitClone(self.repository_url)
-        command.verbose = True
         command.run(self.context)
 
         pprint.pprint(command.get_results()) # debugging output
@@ -96,11 +113,8 @@ class Test_GitCachingCheckout(object):
 
     def test_other_branch(self):
         "Run the GitClone command for another branch."
-        print 'tempdir', self.context.tempdir
-        print 'parent', self.cache_parent
         
         command = GitClone(self.repository_url, branch='other')
-        command.verbose = True
         command.run(self.context)
 
         pprint.pprint(command.get_results()) # debugging output
@@ -158,7 +172,6 @@ class Test_GitCachingUpdate(object):
     def test_basic(self):
         "Run the GitClone command and verify that it produces an updated repo."
         command = GitClone(self.repository_url)
-        command.verbose = True
         command.run(self.context)
 
         pprint.pprint(command.get_results()) # debugging output
@@ -171,6 +184,20 @@ class Test_GitCachingUpdate(object):
         finally:
             os.chdir(cwd)
         
-
+    def test_other_branch(self):
+        "Run the GitClone command for another branch."
         
-                   
+        command = GitClone(self.repository_url, branch='other')
+        command.run(self.context)
+
+        pprint.pprint(command.get_results()) # debugging output
+
+        cwd = os.getcwd()
+        os.chdir(self.context.tempdir)
+        try:
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
+            assert not os.path.exists(os.path.join('pony-build-git-test',
+                                                   'test2'))
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test3'))
+        finally:
+            os.chdir(cwd)

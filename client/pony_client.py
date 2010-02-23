@@ -46,7 +46,7 @@ def log_critical(*args):
 
 def log(level, *what):
     if level <= _log_level:
-        sys.stdout.write(" ".join(what) + "\n")
+        sys.stdout.write(" ".join([ str(x) for x in what]) + "\n")
 
 def set_log_level(level):
     global _log_level
