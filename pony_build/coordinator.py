@@ -51,7 +51,10 @@ def build_tagset(client_info, no_arch=False, no_host=False):
     host = client_info['host']
     package = client_info['package']
 
-    tags = list(client_info['tags'])
+    if client_info['tags'] is not None:
+        tags = list(client_info['tags'])
+    else:
+        tags = []
 
     tags.append('__package=' + package)
     if not no_arch:
