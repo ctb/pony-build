@@ -18,6 +18,8 @@ import traceback
 from optparse import OptionParser
 import pprint
 import glob
+import datetime
+import signal
 
 pb_servers = {
     'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
@@ -61,7 +63,7 @@ def _replace_variables(cmd, variables_d):
         cmd = variables_d[cmd[3:]]
     return cmd
 
-def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
+def _run_command(command_list, timeout=None, cwd=None, variables=None, extra_kwargs={},
                  verbose=False):
     if variables:
         x = []
@@ -82,7 +84,22 @@ def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
         print 'default kwargs:', default_kwargs
         
     try:
+        # get start time
+        start_time = datetime.time.now()
         p = subprocess.Popen(command_list, cwd=cwd, **default_kwargs)
+        while p.poll() is None:
+            # temp suspend execution for .1 second
+            time.sleep(0.1)
+            # get current time
+            current_time = datetime.time.now()
+            # if the amount of seconds between start and current are greater
+            # then passed timeout kill p...
+            if (current_time - start_time).seconds > timeout:
+                # send kill signal to the process
+                os.kill(p.pid, signal.SIGKILL)
+                # wait for the kill to happen before carrying on
+                os.waitpid(-1, os.WNOHANG)
+                return None
 
         out, err = p.communicate()
         ret = p.returncode
