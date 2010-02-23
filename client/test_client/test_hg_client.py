@@ -8,6 +8,30 @@ import urlparse
 import pony_client
 from pony_client import HgClone, TempDirectoryContext, _run_command
 
+class Test_MercurialNonCachingCheckout(object):
+    repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
+
+    def setup(self):
+        # create a context within which to run the HgCheckout command
+        self.context = TempDirectoryContext()
+        self.context.initialize()
+
+    def teardown(self):
+        self.context.finish()
+
+    def test_basic(self):
+        "Run the HgClone command w/o caching and verify it."
+        command = HgClone(self.repository_url, use_cache=False)
+        command.verbose = True
+        command.run(self.context)
+
+        pprint.pprint(command.get_results()) # debugging output
+
+        os.chdir(self.context.tempdir)
+        assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
+        assert os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
+
+
 def create_cache_location(repository_url):
     # use os.environ to specify a new place for VCS cache stuff
     temp_cache_parent = tempfile.mkdtemp()
@@ -30,7 +54,38 @@ def create_cache_location(repository_url):
 
     return (temp_cache_parent, temp_cache_location)
 
+
 class Test_MercurialCachingCheckout(object):
+    repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
+
+    def setup(self):
+        # create a context within which to run the HgCheckout command
+        self.context = TempDirectoryContext()
+        self.context.initialize()
+
+        (cache_parent, cache_dir) = create_cache_location(self.repository_url)
+        self.cache_parent = cache_parent
+
+    def teardown(self):
+        self.context.finish()
+        del os.environ['PONY_BUILD_CACHE']
+
+        shutil.rmtree(self.cache_parent)
+
+    def test_basic(self):
+        "Run the HgClone command and verify that it produces the right repo."
+        command = HgClone(self.repository_url)
+        command.verbose = True
+        command.run(self.context)
+
+        pprint.pprint(command.get_results()) # debugging output
+
+        os.chdir(self.context.tempdir)
+        assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
+        assert os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
+
+
+class Test_MercurialCachingUpdate(object):
     repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
 
     def setup(self):
@@ -70,7 +125,7 @@ class Test_MercurialCachingCheckout(object):
         shutil.rmtree(self.cache_parent)
 
     def test_basic(self):
-        "Run the HgClone command and verify that it Does the Right Thing."
+        "Run the HgClone command and verify that it produces an updated repo."
         command = HgClone(self.repository_url)
         command.verbose = True
         command.run(self.context)
