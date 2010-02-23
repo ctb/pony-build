@@ -94,6 +94,27 @@ class Test_GitCachingCheckout(object):
         finally:
             os.chdir(cwd)
 
+    def test_other_branch(self):
+        "Run the GitClone command for another branch."
+        print 'tempdir', self.context.tempdir
+        print 'parent', self.cache_parent
+        
+        command = GitClone(self.repository_url, branch='other')
+        command.verbose = True
+        command.run(self.context)
+
+        pprint.pprint(command.get_results()) # debugging output
+
+        cwd = os.getcwd()
+        os.chdir(self.context.tempdir)
+        try:
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
+            assert not os.path.exists(os.path.join('pony-build-git-test',
+                                                   'test2'))
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test3'))
+        finally:
+            os.chdir(cwd)
+
 
 class Test_GitCachingUpdate(object):
     repository_url = 'http://github.com/ctb/pony-build-git-test.git'

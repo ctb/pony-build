@@ -439,6 +439,7 @@ class GitClone(_VersionControlClientBase):
     def update_repository(self):
         branchspec = '%s:%s' % (self.branch, self.branch)
         cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
+        print '***', cmdlist
         (ret, out, err) = _run_command(cmdlist)
 
         self.results_dict['cache_update'] = dict(status=ret, output=out,
@@ -458,7 +459,7 @@ class GitClone(_VersionControlClientBase):
         if ret != 0:
             raise Exception("cannot reset cache: %s" % repo_dir)
 
-    def create_repository(self, url, step='clone'):
+    def create_repository(self, url, dirname, step='clone'):
         cmdlist = ['git', 'clone', url]
         (ret, out, err) = _run_command(cmdlist)
 
@@ -468,6 +469,18 @@ class GitClone(_VersionControlClientBase):
         if ret != 0:
             cwd = os.getcwd()
             raise Exception("cannot clone repository %s in %s" % (url, cwd))
+
+        if self.branch != 'master':
+            # fetch the right branch
+            branchspec = '%s:%s' % (self.branch, self.branch)
+            cmdlist = ['git', 'fetch', '-ufv', self.repository, branchspec]
+            (ret, out, err) = _run_command(cmdlist, dirname)
+            assert ret == 0, (out, err)
+
+            # check out the right branch
+            cmdlist = ['git', 'checkout', '-f', self.branch]
+            (ret, out, err) = _run_command(cmdlist, dirname)
+            assert ret == 0, (out, err)
 
     def record_repository_info(self, repo_dir):
         cmdlist = ['git', 'log', '-1', '--pretty=oneline']
@@ -483,6 +496,10 @@ class GitClone(_VersionControlClientBase):
 
         # cwd is the directory we're going to ultimately put dirname under.
         cwd = os.getcwd()
+
+        # NOTE: we flat out don't like the situation where the
+        # directory already exists.  Force a clean checkout.
+        assert not os.path.exists(dirname)
         
         if self.use_cache:
             # 'repo_dir' is the full cache directory containing the repo.
@@ -502,7 +519,8 @@ class GitClone(_VersionControlClientBase):
                 log_info('changing to: ' + cache_dir + ' to make new repo dir')
                 os.chdir(cache_dir)
 
-                self.create_repository(self.repository, step='create cache')
+                self.create_repository(self.repository, dirname,
+                                       step='create cache')
                 assert os.path.isdir(repo_dir)
                 
             os.chdir(cwd)
@@ -512,33 +530,11 @@ class GitClone(_VersionControlClientBase):
         else:
             location = self.repository
 
-        self.create_repository(location, step='clone')
+        self.create_repository(location, dirname, step='clone')
 
         if not os.path.exists(dirname) and os.path.isdir(dirname):
             log_critical('wrong guess; %s does not exist. whoops' % (dirname,))
             raise Exception
-
-        ##
-
-        # check out the right branch
-        if self.branch != 'master':
-            cmdlist = ['git', 'checkout', 'origin/'+self.branch]
-            (ret, out, err) = _run_command(cmdlist, dirname)
-
-            self.results_dict['checkout+origin'] = \
-                    dict(status=ret, output=out, errout=err,
-                         command=str(cmdlist), branch=self.branch)
-            if ret != 0:
-                return
-
-            cmdlist = ['git', 'checkout', '-b', self.branch]
-
-            (ret, out, err) = _run_command(cmdlist, dirname)
-            self.results_dict['checkout branch'] = \
-                    dict(status=ret, output=out, errout=err,
-                         command=str(cmdlist), branch=self.branch)
-            if ret != 0:
-                return
 
         # get some info on what our repository version is
         self.record_repository_info(dirname)
