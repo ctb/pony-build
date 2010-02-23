@@ -44,7 +44,7 @@ def create_cache_location(repository_url):
 
     print 'calculated repository dirname as:', repository_dirname
 
-    repository_cache = pony_client.guess_cache_dir(repository_dirname)
+    (_, repository_cache) = pony_client.guess_cache_dir(repository_dirname)
     assert repository_cache.startswith(temp_cache_location)
 
     # this will create 'the_cache' directory that contains individual
