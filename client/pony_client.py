@@ -175,10 +175,12 @@ environment.
 
 VirtualenvContext works by modifying the @@CTB
 """
-    def __init__(self, always_cleanup=True, dependencies=[], python='python'):
+    def __init__(self, always_cleanup=True, dependencies=[], optional=[],
+                 python='python'):
         Context.__init__(self)
         self.cleanup = always_cleanup
         self.dependencies = dependencies
+        self.optional = optional        # optional dependencies
         self.python = python
 
         # Create the virtualenv. Have to do this here so that commands can use
@@ -212,13 +214,25 @@ VirtualenvContext works by modifying the @@CTB
 
         # install pip, then use it to install any packages desired
         print 'installing pip'
+
         (ret, out, err) = _run_command([self.easy_install, '-U', 'pip'])
         if ret != 0:
             raise Exception("error in installing pip: %s, %s" % (out, err))
         
         for dep in self.dependencies:
             print "installing", dep
-            _run_command([self.pip, 'install', '-U', '-I'] + [dep])
+            (ret, out, err) = _run_command([self.pip, 'install', '-U', '-I',
+                                            dep])
+
+            if ret != 0:
+                raise Exception("pip cannot install req dependency: %s" % dep)
+            
+        for dep in self.optional:
+            print "installing", dep
+            (ret, out, err) = _run_command([self.pip, 'install', '-U', '-I',
+                                            dep])
+
+            # @CTB should record failed installs of optional packages
 
     def finish(self):
         os.chdir(self.cwd)
@@ -234,6 +248,7 @@ VirtualenvContext works by modifying the @@CTB
         info['tempdir'] = self.tempdir
         info['virtualenv'] = True
         info['dependencies'] = self.dependencies
+        info['optional'] = self.optional
 
 
 class UploadAFile(object):
