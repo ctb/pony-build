@@ -30,8 +30,15 @@ class Test_GitNonCachingCheckout(object):
         command = GitClone(self.repository_url, use_cache=False)
         command.run(self.context)
 
-        pprint.pprint(command.get_results()) # debugging output
+        # check version info
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
 
+        assert results_info['version_info'] == """\
+c57591d8cc9ef3c293a2006416a0bb8b2ffed26d secondary commit"""
+        assert results_info['version_type'] == 'git'
+
+        # check files
         os.chdir(self.context.tempdir)
         assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
         assert os.path.exists(os.path.join('pony-build-git-test', 'test2'))
@@ -43,8 +50,15 @@ class Test_GitNonCachingCheckout(object):
                            use_cache=False)
         command.run(self.context)
 
-        pprint.pprint(command.get_results()) # debugging output
+        # check version info
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
 
+        assert results_info['version_info'] == """\
+7f8a8e130a3cc631752e275ea57220a1b6e2dddb look ma, another branch\\!"""
+        assert results_info['version_type'] == 'git'
+
+        # check files
         cwd = os.getcwd()
         os.chdir(self.context.tempdir)
         try:
@@ -101,7 +115,12 @@ class Test_GitCachingCheckout(object):
         command = GitClone(self.repository_url)
         command.run(self.context)
 
-        pprint.pprint(command.get_results()) # debugging output
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
+
+        assert results_info['version_info'] == """\
+c57591d8cc9ef3c293a2006416a0bb8b2ffed26d secondary commit"""
+        assert results_info['version_type'] == 'git'
 
         cwd = os.getcwd()
         os.chdir(self.context.tempdir)
@@ -117,8 +136,15 @@ class Test_GitCachingCheckout(object):
         command = GitClone(self.repository_url, branch='other')
         command.run(self.context)
 
-        pprint.pprint(command.get_results()) # debugging output
+        # check version info
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
 
+        assert results_info['version_info'] == """\
+7f8a8e130a3cc631752e275ea57220a1b6e2dddb look ma, another branch\\!"""
+        assert results_info['version_type'] == 'git'
+
+        # check files
         cwd = os.getcwd()
         os.chdir(self.context.tempdir)
         try:
@@ -174,7 +200,12 @@ class Test_GitCachingUpdate(object):
         command = GitClone(self.repository_url)
         command.run(self.context)
 
-        pprint.pprint(command.get_results()) # debugging output
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
+
+        assert results_info['version_info'] == """\
+c57591d8cc9ef3c293a2006416a0bb8b2ffed26d secondary commit"""
+        assert results_info['version_type'] == 'git'
 
         cwd = os.getcwd()
         os.chdir(self.context.tempdir)
@@ -190,8 +221,15 @@ class Test_GitCachingUpdate(object):
         command = GitClone(self.repository_url, branch='other')
         command.run(self.context)
 
-        pprint.pprint(command.get_results()) # debugging output
+        # check version info
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
 
+        assert results_info['version_info'] == """\
+7f8a8e130a3cc631752e275ea57220a1b6e2dddb look ma, another branch\\!"""
+        assert results_info['version_type'] == 'git'
+
+        # check files
         cwd = os.getcwd()
         os.chdir(self.context.tempdir)
         try:
