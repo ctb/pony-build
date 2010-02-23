@@ -12,7 +12,7 @@ class Test_MercurialNonCachingCheckout(object):
     repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
 
     def setup(self):
-        # create a context within which to run the HgCheckout command
+        # create a context within which to run the HgClone command
         self.context = TempDirectoryContext()
         self.context.initialize()
 
@@ -59,7 +59,7 @@ class Test_MercurialCachingCheckout(object):
     repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
 
     def setup(self):
-        # create a context within which to run the HgCheckout command
+        # create a context within which to run the HgClone command
         self.context = TempDirectoryContext()
         self.context.initialize()
 
@@ -89,7 +89,7 @@ class Test_MercurialCachingUpdate(object):
     repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
 
     def setup(self):
-        # create a context within which to run the HgCheckout command
+        # create a context within which to run the HgClone command
         self.context = TempDirectoryContext()
         self.context.initialize()
 
