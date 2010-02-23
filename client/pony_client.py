@@ -205,7 +205,7 @@ VirtualenvContext works by modifying the
         # install pip, then use it to install any packages desired
         print 'installing pip'
         _run_command([self.easy_install, '-U', 'pip'])
-        for dep in self.reqdependencies:
+        for dep in self.dependencies:
             print "installing", dep
             _run_command([self.pip, 'install', '-U', '-I'] + [dep])
 
@@ -222,7 +222,7 @@ VirtualenvContext works by modifying the
         Context.update_client_info(self, info)
         info['tempdir'] = self.tempdir
         info['virtualenv'] = True
-        info['reqdependencies'] = self.reqdependencies
+        info['dependencies'] = self.dependencies
 
 
 class UploadAFile(object):
