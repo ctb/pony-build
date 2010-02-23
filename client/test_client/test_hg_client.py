@@ -8,6 +8,14 @@ import urlparse
 import pony_client
 from pony_client import HgClone, TempDirectoryContext, _run_command
 
+_cwd = None
+def setup():
+    global _cwd
+    _cwd = os.getcwd()
+
+def teardown():
+    os.chdir(_cwd)
+
 class Test_MercurialNonCachingCheckout(object):
     repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
 

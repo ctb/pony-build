@@ -11,6 +11,14 @@ import urlparse
 import pony_client
 from pony_client import SvnCheckout, TempDirectoryContext, _run_command
 
+_cwd = None
+def setup():
+    global _cwd
+    _cwd = os.getcwd()
+
+def teardown():
+    os.chdir(_cwd)
+
 class Test_SvnNonCachingCheckout(object):
     repository_url = 'http://pony-build.googlecode.com/svn/pony-build-svn-test'
 
