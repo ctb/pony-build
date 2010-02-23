@@ -647,7 +647,7 @@ class HgClone(SetupCommand):
         ##
 
         # get some info on what our HEAD is
-        cmdlist = ['hg', 'log']         # @CTB
+        cmdlist = ['hg', 'id', '-nib']
         (ret, out, err) = _run_command(cmdlist, dirname)
 
         assert ret == 0, (cmdlist, ret, out, err)
