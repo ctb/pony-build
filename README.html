@@ -3,15 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.5: http://docutils.sourceforge.net/" />
 <title>pony-build</title>
 <style type="text/css">
 
 /*
-:Author: David Goodger
-:Contact: goodger@users.sourceforge.net
-:Date: $Date: 2005-12-18 01:56:14 +0100 (Sun, 18 Dec 2005) $
-:Revision: $Revision: 4224 $
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 5196 2007-06-03 20:25:28Z wiemann $
 :Copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -117,7 +115,7 @@ div.line-block div.line-block {
   margin-left: 1.5em }
 
 div.sidebar {
-  margin-left: 1em ;
+  margin: 0 0 0.5em 1em ;
   border: medium outset ;
   padding: 1em ;
   background-color: #ffffee ;
@@ -223,8 +221,7 @@ pre.address {
 
 pre.literal-block, pre.doctest-block {
   margin-left: 2em ;
-  margin-right: 2em ;
-  background-color: #eeeeee }
+  margin-right: 2em }
 
 span.classifier {
   font-family: sans-serif ;
@@ -281,9 +278,6 @@ h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
 h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
   font-size: 100% }
 
-tt.docutils {
-  background-color: #eeeeee }
-
 ul.auto-toc {
   list-style-type: none }
 
@@ -292,6 +286,7 @@ ul.auto-toc {
 <body>
 <div class="document" id="pony-build">
 <h1 class="title">pony-build</h1>
+
 <p>pony-build is a simple continuous integration package that lets you
 run a server to display client build results.  It consists of two
 components, a server (which is run in some central &amp; accessible
@@ -300,17 +295,17 @@ server via HTTP).</p>
 <p>Philosophy statement: good development tools for Python should be easy
 to install, easy to hack, and not overly constraining.  Two out of
 three ain't bad ;).</p>
-<p>Also see <a class="reference" href="http://buildbot.sf.net/">buildbot</a>.</p>
-<div class="section">
-<h1><a id="links" name="links">Links</a></h1>
+<p>Also see <a class="reference external" href="http://buildbot.sf.net/">buildbot</a>.</p>
+<div class="section" id="links">
+<h1>Links</h1>
 <p>pony-build is hosted on github.</p>
-<p>pony-build central repository: <a class="reference" href="http://github.com/ctb/pony-build">http://github.com/ctb/pony-build</a></p>
-<p>pony-build issue tracking: <a class="reference" href="http://github.com/ctb/pony-build/issues">http://github.com/ctb/pony-build/issues</a></p>
-<p>pony-build wiki: <a class="reference" href="http://wiki.github.com/ctb/pony-build">http://wiki.github.com/ctb/pony-build</a></p>
-<p>pony-build mailing list: <a class="reference" href="http://lists.idyll.org/listinfo/pony-build">http://lists.idyll.org/listinfo/pony-build</a></p>
+<p>pony-build central repository: <a class="reference external" href="http://github.com/ctb/pony-build">http://github.com/ctb/pony-build</a></p>
+<p>pony-build issue tracking: <a class="reference external" href="http://github.com/ctb/pony-build/issues">http://github.com/ctb/pony-build/issues</a></p>
+<p>pony-build wiki: <a class="reference external" href="http://wiki.github.com/ctb/pony-build">http://wiki.github.com/ctb/pony-build</a></p>
+<p>pony-build mailing list: <a class="reference external" href="http://lists.idyll.org/listinfo/pony-build">http://lists.idyll.org/listinfo/pony-build</a></p>
 </div>
-<div class="section">
-<h1><a id="requirements" name="requirements">Requirements</a></h1>
+<div class="section" id="requirements">
+<h1>Requirements</h1>
 <dl class="docutils">
 <dt>Server side:</dt>
 <dd><p class="first">Requires Python 2.6 or above.</p>
@@ -321,27 +316,27 @@ three ain't bad ;).</p>
 <dd>Python.  Should work down to Python 2.4.  Developed with 2.5.</dd>
 </dl>
 </div>
-<div class="section">
-<h1><a id="pony-build-server" name="pony-build-server">pony-build server</a></h1>
+<div class="section" id="pony-build-server">
+<h1>pony-build server</h1>
 <p>The command:</p>
 <pre class="literal-block">
-python -m pony_build.qx_web.run &lt;shelve filename&gt; -p &lt;port&gt;
+python -m pony_build.web.run &lt;shelve filename&gt; -p &lt;port&gt;
 </pre>
 <p>will run the Quixote-based pony-build Web app on the given port,
-reading &amp; writing from the shelve database in 'filename'.</p>
+reading &amp; writing from the sqlite database in 'filename'.</p>
 <p>For example,</p>
 <pre class="literal-block">
-python -m pony_build.qx_web.run test.db -p 8080
+python -m pony_build.web.run test.db -p 8080
 </pre>
-<p>will run a server that can be accessed on <a class="reference" href="http://localhost:8080/">http://localhost:8080/</a>.  This
+<p>will run a server that can be accessed on <a class="reference external" href="http://localhost:8080/">http://localhost:8080/</a>.  This
 server will report on whatever results are sent to it by the client (see
 below), based on the package name ('name', below).</p>
 <p>See 'architecture, and extending pony-build', below.</p>
 </div>
-<div class="section">
-<h1><a id="pony-build-client-scripts" name="pony-build-client-scripts">pony-build client scripts</a></h1>
-<div class="section">
-<h2><a id="build-scripts" name="build-scripts">Build scripts</a></h2>
+<div class="section" id="pony-build-client-scripts">
+<h1>pony-build client scripts</h1>
+<div class="section" id="build-scripts">
+<h2>Build scripts</h2>
 <p>Client build scripts are just scripts that set up &amp; run a list of commands:</p>
 <pre class="literal-block">
 from pony_client import BuildCommand, TestCommand, do, send
@@ -365,15 +360,15 @@ Python project (clone, build, run tests).</p>
 <p>Note that 'pony_client' doesn't depend on the rest of pony-build, so you
 can distribute it with other packages if you want.</p>
 </div>
-<div class="section">
-<h2><a id="client-query-scripts" name="client-query-scripts">Client query scripts</a></h2>
+<div class="section" id="client-query-scripts">
+<h2>Client query scripts</h2>
 <p>Client query scripts request information from the server.  For example,
 see 'bin/notify-failure-email', which checks the status of the last build
 of a particular package and sends an e-mail.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="architecture-and-extending-pony-build" name="architecture-and-extending-pony-build">Architecture, and extending pony-build</a></h1>
+<div class="section" id="architecture-and-extending-pony-build">
+<h1>Architecture, and extending pony-build</h1>
 <p>The pony-build server is basically a storage receptacle for &quot;bags&quot; of
 key-value pairs.  It's easiest point of extension is in the Web
 interface, where you can substitute any WSGI app object to serve Web
@@ -385,8 +380,8 @@ interface in 'pony_build.coordinator'; you can get a handle to the
 current coordinator object with 'pony_build.server.get_coordinator()'.
 <strong>The coordinator API is will be stable and public</strong>, after suitable
 evolution.</p>
-<div class="section">
-<h2><a id="client-to-server-communication" name="client-to-server-communication">Client-to-server communication</a></h2>
+<div class="section" id="client-to-server-communication">
+<h2>Client-to-server communication</h2>
 <p>Each client sends two bags of information: the first, 'client_info',
 contains information global to the build client, such as package name,
 host name, architecture, and a list of tags.  The second,
@@ -407,16 +402,16 @@ purposes, and/or to use the 'tags' key in the client_info dict.
 The 'tags' associated value is a list of strings.</p>
 <p>receipt['result_key'] is the internal key used to store the result.</p>
 </div>
-<div class="section">
-<h2><a id="notifications" name="notifications">Notifications</a></h2>
-<p>RSS2 and pubsubhubbub (<a class="reference" href="http://code.google.com/p/pubsubhubbub/">http://code.google.com/p/pubsubhubbub/</a>) are the
+<div class="section" id="notifications">
+<h2>Notifications</h2>
+<p>RSS2 and pubsubhubbub (<a class="reference external" href="http://code.google.com/p/pubsubhubbub/">http://code.google.com/p/pubsubhubbub/</a>) are the
 core of the notification system built into pony_build; the &quot;officially
 correct&quot; way to actively notify interested people of build results is
 to publish them via RSS2, push them to a pubsubhubbub server, and let
 someone else deal with translating those into e-mail alerts, etc.</p>
 <p>All of the RSS feeds that pony-build makes available can be posted to
 pubsubhubbub with the proper configuration (see -P and -S options to
-<tt class="docutils literal"><span class="pre">pony_build.qx_web.run</span></tt>).  A simple example CGI callback script that
+<tt class="docutils literal"><span class="pre">pony_build.web.run</span></tt>).  A simple example CGI callback script that
 sends an e-mail is available in
 <tt class="docutils literal"><span class="pre">examples/push-cgi/notifier/push-subscriber.cgi</span></tt> in the pony-build
 source distribution.</p>
@@ -425,8 +420,8 @@ helping to create RSS2 feeds and notify pubsubhubbub servers of
 new results</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="some-medium-term-ideas" name="some-medium-term-ideas">Some medium-term ideas</a></h1>
+<div class="section" id="some-medium-term-ideas">
+<h1>Some medium-term ideas</h1>
 <p>One an initial release is out &amp; any obvious bugs are cleaned up, here
 are some ideas for the next release.</p>
 <p>A flexible view builder-and-saver would be nice; maybe in Django?
@@ -445,30 +440,30 @@ good, I think.</p>
 total amount of data that can be dumped by an unauthenticated client.
 Otherwise warez sites will be hosted inside of pony-build ;)</p>
 </div>
-<div class="section">
-<h1><a id="development" name="development">Development</a></h1>
-<p>pony-build is hosted on github, at: <a class="reference" href="http://github.com/ctb/pony-build">http://github.com/ctb/pony-build</a></p>
+<div class="section" id="development">
+<h1>Development</h1>
+<p>pony-build is hosted on github, at: <a class="reference external" href="http://github.com/ctb/pony-build">http://github.com/ctb/pony-build</a></p>
 <p>To run the tests:</p>
 <pre class="literal-block">
 python -m pony_build.tests.run
 </pre>
 </div>
-<div class="section">
-<h1><a id="design-and-ideas-for-the-future" name="design-and-ideas-for-the-future">Design and Ideas for the Future</a></h1>
-<div class="section">
-<h2><a id="ideas-that-are-easy-to-implement" name="ideas-that-are-easy-to-implement">Ideas that are easy to implement</a></h2>
+<div class="section" id="design-and-ideas-for-the-future">
+<h1>Design and Ideas for the Future</h1>
+<div class="section" id="ideas-that-are-easy-to-implement">
+<h2>Ideas that are easy to implement</h2>
 <p>Build virtualenv in on the client side (as a Context?)</p>
 <p>Dependency chains example on client side.</p>
 <p>Integration with unittest, nose, py.test -&gt; ship results back to
 central server.</p>
 </div>
-<div class="section">
-<h2><a id="cleanup" name="cleanup">Cleanup</a></h2>
+<div class="section" id="cleanup">
+<h2>Cleanup</h2>
 <p>Figure out a proper database abstraction, maybe?</p>
 <p>Tests, duh.</p>
 </div>
-<div class="section">
-<h2><a id="things-i-don-t-know-how-to-do" name="things-i-don-t-know-how-to-do">Things I don't know how to do...</a></h2>
+<div class="section" id="things-i-don-t-know-how-to-do">
+<h2>Things I don't know how to do...</h2>
 <p>...and don't want to spend time learning ;)</p>
 <p>Josh Williams suggests supporting something other than a wsgiref
 server.  I'm not sure this is really needed -- you can run whatever
@@ -481,8 +476,8 @@ for details if you dare.</p>
 <p>Seriously, check out both pony_build.server.PonyBuildServer and
 pony_build.server.RequestHandler (the latter is the most interesting).</p>
 </div>
-<div class="section">
-<h2><a id="some-general-design-principles" name="some-general-design-principles">Some general design principles</a></h2>
+<div class="section" id="some-general-design-principles">
+<h2>Some general design principles</h2>
 <p>Titus says: A number of people are interested in pony-build, and I've
 gotten many suggestions already.  This has basically forced me to
 articulate a number of my design principles, including some that were
@@ -517,8 +512,8 @@ receive &quot;ack&quot;
 </ul>
 </blockquote>
 </div>
-<div class="section">
-<h2><a id="acks" name="acks">Acks</a></h2>
+<div class="section" id="acks">
+<h2>Acks</h2>
 <p>Titus says: Jesse Noller, Doug Philips, and Josh Williams discussed
 things with me and are, collectively, entirely responsible for any bad
 design decisions; the good ones are all mine.</p>
@@ -528,7 +523,7 @@ people, even though Doug has been a jerk to me since then.</p>
 project-builder-pie.</p>
 <p>You can also read this discussion starting here,</p>
 <blockquote>
-<a class="reference" href="http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html">http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html</a></blockquote>
+<a class="reference external" href="http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html">http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html</a></blockquote>
 <p>where Kumar suggests that I just use Hudson for chrissakes.  He's
 probably right.</p>
 <p>--</p>

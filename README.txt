@@ -45,14 +45,14 @@ pony-build server
 
 The command: ::
 
-   python -m pony_build.qx_web.run <shelve filename> -p <port>
+   python -m pony_build.web.run <shelve filename> -p <port>
 
 will run the Quixote-based pony-build Web app on the given port,
-reading & writing from the shelve database in 'filename'.
+reading & writing from the sqlite database in 'filename'.
 
 For example, ::
 
-   python -m pony_build.qx_web.run test.db -p 8080
+   python -m pony_build.web.run test.db -p 8080
 
 will run a server that can be accessed on http://localhost:8080/.  This
 server will report on whatever results are sent to it by the client (see
@@ -152,7 +152,7 @@ someone else deal with translating those into e-mail alerts, etc.
 
 All of the RSS feeds that pony-build makes available can be posted to
 pubsubhubbub with the proper configuration (see -P and -S options to
-``pony_build.qx_web.run``).  A simple example CGI callback script that
+``pony_build.web.run``).  A simple example CGI callback script that
 sends an e-mail is available in
 ``examples/push-cgi/notifier/push-subscriber.cgi`` in the pony-build
 source distribution.
