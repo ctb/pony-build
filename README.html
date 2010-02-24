@@ -443,9 +443,14 @@ Otherwise warez sites will be hosted inside of pony-build ;)</p>
 <div class="section" id="development">
 <h1>Development</h1>
 <p>pony-build is hosted on github, at: <a class="reference external" href="http://github.com/ctb/pony-build">http://github.com/ctb/pony-build</a></p>
-<p>To run the tests:</p>
+<p>To run the server tests:</p>
 <pre class="literal-block">
 python -m pony_build.tests.run
+</pre>
+<p>To run the client tests:</p>
+<pre class="literal-block">
+cd client
+nosetests
 </pre>
 </div>
 <div class="section" id="design-and-ideas-for-the-future">
@@ -512,6 +517,12 @@ receive &quot;ack&quot;
 </ul>
 </blockquote>
 </div>
+<div class="section" id="contributors">
+<h2>Contributors</h2>
+<p>Jacob Kaplan-Moss, Max Laite, Jack Carlson, Fatima Cherkaoui, and Khushboo
+Shakya have all contributed code and ideas.</p>
+<p>(If I'm missing anyone, please drop me a note!)</p>
+</div>
 <div class="section" id="acks">
 <h2>Acks</h2>
 <p>Titus says: Jesse Noller, Doug Philips, and Josh Williams discussed
@@ -526,8 +537,12 @@ project-builder-pie.</p>
 <a class="reference external" href="http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html">http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html</a></blockquote>
 <p>where Kumar suggests that I just use Hudson for chrissakes.  He's
 probably right.</p>
+<p>Eric Holscher and Jacob Kaplan-Moss took the pony-build idea and ran
+with it, producing a parallel universe of Django-based reporting
+servers and REST-ish clients that report via JSON.  Check out
+devmason.com and 'pony_barn' to see their approach in action.</p>
 <p>--</p>
-<p>CTB 8/24/09</p>
+<p>CTB 2/24/10</p>
 </div>
 </div>
 </div>

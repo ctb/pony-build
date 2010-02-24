@@ -192,9 +192,14 @@ Development
 
 pony-build is hosted on github, at: http://github.com/ctb/pony-build
 
-To run the tests::
+To run the server tests::
 
    python -m pony_build.tests.run
+
+To run the client tests::
+
+   cd client
+   nosetests
 
 Design and Ideas for the Future
 ===============================
@@ -267,6 +272,14 @@ soon let buildbot pick up the higher-end ideas if they're game, too.
      send "final results, authenticate with update token"
      receive "ack"
    
+Contributors
+------------
+
+Jacob Kaplan-Moss, Max Laite, Jack Carlson, Fatima Cherkaoui, and Khushboo
+Shakya have all contributed code and ideas.
+
+(If I'm missing anyone, please drop me a note!)
+
 Acks
 ----
 
@@ -287,6 +300,11 @@ You can also read this discussion starting here,
 where Kumar suggests that I just use Hudson for chrissakes.  He's
 probably right.
 
+Eric Holscher and Jacob Kaplan-Moss took the pony-build idea and ran
+with it, producing a parallel universe of Django-based reporting
+servers and REST-ish clients that report via JSON.  Check out
+devmason.com and 'pony_barn' to see their approach in action.
+
 --
 
-CTB 8/24/09
+CTB 2/24/10
