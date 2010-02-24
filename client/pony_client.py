@@ -483,6 +483,8 @@ class _VersionControlClientBase(SetupCommand):
         return self.results_dict
 
 class GitClone(_VersionControlClientBase):
+    """Check out and/or update a git repository."""
+    
     command_name = 'checkout'
 
     def __init__(self, repository, branch='master', use_cache=True, **kwargs):
@@ -571,6 +573,7 @@ class GitClone(_VersionControlClientBase):
         return self.results_dict
 
 class HgClone(_VersionControlClientBase):
+    """Check out or update an Hg (Mercurial) repository."""
     command_name = 'checkout'
 
     def __init__(self, repository, branch='default', use_cache=True, **kwargs):
@@ -640,67 +643,62 @@ class HgClone(_VersionControlClientBase):
 
         return self.results_dict
 
-class SvnCheckout(SetupCommand):
+class SvnCheckout(_VersionControlClientBase):
+    """Check out or update a subversion repository."""
     command_name = 'checkout'
 
-    def __init__(self, dirname, repository, use_cache=True, cache_dir=None, **kwargs):
-        SetupCommand.__init__(self, [], **kwargs)
+    def __init__(self, dirname, repository, use_cache=True, **kwargs):
+        _VersionControlClientBase.__init__(self, use_cache=use_cache)
+        
+        self.dirname = dirname
         self.repository = repository
 
-        self.cache_dir = None
-        if cache_dir:
-            self.cache_dir = os.path.expanduser(cache_dir)
-        self.duration = -1
-        self.dirname = dirname
+    def get_dirname(self):
+        return self.dirname
 
-    def run(self, context):
-        dirname = self.dirname
+    def update_repository(self):
+        cmdlist = ['svn', 'update', '--accept', 'theirs-full']
+        (ret, out, err) = _run_command(cmdlist)
 
-        ##
+        self.results_dict['svn update'] = dict(status=ret, output=out,
+                                               errout=err,
+                                               command=str(cmdlist))
 
-        if self.cache_dir:
-            cwd = os.getcwd()
-            os.chdir(self.cache_dir)
-            cmdlist = ['svn', 'update']
+        if ret != 0:
+            log_critical("cannot svn update")
+            raise Exception, (cmdlist, ret, out, err)
+
+    def create_repository(self, url, dirname, step='clone'):
+        if os.path.isdir(url):          # local dir? COPY.
+            shutil.copytree(url, dirname)
+        else:                           # remote repo? CO.
+            cmdlist = ['svn', 'co', url, dirname]
             (ret, out, err) = _run_command(cmdlist)
+
+            self.results_dict[step] = dict(status=ret, output=out, errout=err,
+                                           command=str(cmdlist))
+
             if ret != 0:
-                self.command_list = cmdlist
-                self.status = ret
-                self.output = out
-                self.errout = err
-                return
+                log_critical("cannot svn checkout %s into %s" % (url, dirname))
+                raise Exception, "cannot svn checkout %s into %s" % (url, dirname)
 
-            subdir = os.path.join(cwd, dirname)
-            shutil.copytree(self.cache_dir, subdir)
+    def record_repository_info(self, repo_dir):
+        cmdlist = ['svnversion']
+        (ret, out, err) = _run_command(cmdlist, repo_dir)
+        assert ret == 0, (cmdlist, ret, out, err)
+        self.version_info = out.strip()
 
-            os.chdir(subdir)
-        else:
-            cmdlist = ['svn', 'co', self.repository, dirname]
+    def get_results(self):
+        # first, update basic
+        _VersionControlClientBase.get_results(self)
+        
+        self.results_dict['command'] = 'SvnCheckout(%s, %s)' %(self.repository,
+                                                               self.dirname)
+        self.results_dict['version_type'] = 'hg'
+        if self.version_info:
+            self.results_dict['version_info'] = self.version_info
 
-            (ret, out, err) = _run_command(cmdlist)
-            if ret != 0:
-                self.command_list = cmdlist
-                self.status = ret
-                self.output = out
-                self.errout = err
-
-                return
-
-            if not os.path.exists(dirname) and os.path.isdir(dirname):
-                self.command_list = cmdlist
-                self.status = -1
-                self.output = ''
-                self.errout = 'pony-build-client cannot find expected svn dir: %s' % (dirname,)
-
-                return
-
-            os.chdir(dirname)
-
-        ##
-
-        self.status = 0 # success
-        self.output = ''
-        self.errout = ''
+        return self.results_dict
 
 ###
 
