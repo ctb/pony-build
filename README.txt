@@ -12,6 +12,9 @@ Philosophy statement: good development tools for Python should be easy
 to install, easy to hack, and not overly constraining.  Two out of
 three ain't bad ;).
 
+The pony-build architectural model is this: use decoupled components
+that communicate via webhooks whenever possible.
+
 Also see `buildbot <http://buildbot.sf.net/>`__.
 
 Links
@@ -286,6 +289,11 @@ You can also read this discussion starting here,
 
 where Kumar suggests that I just use Hudson for chrissakes.  He's
 probably right.
+
+References
+----------
+
+webhooks: http://webhooks.pbworks.com/
 
 --
 
