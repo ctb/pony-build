@@ -1,3 +1,6 @@
+"""
+svn VCS client tests.
+"""
 import sys
 import os, os.path
 import shutil
@@ -6,7 +9,7 @@ import pprint
 import urlparse
 
 import pony_client
-from pony_client import HgClone, TempDirectoryContext, _run_command
+from pony_client import SvnCheckout, TempDirectoryContext, _run_command
 
 _cwd = None
 def setup():
@@ -16,11 +19,11 @@ def setup():
 def teardown():
     os.chdir(_cwd)
 
-class Test_MercurialNonCachingCheckout(object):
-    repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
+class Test_SvnNonCachingCheckout(object):
+    repository_url = 'http://pony-build.googlecode.com/svn/pony-build-svn-test'
 
     def setup(self):
-        # create a context within which to run the HgClone command
+        # create a context within which to run the SvnCheckout command
         self.context = TempDirectoryContext()
         self.context.initialize()
 
@@ -28,16 +31,17 @@ class Test_MercurialNonCachingCheckout(object):
         self.context.finish()
 
     def test_basic(self):
-        "Run the HgClone command w/o caching and verify it."
-        command = HgClone(self.repository_url, use_cache=False)
+        "Run the SvnCheckout command w/o caching and verify it."
+        command = SvnCheckout('pony-build-svn-test', self.repository_url,
+                              use_cache=False)
         command.verbose = True
         command.run(self.context)
 
         pprint.pprint(command.get_results()) # debugging output
 
         os.chdir(self.context.tempdir)
-        assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
-        assert os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
+        assert os.path.exists(os.path.join('pony-build-svn-test', 'test1'))
+        assert os.path.exists(os.path.join('pony-build-svn-test', 'test2'))
 
 
 def create_cache_location(repository_url):
@@ -63,11 +67,11 @@ def create_cache_location(repository_url):
     return (temp_cache_parent, temp_cache_location)
 
 
-class Test_MercurialCachingCheckout(object):
-    repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
+class Test_SvnCachingCheckout(object):
+    repository_url = 'http://pony-build.googlecode.com/svn/pony-build-svn-test'
 
     def setup(self):
-        # create a context within which to run the HgClone command
+        # create a context within which to run the SvnCheckout command
         self.context = TempDirectoryContext()
         self.context.initialize()
 
@@ -78,26 +82,30 @@ class Test_MercurialCachingCheckout(object):
         self.context.finish()
         del os.environ['PONY_BUILD_CACHE']
 
-        shutil.rmtree(self.cache_parent)
+        shutil.rmtree(self.cache_parent, ignore_errors=True)
 
     def test_basic(self):
-        "Run the HgClone command and verify that it produces the right repo."
-        command = HgClone(self.repository_url)
+        "Run the SvnCheckout command and verify that it works."
+        command = SvnCheckout('pony-build-svn-test', self.repository_url)
         command.verbose = True
         command.run(self.context)
 
         pprint.pprint(command.get_results()) # debugging output
 
+        cwd = os.getcwd()
         os.chdir(self.context.tempdir)
-        assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
-        assert os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
+        try:
+            assert os.path.exists(os.path.join('pony-build-svn-test', 'test1'))
+            assert os.path.exists(os.path.join('pony-build-svn-test', 'test2'))
+        finally:
+            os.chdir(cwd)
 
 
-class Test_MercurialCachingUpdate(object):
-    repository_url = 'http://bitbucket.org/ctb/pony-build-hg-test/'
+class Test_SvnCachingUpdate(object):
+    repository_url = 'http://pony-build.googlecode.com/svn/pony-build-svn-test'
 
     def setup(self):
-        # create a context within which to run the HgClone command
+        # create a context within which to run the SvnCheckout command
         self.context = TempDirectoryContext()
         self.context.initialize()
 
@@ -113,16 +121,18 @@ class Test_MercurialCachingUpdate(object):
         
         os.chdir(cache_dir)
 
-        # now, check out the test hg repository.
-        (ret, out, err) = _run_command(['hg', 'clone', self.repository_url])
+        # now, check out the test svn repository.
+        (ret, out, err) = _run_command(['svn', 'checkout',
+                                        self.repository_url,
+                                        'pony-build-svn-test'])
         assert ret == 0, (out, err)
 
-        # forcibly check out revision 0 instead of revision 1.
-        (ret, out, err) = _run_command(['hg', 'checkout', '0'],
-                                       cwd='pony-build-hg-test')
+        # forcibly check out the first revision, instead of the second.
+        (ret, out, err) = _run_command(['svn', 'update', '-r2'],
+                                       cwd='pony-build-svn-test')
         assert ret == 0, (out, err)
-        assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
-        assert not os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
+        assert os.path.exists(os.path.join('pony-build-svn-test', 'test1'))
+        assert not os.path.exists(os.path.join('pony-build-svn-test', 'test2'))
 
         os.chdir(cwd)                           # return to working dir.
         
@@ -130,20 +140,23 @@ class Test_MercurialCachingUpdate(object):
         self.context.finish()
         del os.environ['PONY_BUILD_CACHE']
 
-        shutil.rmtree(self.cache_parent)
+        shutil.rmtree(self.cache_parent, ignore_errors=True)
 
     def test_basic(self):
-        "Run the HgClone command and verify that it produces an updated repo."
-        command = HgClone(self.repository_url)
+        "Run the SvnCheckout command and verify that it updates right."
+        command = SvnCheckout('pony-build-svn-test', self.repository_url)
         command.verbose = True
         command.run(self.context)
 
         pprint.pprint(command.get_results()) # debugging output
 
+        cwd = os.getcwd()
         os.chdir(self.context.tempdir)
-        assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
-        assert os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
-
+        try:
+            assert os.path.exists(os.path.join('pony-build-svn-test', 'test1'))
+            assert os.path.exists(os.path.join('pony-build-svn-test', 'test2'))
+        finally:
+            os.chdir(cwd)
         
 
         

@@ -113,50 +113,11 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
             message = 'upload attempt, but no upload content?!'
 
         self._send_html_response(code, message)
-
-    def _handle_notify(self):
-        """Handle webhook notification, currently only from github."""
-        
-        data = ''
-        
-        content_length = self.headers.getheader('content-length')
-        if content_length:
-            content_length = int(content_length)
-            data = self.rfile.read(content_length)
-
-        qs = {}
-        if '?' in self.path:
-            url, qs = self.path.split('?', 1)
-            qs = parse_qs(qs)
-
-        format = 'unknown'
-        package = ''
-        try:
-            format = qs.get('format')[0]
-            package = qs.get('package')[0]
-        except (TypeError, ValueError, KeyError):
-            pass
-
-        if not package:
-            self._send_html_response(400, missing_package)
-
-        if format == 'github':          # @CTB hardcoded github webhook...!
-            post_d = parse_qs(data)
-            payload = post_d.get('payload')[0]
-            payload = json.loads(payload)
-
-            data = payload
-
-        _coordinator.notify_of_changes(package, format, data)
-
-        self._send_html_response(200, "received")
-
     def handle(self):
         """
         Handle:
           /xmlrpc => SimpleXMLRPCServer
           /upload => self._handle_upload
-          /notify => self._handle_notify
           all else => WSGI app for Web UI
         """
         self.raw_requestline = self.rfile.readline()
@@ -181,9 +142,6 @@ class RequestHandler(WSGIRequestHandler, SimpleXMLRPCRequestHandler):
         
         elif self.path.startswith('/upload?'):
             return self._handle_upload()
-
-        elif self.path.startswith('/notify'):
-            return self._handle_notify()
 
         ## else:
 
