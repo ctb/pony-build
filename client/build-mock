@@ -27,7 +27,7 @@ context = TempDirectoryContext()
 commands = [ SvnCheckout(dirname, repo_url, name='checkout'),
              BuildCommand([python_exe, 'setup.py', 'build_ext', '-i'],
                           name='compile'),
-             TestCommand([python_exe, 'setup.py', 'test'], name='run tests'),
+             TestCommand([python_exe, 'discover.py'], name='run tests'),
              PythonPackageEgg(python_exe)]
 
 results = do(name, commands, context=context)
