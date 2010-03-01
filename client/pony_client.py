@@ -700,13 +700,13 @@ def parse_cmdline(argv=[]):
 
 ###
 
-
-def test_python_version(python_exe):
-    result = subprocess.Popen(python_exe + " -c \"print 'hello, world'\"", shell=True, \
-                    stdout=subprocess.PIPE).communicate()
-    if result[0] != "hello, world\n":
-        return False
-    return True
+def get_python_version(python_exe):
+    result = subprocess.Popen(python_exe + " -c \"import sys \nprint" \
+    " str(sys.version_info[0]) + '.' + str(sys.version_info[1])\"", shell=True, \
+    stdout=subprocess.PIPE).communicate()
+    if result[0] == '':
+        return None
+    return "python" + str(result[0][:-1])
 
 ###
 

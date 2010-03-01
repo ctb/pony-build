@@ -3,19 +3,19 @@ import sys
 import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
      TempDirectoryContext, SetupCommand, GitClone, check, parse_cmdline, \
-     PythonPackageEgg, test_python_version
+     PythonPackageEgg, get_python_version
 
 options, _ = parse_cmdline()
 
 python_exe = options.python_executable
 
-if not test_python_version(python_exe):
+if get_python_version(python_exe) is None:
     print "Unable to find " + python_exe + ".  Failing..."
-    sys.exit(1)
+    sys.exit(0)
 
 repo_url = 'git://quixote.ca/quixote'
 
-tags = [python_exe] + options.tagset
+tags = [get_python_version(python_exe)] + options.tagset
 name = 'quixote'
 
 server_url = options.server_url
