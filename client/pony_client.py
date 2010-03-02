@@ -20,7 +20,7 @@ import glob
 
 pb_servers = {
     'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
-    'local' : 'http://localhost:8000/xmlrpc'
+    'local' : 'http://localhost:8080/xmlrpc'
     }
 pb_servers['default'] = pb_servers['pb-dev']
 
@@ -846,7 +846,7 @@ def parse_cmdline(argv=[]):
                        help='do not clean up the temp directory')
 
     cmdline.add_option('-s', '--server-url', dest='server_url',
-                       action='store', default='default',
+                       action='store', default='local',
                        help='set pony-build server URL for reporting results')
 
     cmdline.add_option('-v', '--verbose', dest='verbose',
