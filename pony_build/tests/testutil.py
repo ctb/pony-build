@@ -20,7 +20,7 @@ def run_server_wsgi_intercept(dbfilename):
     port = 80
     
     from pony_build import server, coordinator, dbsqlite
-    from pony_build.qx_web import create_publisher, urls
+    from pony_build.web import create_publisher, urls
     
     dbfile = dbsqlite.open_shelf(dbfilename)
     dbfile = coordinator.IntDictWrapper(dbfile)
@@ -58,12 +58,12 @@ def run_server(DB_FILE, PORT=None):
     if PORT is None:
         PORT = int(os.environ.get('PB_TEST_PORT', DEFAULT_PORT))
 
-    print 'STARTING:', sys.executable, 'pony_build.qx_web.run', os.getcwd()
+    print 'STARTING:', sys.executable, 'pony_build.web.run', os.getcwd()
     print [sys.executable, '-u',
-                                '-m', 'pony_build.qx_web.run', DB_FILE,
+                                '-m', 'pony_build.web.run', DB_FILE,
                                 '-p', str(PORT)],
     process = subprocess.Popen([sys.executable, '-u',
-                                '-m', 'pony_build.qx_web.run', DB_FILE,
+                                '-m', 'pony_build.web.run', DB_FILE,
                                 '-p', str(PORT)],
                                stderr=subprocess.STDOUT,
                                stdout=subprocess.PIPE)

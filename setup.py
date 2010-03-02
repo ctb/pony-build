@@ -15,7 +15,7 @@ except ImportError:
 root_dir = os.path.dirname(__file__)
 if root_dir != '':
     os.chdir(root_dir)
-templates_dir = os.path.join('pony_build', 'qx_web', 'templates')
+templates_dir = os.path.join('pony_build', 'web', 'templates')
 
 data_files = []
 for dirpath, dirnames, filenames in os.walk(templates_dir):
@@ -34,7 +34,7 @@ setup(name='pony-build',
       author_email = 't@idyll.org',
       url = 'http://github.com/ctb/pony-build',
       license = 'BSD',
-      packages = ['pony_build', 'pony_build.qx_web'],
+      packages = ['pony_build', 'pony_build.web'],
       data_files = data_files,
       test_suite = 'nose.collector',
       )

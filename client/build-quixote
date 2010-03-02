@@ -34,8 +34,7 @@ client_info, reslist, files = results
 
 if options.report:
     print 'result: %s; sending' % (client_info['success'],)
-    #send(server_url, results, tags=tags)
-    send("http://localhost:8080/xmlrpc", results, tags=tags)
+    send(server_url, results, tags=tags)
 else:
     print 'build result:'
     pprint.pprint(client_info)

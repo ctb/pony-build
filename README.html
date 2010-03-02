@@ -300,6 +300,8 @@ server via HTTP).</p>
 <p>Philosophy statement: good development tools for Python should be easy
 to install, easy to hack, and not overly constraining.  Two out of
 three ain't bad ;).</p>
+<p>The pony-build architectural model is this: use decoupled components
+that communicate via webhooks whenever possible.</p>
 <p>Also see <a class="reference" href="http://buildbot.sf.net/">buildbot</a>.</p>
 <div class="section">
 <h1><a id="links" name="links">Links</a></h1>
@@ -325,13 +327,13 @@ three ain't bad ;).</p>
 <h1><a id="pony-build-server" name="pony-build-server">pony-build server</a></h1>
 <p>The command:</p>
 <pre class="literal-block">
-python -m pony_build.qx_web.run &lt;shelve filename&gt; -p &lt;port&gt;
+python -m pony_build.web.run &lt;shelve filename&gt; -p &lt;port&gt;
 </pre>
 <p>will run the Quixote-based pony-build Web app on the given port,
-reading &amp; writing from the shelve database in 'filename'.</p>
+reading &amp; writing from the sqlite database in 'filename'.</p>
 <p>For example,</p>
 <pre class="literal-block">
-python -m pony_build.qx_web.run test.db -p 8080
+python -m pony_build.web.run test.db -p 8080
 </pre>
 <p>will run a server that can be accessed on <a class="reference" href="http://localhost:8080/">http://localhost:8080/</a>.  This
 server will report on whatever results are sent to it by the client (see
@@ -416,7 +418,7 @@ to publish them via RSS2, push them to a pubsubhubbub server, and let
 someone else deal with translating those into e-mail alerts, etc.</p>
 <p>All of the RSS feeds that pony-build makes available can be posted to
 pubsubhubbub with the proper configuration (see -P and -S options to
-<tt class="docutils literal"><span class="pre">pony_build.qx_web.run</span></tt>).  A simple example CGI callback script that
+<tt class="docutils literal"><span class="pre">pony_build.web.run</span></tt>).  A simple example CGI callback script that
 sends an e-mail is available in
 <tt class="docutils literal"><span class="pre">examples/push-cgi/notifier/push-subscriber.cgi</span></tt> in the pony-build
 source distribution.</p>
@@ -448,9 +450,14 @@ Otherwise warez sites will be hosted inside of pony-build ;)</p>
 <div class="section">
 <h1><a id="development" name="development">Development</a></h1>
 <p>pony-build is hosted on github, at: <a class="reference" href="http://github.com/ctb/pony-build">http://github.com/ctb/pony-build</a></p>
-<p>To run the tests:</p>
+<p>To run the server tests:</p>
 <pre class="literal-block">
 python -m pony_build.tests.run
+</pre>
+<p>To run the client tests:</p>
+<pre class="literal-block">
+cd client
+nosetests
 </pre>
 </div>
 <div class="section">
@@ -518,6 +525,12 @@ receive &quot;ack&quot;
 </blockquote>
 </div>
 <div class="section">
+<h2><a id="contributors" name="contributors">Contributors</a></h2>
+<p>Jacob Kaplan-Moss, Max Laite, Jack Carlson, Fatima Cherkaoui, and Khushboo
+Shakya have all contributed code and ideas.</p>
+<p>(If I'm missing anyone, please drop me a note!)</p>
+</div>
+<div class="section">
 <h2><a id="acks" name="acks">Acks</a></h2>
 <p>Titus says: Jesse Noller, Doug Philips, and Josh Williams discussed
 things with me and are, collectively, entirely responsible for any bad
@@ -531,8 +544,16 @@ project-builder-pie.</p>
 <a class="reference" href="http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html">http://lists.idyll.org/pipermail/testing-in-python/2009-March/001277.html</a></blockquote>
 <p>where Kumar suggests that I just use Hudson for chrissakes.  He's
 probably right.</p>
+<p>Eric Holscher and Jacob Kaplan-Moss took the pony-build idea and ran
+with it, producing a parallel universe of Django-based reporting
+servers and REST-ish clients that report via JSON.  Check out
+devmason.com and 'pony_barn' to see their approach in action.</p>
+</div>
+<div class="section">
+<h2><a id="references" name="references">References</a></h2>
+<p>webhooks: <a class="reference" href="http://webhooks.pbworks.com/">http://webhooks.pbworks.com/</a></p>
 <p>--</p>
-<p>CTB 8/24/09</p>
+<p>CTB 2/24/10</p>
 </div>
 </div>
 </div>
