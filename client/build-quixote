@@ -9,10 +9,6 @@ options, _ = parse_cmdline()
 
 python_exe = options.python_executable
 
-if get_python_version(python_exe) is None:
-    print "Unable to find " + python_exe + ".  Failing..."
-    sys.exit(0)
-
 repo_url = 'git://quixote.ca/quixote'
 
 tags = [get_python_version(python_exe)] + options.tagset

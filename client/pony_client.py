@@ -881,12 +881,19 @@ def parse_cmdline(argv=[]):
 
 ###
 
+class PythonVersionNotFound(Exception):
+    def __init__(self, python_exe):
+        self.python_exe = python_exe
+    def __str__(self):
+        return repr(self.python_exe + " not found on system.")
+
+
 def get_python_version(python_exe):
     result = subprocess.Popen(python_exe + " -c \"import sys \nprint" \
     " str(sys.version_info[0]) + '.' + str(sys.version_info[1])\"", shell=True, \
     stdout=subprocess.PIPE).communicate()
     if result[0] == '':
-        return None
+        raise PythonVersionNotFound(python_exe)
     return "python" + str(result[0][:-1])
 
 ###
