@@ -12,6 +12,9 @@ Philosophy statement: good development tools for Python should be easy
 to install, easy to hack, and not overly constraining.  Two out of
 three ain't bad ;).
 
+The pony-build architectural model is this: use decoupled components
+that communicate via webhooks whenever possible.
+
 Also see `buildbot <http://buildbot.sf.net/>`__.
 
 Links
@@ -45,14 +48,14 @@ pony-build server
 
 The command: ::
 
-   python -m pony_build.qx_web.run <shelve filename> -p <port>
+   python -m pony_build.web.run <shelve filename> -p <port>
 
 will run the Quixote-based pony-build Web app on the given port,
-reading & writing from the shelve database in 'filename'.
+reading & writing from the sqlite database in 'filename'.
 
 For example, ::
 
-   python -m pony_build.qx_web.run test.db -p 8080
+   python -m pony_build.web.run test.db -p 8080
 
 will run a server that can be accessed on http://localhost:8080/.  This
 server will report on whatever results are sent to it by the client (see
@@ -152,7 +155,7 @@ someone else deal with translating those into e-mail alerts, etc.
 
 All of the RSS feeds that pony-build makes available can be posted to
 pubsubhubbub with the proper configuration (see -P and -S options to
-``pony_build.qx_web.run``).  A simple example CGI callback script that
+``pony_build.web.run``).  A simple example CGI callback script that
 sends an e-mail is available in
 ``examples/push-cgi/notifier/push-subscriber.cgi`` in the pony-build
 source distribution.
@@ -192,9 +195,14 @@ Development
 
 pony-build is hosted on github, at: http://github.com/ctb/pony-build
 
-To run the tests::
+To run the server tests::
 
    python -m pony_build.tests.run
+
+To run the client tests::
+
+   cd client
+   nosetests
 
 Design and Ideas for the Future
 ===============================
@@ -267,6 +275,14 @@ soon let buildbot pick up the higher-end ideas if they're game, too.
      send "final results, authenticate with update token"
      receive "ack"
    
+Contributors
+------------
+
+Jacob Kaplan-Moss, Max Laite, Jack Carlson, Fatima Cherkaoui, and Khushboo
+Shakya have all contributed code and ideas.
+
+(If I'm missing anyone, please drop me a note!)
+
 Acks
 ----
 
@@ -287,6 +303,16 @@ You can also read this discussion starting here,
 where Kumar suggests that I just use Hudson for chrissakes.  He's
 probably right.
 
+Eric Holscher and Jacob Kaplan-Moss took the pony-build idea and ran
+with it, producing a parallel universe of Django-based reporting
+servers and REST-ish clients that report via JSON.  Check out
+devmason.com and 'pony_barn' to see their approach in action.
+
+References
+----------
+
+webhooks: http://webhooks.pbworks.com/
+
 --
 
-CTB 8/24/09
+CTB 2/24/10

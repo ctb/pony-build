@@ -14,6 +14,14 @@ import urlparse
 import pony_client
 from pony_client import GitClone, TempDirectoryContext, _run_command
 
+_cwd = None
+def setup():
+    global _cwd
+    _cwd = os.getcwd()
+
+def teardown():
+    os.chdir(_cwd)
+
 class Test_GitNonCachingCheckout(object):
     repository_url = 'http://github.com/ctb/pony-build-git-test.git'
 
@@ -28,14 +36,46 @@ class Test_GitNonCachingCheckout(object):
     def test_basic(self):
         "Run the GitClone command w/o caching and verify it."
         command = GitClone(self.repository_url, use_cache=False)
-        command.verbose = True
         command.run(self.context)
 
-        pprint.pprint(command.get_results()) # debugging output
+        # check version info
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
 
+        assert results_info['version_info'] == """\
+c57591d8cc9ef3c293a2006416a0bb8b2ffed26d secondary commit"""
+        assert results_info['version_type'] == 'git'
+
+        # check files
         os.chdir(self.context.tempdir)
         assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
         assert os.path.exists(os.path.join('pony-build-git-test', 'test2'))
+        
+    def test_other_branch(self):
+        "Run the GitClone command for another branch."
+        
+        command = GitClone(self.repository_url, branch='other',
+                           use_cache=False)
+        command.run(self.context)
+
+        # check version info
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
+
+        assert results_info['version_info'] == """\
+7f8a8e130a3cc631752e275ea57220a1b6e2dddb look ma, another branch\\!"""
+        assert results_info['version_type'] == 'git'
+
+        # check files
+        cwd = os.getcwd()
+        os.chdir(self.context.tempdir)
+        try:
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
+            assert not os.path.exists(os.path.join('pony-build-git-test',
+                                                   'test2'))
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test3'))
+        finally:
+            os.chdir(cwd)
 
 
 def create_cache_location(repository_url):
@@ -50,7 +90,7 @@ def create_cache_location(repository_url):
 
     print 'calculated repository dirname as:', repository_dirname
 
-    repository_cache = pony_client.guess_cache_dir(repository_dirname)
+    (_, repository_cache) = pony_client.guess_cache_dir(repository_dirname)
     assert repository_cache.startswith(temp_cache_location)
 
     # this will create 'the_cache' directory that contains individual
@@ -81,16 +121,45 @@ class Test_GitCachingCheckout(object):
     def test_basic(self):
         "Run the GitClone command and verify that it produces the right repo."
         command = GitClone(self.repository_url)
-        command.verbose = True
         command.run(self.context)
 
-        pprint.pprint(command.get_results()) # debugging output
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
+
+        assert results_info['version_info'] == """\
+c57591d8cc9ef3c293a2006416a0bb8b2ffed26d secondary commit"""
+        assert results_info['version_type'] == 'git'
 
         cwd = os.getcwd()
         os.chdir(self.context.tempdir)
         try:
             assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
             assert os.path.exists(os.path.join('pony-build-git-test', 'test2'))
+        finally:
+            os.chdir(cwd)
+
+    def test_other_branch(self):
+        "Run the GitClone command for another branch."
+        
+        command = GitClone(self.repository_url, branch='other')
+        command.run(self.context)
+
+        # check version info
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
+
+        assert results_info['version_info'] == """\
+7f8a8e130a3cc631752e275ea57220a1b6e2dddb look ma, another branch\\!"""
+        assert results_info['version_type'] == 'git'
+
+        # check files
+        cwd = os.getcwd()
+        os.chdir(self.context.tempdir)
+        try:
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
+            assert not os.path.exists(os.path.join('pony-build-git-test',
+                                                   'test2'))
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test3'))
         finally:
             os.chdir(cwd)
 
@@ -115,7 +184,7 @@ class Test_GitCachingUpdate(object):
         
         os.chdir(cache_dir)
 
-        # now, check out the test hg repository.
+        # now, check out the test git repository.
         (ret, out, err) = _run_command(['git', 'clone', self.repository_url])
         assert ret == 0, (out, err)
 
@@ -137,10 +206,14 @@ class Test_GitCachingUpdate(object):
     def test_basic(self):
         "Run the GitClone command and verify that it produces an updated repo."
         command = GitClone(self.repository_url)
-        command.verbose = True
         command.run(self.context)
 
-        pprint.pprint(command.get_results()) # debugging output
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
+
+        assert results_info['version_info'] == """\
+c57591d8cc9ef3c293a2006416a0bb8b2ffed26d secondary commit"""
+        assert results_info['version_type'] == 'git'
 
         cwd = os.getcwd()
         os.chdir(self.context.tempdir)
@@ -150,6 +223,27 @@ class Test_GitCachingUpdate(object):
         finally:
             os.chdir(cwd)
         
-
+    def test_other_branch(self):
+        "Run the GitClone command for another branch."
         
-                   
+        command = GitClone(self.repository_url, branch='other')
+        command.run(self.context)
+
+        # check version info
+        results_info = command.get_results()
+        pprint.pprint(results_info) # debugging output
+
+        assert results_info['version_info'] == """\
+7f8a8e130a3cc631752e275ea57220a1b6e2dddb look ma, another branch\\!"""
+        assert results_info['version_type'] == 'git'
+
+        # check files
+        cwd = os.getcwd()
+        os.chdir(self.context.tempdir)
+        try:
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test1'))
+            assert not os.path.exists(os.path.join('pony-build-git-test',
+                                                   'test2'))
+            assert os.path.exists(os.path.join('pony-build-git-test', 'test3'))
+        finally:
+            os.chdir(cwd)
