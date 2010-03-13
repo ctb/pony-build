@@ -94,7 +94,7 @@ def _replace_variables(cmd, variables_d):
     return cmd
 
 
-def _run_command(command_list, timeout=None, cwd=None, variables=None, extra_kwargs={},
+def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
                  verbose=False):
 
     if variables:
@@ -115,23 +115,7 @@ def _run_command(command_list, timeout=None, cwd=None, variables=None, extra_kwa
     log_debug('_run_command default kwargs:', default_kwargs)
 
     try:
-        # get start time
-        start_time = datetime.time.now()
         p = subprocess.Popen(command_list, cwd=cwd, **default_kwargs)
-        while p.poll() is None:
-            # temp suspend execution for .1 second,
-            # i like .1 seconds.
-            time.sleep(0.1)
-            # get current time
-            current_time = datetime.time.now()
-            # if the amount of seconds between start and current are greater
-            # then passed timeout kill p...
-            if (current_time - start_time).seconds > timeout:
-                # send kill signal to the process
-                os.kill(p.pid, signal.SIGKILL)
-                # wait for the kill to happen before carrying on
-                os.waitpid(-1, os.WNOHANG)
-                return None
 
         out, err = p.communicate()
         ret = p.returncode
@@ -236,7 +220,7 @@ class VirtualenvContext(Context):
 
         self.tempdir = tempfile.mkdtemp()
 
-        log_inf('creating virtualenv')
+        log_info('creating virtualenv')
         cmdlist = [python, '-m', 'virtualenv', '--no-site-packages',
                    self.tempdir]
         (ret, out, err) = _run_command(cmdlist)
@@ -274,6 +258,8 @@ class VirtualenvContext(Context):
 
             if ret != 0:
                 raise Exception("pip cannot install req dependency: %s" % dep)
+                VirtualenvContext.finish(self)
+                sys.exit(out)
             
         for dep in self.optional:
             log_info("installing optional dependency:", dep)
