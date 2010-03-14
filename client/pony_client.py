@@ -258,8 +258,6 @@ class VirtualenvContext(Context):
 
             if ret != 0:
                 raise Exception("pip cannot install req dependency: %s" % dep)
-                VirtualenvContext.finish(self)
-                sys.exit(out)
             
         for dep in self.optional:
             log_info("installing optional dependency:", dep)
