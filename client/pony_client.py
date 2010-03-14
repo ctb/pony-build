@@ -249,6 +249,7 @@ class VirtualenvContext(Context):
 
         (ret, out, err) = _run_command([self.easy_install, '-U', 'pip'])
         if ret != 0:
+            VirtualenvContext.finish(self)
             raise Exception("error in installing pip: %s, %s" % (out, err))
         
         for dep in self.dependencies:
