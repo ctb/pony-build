@@ -866,6 +866,9 @@ def parse_cmdline(argv=[]):
     cmdline.add_option('-t', '--tagset', dest='tagset',
                        action='store', default=[],
                        help='comma-delimited list of tags to be applied')
+    cmdline.add_option('-l', '--log-level', dest='log_level',
+                       action'store', default='WARNING_LEVEL',
+                       help='Change the amount of output you get during build process.')
 
     if not argv:
         (options, args) = cmdline.parse_args()
