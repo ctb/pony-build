@@ -2,7 +2,7 @@
 import sys
 import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
-     TempDirectoryContext, SetupCommand, SvnUpdate, check, parse_cmdline
+     TempDirectoryContext, SetupCommand, SvnCheckout, check, parse_cmdline
 
 options, args = parse_cmdline()
 if args:
@@ -23,7 +23,7 @@ if not options.force_build:
         print 'check build says no need to build; bye'
         sys.exit(0)
 
-commands = [ SvnUpdate('twill', repo_url, name='checkout'),
+commands = [ SvnCheckout('twill', repo_url, name='checkout'),
              BuildCommand([python_exe, 'setup.py', 'test'])
              ]
 
