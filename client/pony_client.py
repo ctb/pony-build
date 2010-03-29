@@ -218,7 +218,7 @@ class VirtualenvContext(Context):
         log_info('creating virtualenv')
 
         cmdlist = list([python, '-m', 'virtualenv'])
-        if include_site_packages:
+        if not include_site_packages:
             cmdlist.append('--no-site-packages')
 
         cmdlist.append(self.tempdir)
