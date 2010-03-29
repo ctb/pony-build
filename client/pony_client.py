@@ -853,6 +853,10 @@ def parse_cmdline(argv=[]):
                        action='store_true', default=False,
                        help='set verbose reporting')
                        
+    cmdline.add_option('--debug', dest='debug',
+                       action='store_true', default=False,
+                       help='set debug reporting')
+                       
     cmdline.add_option('-e', '--python-executable', dest='python_executable',
                        action='store', default='python',
                        help='override the version of python used to build with')
@@ -877,6 +881,9 @@ def parse_cmdline(argv=[]):
         sys.exit(0)
 
     if options.verbose:
+        set_log_level(INFO_LEVEL)
+
+    if options.debug:
         set_log_level(DEBUG_LEVEL)
 
     if not options.report:
