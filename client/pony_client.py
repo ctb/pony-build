@@ -202,7 +202,7 @@ class VirtualenvContext(Context):
     VirtualenvContext works by modifying the path to the Python executable.
     """
     def __init__(self, always_cleanup=True, dependencies=[], optional=[],
-                 python='python'):
+                 python='python', include_site_packages=False):
         Context.__init__(self)
         self.cleanup = always_cleanup
         self.dependencies = dependencies
@@ -216,8 +216,13 @@ class VirtualenvContext(Context):
         self.tempdir = tempfile.mkdtemp()
 
         log_info('creating virtualenv')
-        cmdlist = [python, '-m', 'virtualenv', '--no-site-packages',
-                   self.tempdir]
+
+        cmdlist = list([python, '-m', 'virtualenv'])
+        if include_site_packages:
+            cmdlist.append('--no-site-packages')
+
+        cmdlist.append(self.tempdir)
+        
         (ret, out, err) = _run_command(cmdlist)
 
         if ret != 0:

@@ -11,10 +11,10 @@ python_exe = 'python2.5'
 if args:
     python_exe = args[0]
 
-repo_url = 'git://github.com/acr/screed.git'
+repo_url = 'git://github.com/ctb/screed.git'
 
 tags = [python_exe]
-name = 'pygr'
+name = 'screed'
 
 server_url = options.server_url
 
@@ -23,7 +23,8 @@ if not options.force_build:
         print 'check build says no need to build; bye'
         sys.exit(0)
 
-context = VirtualenvContext(dependencies=['nose'])
+# requires pygr, which isn't pip-installable.
+context = VirtualenvContext(dependencies=['nose'], include_site_packages=True)
 commands = [ GitClone(repo_url, name='checkout'),
              TestCommand(['nosetests'], name='run tests'),
              PythonPackageEgg(python_exe) ]
