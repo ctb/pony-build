@@ -881,9 +881,9 @@ def parse_cmdline(argv=[]):
         
     # there should be nothing in args.
     # if there is, print a warning, then crash and burn.
-    if args:
-        print "Error--unknown arguments detected.  Failing..."
-        sys.exit(0)
+    #if args:
+    #    print "Error--unknown arguments detected.  Failing..."
+    #    sys.exit(0)
 
     if options.verbose:
         set_log_level(INFO_LEVEL)
