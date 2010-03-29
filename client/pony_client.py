@@ -588,7 +588,7 @@ class HgClone(_VersionControlClientBase):
         path = p[2]                     # urlparse -> path
 
         dirname = path.rstrip('/').split('/')[-1]
-        log_info('git checkout dirname guessed as: %s' % (dirname,))
+        log_info('hg checkout dirname guessed as: %s' % (dirname,))
         return dirname
 
     def update_repository(self):
@@ -623,6 +623,12 @@ class HgClone(_VersionControlClientBase):
             raise Exception("cannot clone repository %s in %s" % (url, cwd))
 
         # @CTB branch stuff unimplemented
+        if self.branch != 'default':
+            # update to the right branch
+            branchspec = '%s:%s' % (self.branch, self.branch)
+            cmdlist = ['hg', 'update', branchspec]
+            (ret, out, err) = _run_command(cmdlist, dirname)
+            assert ret == 0, (out, err)
             
     def record_repository_info(self, repo_dir):
         # get some info on what our HEAD is
