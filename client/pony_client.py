@@ -215,7 +215,7 @@ class VirtualenvContext(Context):
 
         self.tempdir = tempfile.mkdtemp()
 
-        log_inf('creating virtualenv')
+        log_info('creating virtualenv')
         cmdlist = [python, '-m', 'virtualenv', '--no-site-packages',
                    self.tempdir]
         (ret, out, err) = _run_command(cmdlist)
@@ -875,6 +875,12 @@ def parse_cmdline(argv=[]):
     if args:
         print "Error--unknown arguments detected.  Failing..."
         sys.exit(0)
+
+    if options.verbose:
+        set_log_level(DEBUG_LEVEL)
+
+    if not options.report:
+        options.force_build = True
 
     return options, args
 
