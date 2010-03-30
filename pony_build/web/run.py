@@ -12,8 +12,7 @@ if __name__ == '__main__':
     parser.add_option('-p', '--port', dest='port', help='port to bind',
                       type='int', default='5000')
     parser.add_option('-f', '--dbfile', dest='dbfile',
-                      help='name for dbfile', type='string', 
-                      default='pbDB.db')
+                     help='name for dbfile', type='string')
     parser.add_option('-u', '--url', dest='url', help='public URL',
                       default=None)
     parser.add_option('-P', '--use-pubsubhubbub', dest='use_pubsubhubbub',
@@ -25,11 +24,17 @@ if __name__ == '__main__':
     
 
     (options, args) = parser.parse_args()
-    # dbfile=args[0]
+    #dbfile=args[0]
+
+    db_file = None
+    if options.dbfile:
+        db_file = options.dbfile
+    else:
+        db_file = ':memory:'
 
     push_server = None
     if options.use_pubsubhubbub:
         push_server = options.push_server
 
-    qx_web.run(options.interface, options.port, options.dbfile, public_url=options.url,
+    qx_web.run(options.interface, options.port, db_file, public_url=options.url,
                pubsubhubbub_server=push_server)
