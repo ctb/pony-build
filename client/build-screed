@@ -24,7 +24,8 @@ if not options.force_build:
         sys.exit(0)
 
 # requires pygr, which isn't pip-installable.
-context = VirtualenvContext(dependencies=['nose'], include_site_packages=True)
+context = VirtualenvContext(dependencies=['nose'], include_site_packages=True,
+                            python=python_exe)
 commands = [ GitClone(repo_url, name='checkout'),
              BuildCommand([python_exe, 'setup.py', 'install']),
              TestCommand(['nosetests'], name='run tests'),

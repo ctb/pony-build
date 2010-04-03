@@ -236,6 +236,7 @@ class VirtualenvContext(Context):
         self.pip = os.path.join(bindir, 'pip')
 
         os.environ['PATH'] = bindir + os.pathsep + os.environ['PATH']
+        log_debug("modified PATH to include virtualenv bindir: '%s'" % bindir)
 
     def initialize(self):
         Context.initialize(self)
