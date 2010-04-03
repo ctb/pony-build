@@ -1,0 +1,53 @@
+#! /usr/bin/env python
+import sys, os
+import pprint
+from pony_client import BuildCommand, TestCommand, do, send, \
+     VirtualenvContext, SetupCommand, GitClone, check, parse_cmdline, \
+     PythonPackageEgg, CopyLocalDir
+import shutil
+
+options, args = parse_cmdline()
+
+python_exe = 'python2.5'
+if args:
+    python_exe = args[0]
+
+#repo_url = 'git://github.com/ctb/Caper.git'
+repo_url = '/u/t/dev/Caper'
+
+tags = [python_exe]
+name = 'caper'
+
+server_url = options.server_url
+
+if not options.force_build:
+    if not check(name, server_url, tags=tags):
+        print 'check build says no need to build; bye'
+        sys.exit(0)
+
+# requires pygr, which isn't pip-installable.
+screed_repo = 'git+git://github.com/acr/screed.git'
+context = VirtualenvContext(dependencies=['nose', screed_repo],
+                            include_site_packages=True,
+                            python=python_exe,
+                            always_cleanup=options.cleanup_temp)
+
+commands = [ GitClone(repo_url, name='checkout'),
+             BuildCommand(['make', 'clean', 'all'], run_cwd='Pyrex'),
+             BuildCommand(['make', 'tests'], run_cwd='Pyrex') ]
+
+results = do(name, commands, context=context)
+client_info, reslist, files = results
+
+if options.report:
+    print 'result: %s; sending' % (client_info['success'],)
+    send(server_url, results, tags=tags)
+else:
+    print 'build result:'
+    pprint.pprint(client_info)
+    pprint.pprint(reslist)
+    
+    print '(NOT SENDING BUILD RESULT TO SERVER)'
+
+if not client_info['success']:
+    sys.exit(-1)
