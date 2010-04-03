@@ -663,7 +663,10 @@ class SvnCheckout(_VersionControlClientBase):
         return self.dirname
 
     def update_repository(self):
-        cmdlist = ['svn', 'update', '--accept', 'theirs-full']
+        # adding '--accept', 'theirs-full' is a good idea for newer versions
+        # of svn; this automatically accepts dodgy security certs.
+        cmdlist = ['svn', 'update']
+        
         (ret, out, err) = _run_command(cmdlist)
 
         self.results_dict['svn update'] = dict(status=ret, output=out,
