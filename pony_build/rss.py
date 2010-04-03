@@ -22,7 +22,9 @@ canonical URLs
 
 """
 
-from datetime import datetime
+MAX=50
+
+from datetime import datetime, timedelta
 import traceback
 from cStringIO import StringIO
 from .PyRSS2Gen import RSS2, RSSItem, _element, Guid, Source
@@ -128,23 +130,29 @@ class BuildSnooper_All(object):
 
         it = []
         keys = list(reversed(sorted(pb_coord.db.keys())))
-        for k in keys:
+        now = datetime.now()
+        a_week = timedelta(days=1)
+        
+        for n, k in enumerate(keys):
             (receipt, client_info, results_list) = pb_coord.db[k]
             tagset = client_info['tags']
 
             t = receipt['time']
             t = datetime.fromtimestamp(t)
 
+            if now - t > a_week:
+                break
+            
             it.append((t, (tagset, receipt, client_info, results_list)))
 
-        it.sort()
-        it.reverse()
-        
         if not self.report_successes:
             it = [ (t, v) for (t, v) in it if not v[2]['success'] ]
         
         rss_items = []
-        for _, v in it:
+        for n, (_, v) in enumerate(it):
+            if n > MAX:
+                break
+            
             tagset = sorted([ x for x in list(v[0]) if not x.startswith('__')])
             tagset = ", ".join(tagset)
 
