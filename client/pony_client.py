@@ -384,6 +384,33 @@ class TestCommand(BaseCommand):
     command_type = 'test'
     command_name = 'test'
 
+class CopyLocalDir(BuildCommand):
+    def __init__(self, fromdir, to_name):
+        self.ignore_failure = False
+        self.fromdir = fromdir
+        self.to_name = to_name
+        self.results_dict = dict(fromdir=fromdir, to_name=to_name)
+        
+    def run(self, context):
+        self.results_dict['out'] = self.results_dict['errout'] = ''
+
+        try:
+            shutil.copytree(self.fromdir, self.to_name)
+            context.build_dir = os.path.join(os.getcwd(), 'Caper')
+            self.status = 0
+        except Exception, e:
+            self.errout = str(e)
+            self.status = 1
+
+    def get_results(self):
+        self.results_dict['status'] = self.status
+        self.results_dict['type'] = self.command_type
+        self.results_dict['name'] = self.command_name
+
+        return self.results_dict
+            
+
+
 class PythonPackageEgg(BaseCommand):
     command_type = 'package'
     command_name = 'package_egg'
