@@ -5,8 +5,6 @@ from pony_client import BuildCommand, TestCommand, do, send, \
      TempDirectoryContext, SetupCommand, SvnCheckout, check, parse_cmdline
 
 options, args = parse_cmdline()
-if args:
-    print 'ignoring command line args: ', args
 
 repo_url = 'http://twill.googlecode.com/svn/branches/0.9.2-dev/twill'
 
