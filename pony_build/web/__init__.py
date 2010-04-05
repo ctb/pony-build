@@ -144,7 +144,9 @@ class RSS2FeedDirectory(Directory):
         for k in rss.build_snoopers:
             snooper = rss.build_snoopers[k]
             feeds.append((k, str(snooper)))
-            
+
+        # @CTB sort.
+
         template = env.get_template('feed_index.html')
         return template.render(locals()).encode('latin-1', 'replace')
     
@@ -488,6 +490,12 @@ def run(host, port, dbfilename, public_url=None, pubsubhubbub_server=None):
 
     snooper = rss.PackageSnooper('pygr', only_failures=True)
     rss.add_snooper(snooper, 'pygr-failures')
+
+    snooper = rss.BuildSnooper_All(only_failures=False)
+    rss.add_snooper(snooper, 'all')
+    
+    snooper = rss.BuildSnooper_All(only_failures=True)
+    rss.add_snooper(snooper, 'failed')
 
     ###
 
