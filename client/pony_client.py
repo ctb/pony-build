@@ -261,7 +261,7 @@ class VirtualenvContext(Context):
             if ret != 0:
                 error_state = True
                 print 'about to break'
-                log_critical('pip could not isntall req dependency: %s' % dep)
+                log_critical('pip could not install req dependency: %s' % dep)
                 break
             
         for dep in self.optional:
