@@ -26,6 +26,7 @@ pb_servers = {
     }
 pb_servers['default'] = pb_servers['pb-dev']
 
+error_state = False
 ###
 
 DEBUG_LEVEL = 5
@@ -239,6 +240,7 @@ class VirtualenvContext(Context):
 
     def initialize(self):
         Context.initialize(self)
+        global error_state
         log_info('changing to temp directory:', self.tempdir)
         
         self.cwd = os.getcwd()
@@ -249,7 +251,6 @@ class VirtualenvContext(Context):
 
         (ret, out, err) = _run_command([self.easy_install, '-U', 'pip'])
         if ret != 0:
-            VirtualenvContext.finish(self)
             raise Exception("error in installing pip: %s, %s" % (out, err))
         
         for dep in self.dependencies:
@@ -258,7 +259,10 @@ class VirtualenvContext(Context):
                                             dep])
 
             if ret != 0:
-                raise Exception("pip cannot install req dependency: %s" % dep)
+                error_state = True
+                print 'about to break'
+                log_critical('pip could not isntall req dependency: %s' % dep)
+                break
             
         for dep in self.optional:
             log_info("installing optional dependency:", dep)
@@ -750,9 +754,20 @@ def _upload_file(server_url, fileobj, auth_key):
 
 def do(name, commands, context=None, arch=None, stop_if_failure=True):
     reslist = []
-
+    
     if context:
         context.initialize()
+    print 'error_state:',error_state
+    if error_state:
+        context.finish()
+        success = False
+        arch = get_arch()
+        client_info = dict(package=name, arch=arch, success=success)
+        print 'client_info:',client_info
+        context.update_client_info(client_info)
+        files_to_upload = None
+        return (client_info, reslist, files_to_upload)
+        
 
     for c in commands:
         log_debug('running:', str(c))
@@ -763,7 +778,7 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
             context.end_command(c)
 
         reslist.append(c.get_results())
-
+        
         if stop_if_failure and not c.success():
             break
 
@@ -867,7 +882,7 @@ def parse_cmdline(argv=[]):
                        action='store', default=[],
                        help='comma-delimited list of tags to be applied')
     cmdline.add_option('-l', '--log-level', dest='log_level',
-                       action'store', default='WARNING_LEVEL',
+                       action='store', default='WARNING_LEVEL',
                        help='Change the amount of output you get during build process.')
 
     if not argv:
