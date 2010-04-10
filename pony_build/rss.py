@@ -22,7 +22,9 @@ canonical URLs
 
 """
 
-import datetime
+MAX=50
+
+from datetime import datetime, timedelta
 import traceback
 from cStringIO import StringIO
 from .PyRSS2Gen import RSS2, RSSItem, _element, Guid, Source
@@ -30,6 +32,8 @@ from .pubsubhubbub_publish import publish as push_publish, PublishError
 
 build_snoopers = {}
 build_snoopers_rev = {}
+
+wildcard_snoopers = []
 snoopers_per_package = {}
 
 def add_snooper(snooper, key):
@@ -40,6 +44,9 @@ def add_snooper(snooper, key):
     assert key not in build_snoopers
     build_snoopers[key] = snooper
     build_snoopers_rev[snooper] = key
+
+def register_wildcard_snooper(snooper):
+    wildcard_snoopers.append(snooper)
 
 def register_snooper_for_package(package, snooper):
     """
@@ -99,6 +106,108 @@ class BuildSnooper(object):
     def is_match(self, receipt, client_info, results):
         pass
 
+class BuildSnooper_All(object):
+    def __init__(self, only_failures=False):
+        self.report_successes = not only_failures
+
+    def __str__(self):
+        modifier = 'failed'
+        if self.report_successes:
+            modifier = 'all'
+        return 'Report on %s builds' % modifier
+
+    def is_match(self, *args):
+        (receipt, client_info, results) = args
+        success = client_info['success']
+        
+        if not self.report_successes and success:
+            return False
+            
+        return True
+
+    def generate_rss(self, pb_coord, package_url, per_result_url,
+                     source_url=''):
+
+        it = []
+        keys = list(reversed(sorted(pb_coord.db.keys())))
+        now = datetime.now()
+        a_week = timedelta(days=1)
+        
+        for n, k in enumerate(keys):
+            (receipt, client_info, results_list) = pb_coord.db[k]
+            tagset = client_info['tags']
+
+            t = receipt['time']
+            t = datetime.fromtimestamp(t)
+
+            if now - t > a_week:
+                break
+            
+            it.append((t, (tagset, receipt, client_info, results_list)))
+
+        if not self.report_successes:
+            it = [ (t, v) for (t, v) in it if not v[2]['success'] ]
+        
+        rss_items = []
+        for n, (_, v) in enumerate(it):
+            if n > MAX:
+                break
+            
+            tagset = sorted([ x for x in list(v[0]) if not x.startswith('__')])
+            tagset = ", ".join(tagset)
+
+            _, receipt, client_info, _ = v
+            result_key = receipt['result_key']
+            status = client_info['success']
+
+            x = []
+            if status:
+                title = 'Package %s build succeeded (tags %s)' % \
+                        (client_info['package'], tagset)
+                x.append("status: success")
+            else:
+                title = 'Package %s build FAILED (tags %s)' % \
+                        (client_info['package'], tagset)
+                x.append("status: failure")
+
+            x.append("result_key: %s" % (receipt['result_key'],))
+            x.append("package: %s" % (client_info['package'],))
+            x.append("build host: %s" % (client_info['host'],)) # @CTB XSS
+            x.append("build arch: %s" % (client_info['arch'],))
+
+            tags = list(client_info['tags'])
+            x.append("tags: %s" % (", ".join(tags)))
+            description = "<br>".join(x)
+
+            pubDate = datetime.fromtimestamp(v[1]['time'])
+
+            link = per_result_url % dict(result_key=result_key,
+                                         package=client_info['package'])
+
+            source_obj = Source('package build & test information for "%s"' % client_info['package'], source_url)
+            
+            item = RSSItem(title=title,
+                           link=link,
+                           description=description,
+                           guid=Guid(link),
+                           pubDate=pubDate,
+                           source=source_obj)
+
+            rss_items.append(item)
+
+        rss = PuSH_RSS2(
+            title = "pony-build feed",
+            link = 'XXX',
+            description = 'all package build & test information',
+
+            lastBuildDate = datetime.now(),
+            items=rss_items
+          )
+
+        fp = StringIO()
+        rss.write_xml(fp)
+        return fp.getvalue()
+        
 class PackageSnooper(BuildSnooper):
     def __init__(self, package_name, only_failures=False, register=True):
         self.package_name = package_name
@@ -157,7 +266,7 @@ class PackageSnooper(BuildSnooper):
             x.append("tags: %s" % (", ".join(tags)))
             description = "<br>".join(x)
 
-            pubDate = datetime.datetime.fromtimestamp(v[0]['time'])
+            pubDate = datetime.fromtimestamp(v[0]['time'])
 
             link = per_result_url % dict(result_key=result_key,
                                          package=self.package_name)
@@ -179,7 +288,7 @@ class PackageSnooper(BuildSnooper):
             description = 'package build & test information for "%s"' \
                 % self.package_name,
 
-            lastBuildDate = datetime.datetime.now(),
+            lastBuildDate = datetime.now(),
             items=rss_items
           )
 

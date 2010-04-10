@@ -2,7 +2,7 @@
 import sys
 import distutils
 from pony_client import BuildCommand, TestCommand, do, send, \
-     Context, TempDirectoryContext, SetupCommand, SvnUpdate, check, parse_cmdline
+     Context, TempDirectoryContext, SetupCommand, SvnCheckout, check, parse_cmdline
 
 options, args = parse_cmdline()
 if args:
@@ -24,7 +24,7 @@ if not options.force_build:
 
 
 context = Context()
-#SvnUpdate('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
+#SvnCheckout('python27', repo_url, name='checkout', cache_dir='~/.pony-build/python27'),
 
 commands = [
              BuildCommand(['build.bat'], name='build.bat', run_cwd='pcbuild', subprocess_kwargs=dict(shell=True), ignore_failure=True, verbose=True),

@@ -26,7 +26,7 @@ pb_servers = {
     }
 pb_servers['default'] = pb_servers['pb-dev']
 
-error_state = False
+
 ###
 
 DEBUG_LEVEL = 5
@@ -208,7 +208,7 @@ class VirtualenvContext(Context):
     VirtualenvContext works by modifying the path to the Python executable.
     """
     def __init__(self, always_cleanup=True, dependencies=[], optional=[],
-                 python='python'):
+                 python='python', include_site_packages=False):
         Context.__init__(self)
         self.cleanup = always_cleanup
         self.dependencies = dependencies
@@ -222,8 +222,16 @@ class VirtualenvContext(Context):
         self.tempdir = tempfile.mkdtemp()
 
         log_info('creating virtualenv')
+
         cmdlist = [python, '-m', 'virtualenv', '--no-site-packages',
                    self.tempdir]
+
+        cmdlist = list([python, '-m', 'virtualenv'])
+        if not include_site_packages:
+            cmdlist.append('--no-site-packages')
+
+        cmdlist.append(self.tempdir)
+
         (ret, out, err) = _run_command(cmdlist)
 
         if ret != 0:
@@ -237,10 +245,11 @@ class VirtualenvContext(Context):
         self.pip = os.path.join(bindir, 'pip')
 
         os.environ['PATH'] = bindir + os.pathsep + os.environ['PATH']
+        log_debug("modified PATH to include virtualenv bindir: '%s'" % bindir)
 
     def initialize(self):
         Context.initialize(self)
-        global error_state
+        
         log_info('changing to temp directory:', self.tempdir)
         
         self.cwd = os.getcwd()
@@ -259,10 +268,7 @@ class VirtualenvContext(Context):
                                             dep])
 
             if ret != 0:
-                error_state = True
-                print 'about to break'
-                log_critical('pip could not install req dependency: %s' % dep)
-                break
+                raise Exception("pip cannot install req dependency: %s" % dep)
             
         for dep in self.optional:
             log_info("installing optional dependency:", dep)
@@ -387,6 +393,33 @@ class BuildCommand(BaseCommand):
 class TestCommand(BaseCommand):
     command_type = 'test'
     command_name = 'test'
+
+class CopyLocalDir(BuildCommand):
+    def __init__(self, fromdir, to_name):
+        self.ignore_failure = False
+        self.fromdir = fromdir
+        self.to_name = to_name
+        self.results_dict = dict(fromdir=fromdir, to_name=to_name)
+        
+    def run(self, context):
+        self.results_dict['out'] = self.results_dict['errout'] = ''
+
+        try:
+            shutil.copytree(self.fromdir, self.to_name)
+            context.build_dir = os.path.join(os.getcwd(), 'Caper')
+            self.status = 0
+        except Exception, e:
+            self.errout = str(e)
+            self.status = 1
+
+    def get_results(self):
+        self.results_dict['status'] = self.status
+        self.results_dict['type'] = self.command_type
+        self.results_dict['name'] = self.command_name
+
+        return self.results_dict
+            
+
 
 class PythonPackageEgg(BaseCommand):
     command_type = 'package'
@@ -667,7 +700,10 @@ class SvnCheckout(_VersionControlClientBase):
         return self.dirname
 
     def update_repository(self):
-        cmdlist = ['svn', 'update', '--accept', 'theirs-full']
+        # adding '--accept', 'theirs-full' is a good idea for newer versions
+        # of svn; this automatically accepts dodgy security certs.
+        cmdlist = ['svn', 'update']
+        
         (ret, out, err) = _run_command(cmdlist)
 
         self.results_dict['svn update'] = dict(status=ret, output=out,
@@ -757,18 +793,7 @@ def do(name, commands, context=None, arch=None, stop_if_failure=True):
     
     if context:
         context.initialize()
-    print 'error_state:',error_state
-    if error_state:
-        context.finish()
-        success = False
-        arch = get_arch()
-        client_info = dict(package=name, arch=arch, success=success)
-        print 'client_info:',client_info
-        context.update_client_info(client_info)
-        files_to_upload = None
-        return (client_info, reslist, files_to_upload)
         
-
     for c in commands:
         log_debug('running:', str(c))
         if context:
@@ -874,6 +899,10 @@ def parse_cmdline(argv=[]):
                        action='store_true', default=False,
                        help='set verbose reporting')
                        
+    cmdline.add_option('--debug', dest='debug',
+                       action='store_true', default=False,
+                       help='set debug reporting')
+                       
     cmdline.add_option('-e', '--python-executable', dest='python_executable',
                        action='store', default='python',
                        help='override the version of python used to build with')
@@ -896,9 +925,18 @@ def parse_cmdline(argv=[]):
         
     # there should be nothing in args.
     # if there is, print a warning, then crash and burn.
-    if args:
-        print "Error--unknown arguments detected.  Failing..."
-        sys.exit(0)
+    #if args:
+    #    print "Error--unknown arguments detected.  Failing..."
+    #    sys.exit(0)
+
+    if options.verbose:
+        set_log_level(INFO_LEVEL)
+
+    if options.debug:
+        set_log_level(DEBUG_LEVEL)
+
+    if not options.report:
+        options.force_build = True
 
     return options, args
 

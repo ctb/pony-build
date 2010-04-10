@@ -3,7 +3,7 @@ import sys
 import pprint
 import distutils
 from pony_client import BuildCommand, TestCommand, do, send, \
-     TempDirectoryContext, SetupCommand, SvnUpdate, check, parse_cmdline
+     TempDirectoryContext, SetupCommand, SvnCheckout, check, parse_cmdline
 
 options, args = parse_cmdline()
 if args:
@@ -29,7 +29,7 @@ if distutils.util.get_platform().startswith('macosx'):
     built_exe = './python.exe'
 
 context = TempDirectoryContext()
-commands = [ SvnUpdate('python32', repo_url, name='checkout'),
+commands = [ SvnCheckout('python32', repo_url, name='checkout'),
              BuildCommand(['./configure'], name='configure'),
              BuildCommand(['make'], name='make'),
              TestCommand([built_exe, 'Lib/test/regrtest.py'], name='regrtest')
