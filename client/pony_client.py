@@ -859,6 +859,7 @@ def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
 def get_server_url(server_name):
     try_url = urlparse.urlparse(server_name)
     if try_url[0]:                      # urlparse -> scheme
+        server_name = urlparse.urljoin(server_name, 'xmlrpc')
         server_url = server_name
     else: # not a URL?
         server_url = pb_servers[server_name]
