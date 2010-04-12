@@ -93,16 +93,18 @@ class Test_MercurialCachingCheckout(object):
         assert os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
     def test_other_branch(self):
         "Run the HgClone command for another branch."
-        
-        command = HgClone(self.repository_url, '-r', 7 )
+         
+        command = HgClone('http://bitbucket.org/cherkf/pony-build-hg-test/')
         command.run(self.context)
+        #commands.getoutput('hg', 'update', 'extrabranch')
+        
+        #pprint.pprint(cmdlist.get_results()) #debugging output
 
         # check version info
         results_info = command.get_results()
         pprint.pprint(results_info) # debugging output
 
-        assert results_info['version_info'] == """
-1d4537588c4c\ look ma, another branch\\!"""
+        assert results_info['version_info'] == '949a4d660f2e 2 default'
         assert results_info['version_type'] == 'hg'
 
         # check files
@@ -110,9 +112,9 @@ class Test_MercurialCachingCheckout(object):
         os.chdir(self.context.tempdir)
         try:
             assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
-            assert not os.path.exists(os.path.join('pony-build-hg-test',
+            assert  os.path.exists(os.path.join('pony-build-hg-test',
                                                    'test2'))
-            assert os.path.exists(os.path.join('pony-build-hg-test', 'test4'))
+          #  assert os.path.exists(os.path.join('pony-build-hg-test', 'test4'))
         finally:
             os.chdir(cwd)
  
@@ -141,12 +143,12 @@ class Test_MercurialCachingUpdate(object):
         (ret, out, err) = _run_command(['hg', 'clone', self.repository_url])
         assert ret == 0, (out, err)
  
-        # forcibly check out revision 0 instead of revision 1.
-        (ret, out, err) = _run_command(['hg', 'checkout', '0'],
+        # forcibly check out revision 7 instead of revision 1.
+        (ret, out, err) = _run_command(['hg', 'checkout', '7'],
                                        cwd='pony-build-hg-test')
         assert ret == 0, (out, err)
         assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
-        assert not os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
+        assert  os.path.exists(os.path.join('pony-build-hg-test', 'test4.py'))
  
         os.chdir(cwd) # return to working dir.
         
@@ -170,25 +172,31 @@ class Test_MercurialCachingUpdate(object):
     def test_other_branch(self):
         "Run the HgClone command for another branch."
         
-        command = HgClone(self.repository_url, '-r', 7)
+        command = HgClone(self.repository_url)
         command.run(self.context)
-
+         # forcibly check out revision 7 instead of revision 1.
+        (ret, out, err) = _run_command(['hg', 'checkout', '7'],
+                                       cwd='pony-build-hg-test')
+        (ret, out, err) = _run_command(['hg', 'identify'],
+                                       cwd='pony-build-hg-test')
+ 
+        #os.chdir(cwd) # return to working dir.
         # check version info
         results_info = command.get_results()
         pprint.pprint(results_info) # debugging output
 
-        assert results_info['version_info'] == """\
-1d4537588c4c look ma, another branch\\!"""
+        assert results_info['version_info'] == '949a4d660f2e 2 default'
         assert results_info['version_type'] == 'hg'
 
         # check files
         cwd = os.getcwd()
         os.chdir(self.context.tempdir)
         try:
-            assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
-            assert not os.path.exists(os.path.join('pony-build-hg-test',
+             assert ret == 0, (out, err)
+             assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
+             assert os.path.exists(os.path.join('pony-build-hg-test',
                                                    'test2'))
-            assert os.path.exists(os.path.join('pony-build-hg-test', 'test4'))
+             assert os.path.exists(os.path.join('pony-build-hg-test', 'test4.py'))
         finally:
             os.chdir(cwd)
  
