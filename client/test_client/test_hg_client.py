@@ -91,6 +91,7 @@ class Test_MercurialCachingCheckout(object):
         os.chdir(self.context.tempdir)
         assert os.path.exists(os.path.join('pony-build-hg-test', 'test1'))
         assert os.path.exists(os.path.join('pony-build-hg-test', 'test2'))
+        
     def test_other_branch(self):
         "Run the HgClone command for another branch."
          
