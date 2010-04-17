@@ -94,7 +94,7 @@ def _replace_variables(cmd, variables_d):
     return cmd
 
 
-def _run_command(command_list, timeout=None, cwd=None, variables=None, extra_kwargs={},
+def _run_command(command_list, cwd=None, variables=None, extra_kwargs={},
                  verbose=False):
 
     if variables:
