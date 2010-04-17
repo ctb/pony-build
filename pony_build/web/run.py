@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_option('-p', '--port', dest='port', help='port to bind',
                       type='int', default='5000')
     parser.add_option('-f', '--dbfile', dest='dbfile',
-                     help='name for dbfile', type='string',
+                     help='database filename', type='string',
                       default=':memory:')
     parser.add_option('-u', '--url', dest='url', help='public URL',
                       default=None)
