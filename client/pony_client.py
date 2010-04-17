@@ -888,13 +888,21 @@ class PythonVersionNotFound(Exception):
         return repr(self.python_exe + " not found on system.")
 
 
-def get_python_version(python_exe):
-    result = subprocess.Popen(python_exe + " -c \"import sys \nprint" \
-    " str(sys.version_info[0]) + '.' + str(sys.version_info[1])\"", shell=True, \
-    stdout=subprocess.PIPE).communicate()
-    if result[0] == '':
+def get_python_version(python_exe='python'):
+    """
+    Return the major.minor number for the given Python executable.
+    """
+    
+    cmd = python_exe + " -c \"import sys \nprint" \
+    " str(sys.version_info[0]) + '.' + str(sys.version_info[1])\""
+    
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    
+    if not stdout:
         raise PythonVersionNotFound(python_exe)
-    return "python" + str(result[0][:-1])
+    
+    return stdout.strip()
 
 ###
 
