@@ -22,7 +22,7 @@ import signal
 
 pb_servers = {
     'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
-    'local' : 'http://localhost:8000/xmlrpc'
+    'local' : 'http://localhost:8080/xmlrpc'
     }
 pb_servers['default'] = pb_servers['pb-dev']
 
@@ -887,7 +887,7 @@ def parse_cmdline(argv=[]):
                        help='do not clean up the temp directory')
 
     cmdline.add_option('-s', '--server-url', dest='server_url',
-                       action='store', default='default',
+                       action='store', default='local',
                        help='set pony-build server URL for reporting results')
 
     cmdline.add_option('-v', '--verbose', dest='verbose',
@@ -935,13 +935,28 @@ def parse_cmdline(argv=[]):
 
 ###
 
+class PythonVersionNotFound(Exception):
+    def __init__(self, python_exe):
+        self.python_exe = python_exe
+    def __str__(self):
+        return repr(self.python_exe + " not found on system.")
 
-def test_python_version(python_exe):
-    result = subprocess.Popen(python_exe + " -c \"print 'hello, world'\"", shell=True, \
-                    stdout=subprocess.PIPE).communicate()
-    if result[0] != "hello, world\n":
-        return False
-    return True
+
+def get_python_version(python_exe='python'):
+    """
+    Return the major.minor number for the given Python executable.
+    """
+    
+    cmd = python_exe + " -c \"import sys \nprint" \
+    " str(sys.version_info[0]) + '.' + str(sys.version_info[1])\""
+    
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    
+    if not stdout:
+        raise PythonVersionNotFound(python_exe)
+    
+    return stdout.strip()
 
 ###
 
