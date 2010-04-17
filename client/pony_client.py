@@ -17,10 +17,12 @@ import traceback
 from optparse import OptionParser
 import pprint
 import glob
+import datetime
+import signal
 
 pb_servers = {
     'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
-    'local' : 'http://localhost:8000/xmlrpc'
+    'local' : 'http://localhost:8080/xmlrpc'
     }
 pb_servers['default'] = pb_servers['pb-dev']
 
@@ -91,7 +93,10 @@ def _replace_variables(cmd, variables_d):
         cmd = variables_d[cmd[3:]]
     return cmd
 
-def _run_command(command_list, cwd=None, variables=None, extra_kwargs={}):
+
+def _run_command(command_list, timeout=None, cwd=None, variables=None, extra_kwargs={},
+                 verbose=False):
+
     if variables:
         x = []
         for cmd in command_list:
@@ -839,6 +844,8 @@ def send(server_url, x, hostname=None, tags=()):
             _upload_file(server_url, fileobj, auth_key)
 
 def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
+    import socket
+    
     if hostname is None:
         hostname = get_hostname()
 
@@ -848,12 +855,18 @@ def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     server_url = get_server_url(server_url)
     s = xmlrpclib.ServerProxy(server_url, allow_none=True)
-    (flag, reason) = s.check_should_build(client_info, True, reserve_time)
+    try:
+        (flag, reason) = s.check_should_build(client_info, True, reserve_time)
+    except socket.error:
+        log_critical('cannot connect to pony-build server: %s' % server_url)
+        sys.exit(-1)
+        
     return flag
 
 def get_server_url(server_name):
     try_url = urlparse.urlparse(server_name)
     if try_url[0]:                      # urlparse -> scheme
+        server_name = urlparse.urljoin(server_name, 'xmlrpc')
         server_url = server_name
     else: # not a URL?
         server_url = pb_servers[server_name]
@@ -882,7 +895,7 @@ def parse_cmdline(argv=[]):
                        help='do not clean up the temp directory')
 
     cmdline.add_option('-s', '--server-url', dest='server_url',
-                       action='store', default='default',
+                       action='store', default='pb-dev',
                        help='set pony-build server URL for reporting results')
 
     cmdline.add_option('-v', '--verbose', dest='verbose',
@@ -930,13 +943,28 @@ def parse_cmdline(argv=[]):
 
 ###
 
+class PythonVersionNotFound(Exception):
+    def __init__(self, python_exe):
+        self.python_exe = python_exe
+    def __str__(self):
+        return repr(self.python_exe + " not found on system.")
 
-def test_python_version(python_exe):
-    result = subprocess.Popen(python_exe + " -c \"print 'hello, world'\"", shell=True, \
-                    stdout=subprocess.PIPE).communicate()
-    if result[0] != "hello, world\n":
-        return False
-    return True
+
+def get_python_version(python_exe='python'):
+    """
+    Return the major.minor number for the given Python executable.
+    """
+    
+    cmd = python_exe + " -c \"import sys \nprint" \
+    " str(sys.version_info[0]) + '.' + str(sys.version_info[1])\""
+    
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    
+    if not stdout:
+        raise PythonVersionNotFound(python_exe)
+    
+    return stdout.strip()
 
 ###
 
