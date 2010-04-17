@@ -26,6 +26,10 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
 
+    if args:
+        print "pony-build Web server doesn't take any arguments??"
+        sys.exit(-1)
+
     push_server = None
     if options.use_pubsubhubbub:
         push_server = options.push_server

@@ -59,12 +59,10 @@ def run_server(DB_FILE, PORT=None):
         PORT = int(os.environ.get('PB_TEST_PORT', DEFAULT_PORT))
 
     print 'STARTING:', sys.executable, 'pony_build.web.run', os.getcwd()
-    print [sys.executable, '-u',
-                                '-m', 'pony_build.web.run', DB_FILE,
-                                '-p', str(PORT)],
-    process = subprocess.Popen([sys.executable, '-u',
-                                '-m', 'pony_build.web.run', DB_FILE,
-                                '-p', str(PORT)],
+    cmdlist = [sys.executable, '-u',
+               '-m', 'pony_build.web.run', '-f', DB_FILE,
+               '-p', str(PORT)]
+    process = subprocess.Popen(cmdlist,
                                stderr=subprocess.STDOUT,
                                stdout=subprocess.PIPE)
 

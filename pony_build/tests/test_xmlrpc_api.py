@@ -52,6 +52,7 @@ def setup():
     
     global rpc_url
     rpc_url = testutil._server_url + 'xmlrpc'
+    print 'RPC URL:', rpc_url
 
 def teardown():
     testutil.kill_server()
@@ -62,8 +63,8 @@ def test_check_fn():
     hostname = 'testhost'
     arch = 'fooarch'
 
-    assert not pbc.check(package, rpc_url,
-                         tags=tags, hostname=hostname, arch=arch)
+    x = pbc.check(package, rpc_url, tags=tags, hostname=hostname, arch=arch)
+    assert not x, x
 
 def test_send_fn():
     client_info = dict(package='test-underway2', arch='fooarch2',
