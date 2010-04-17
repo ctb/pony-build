@@ -21,8 +21,8 @@ import datetime
 import signal
 
 pb_servers = {
-    'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
-    'local' : 'http://localhost:8000/xmlrpc'
+    'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/',
+    'local' : 'http://localhost:8000/'
     }
 pb_servers['default'] = pb_servers['pb-dev']
 
@@ -864,8 +864,7 @@ def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
 def get_server_url(server_name):
     try_url = urlparse.urlparse(server_name)
     if try_url[0]:                      # urlparse -> scheme
-        server_name = urlparse.urljoin(server_name, 'xmlrpc')
-        server_url = server_name
+        server_url = urlparse.urljoin(server_name, 'xmlrpc')
     else: # not a URL?
         server_url = pb_servers[server_name]
 
