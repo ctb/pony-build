@@ -866,8 +866,8 @@ def get_server_url(server_name):
     if try_url[0]:                      # urlparse -> scheme
         server_url = urlparse.urljoin(server_name, 'xmlrpc')
     else: # not a URL?
-        server_url = pb_servers[server_name]
-
+        server_temp = pb_servers[server_name]
+        server_url = urlparse.urljoin(server_temp, 'xmlrpc')
     return server_url
 
 def get_tagsets_for_package(server, package):
