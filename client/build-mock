@@ -14,7 +14,7 @@ if args:
 repo_url = 'http://mock.googlecode.com/svn/trunk/'
 dirname = 'mock-read-only'
 tags = [python_exe]
-name = 'build-mock'
+name = 'mock'
 server_url = options.server_url
 
 if not options.force_build:
