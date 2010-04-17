@@ -67,13 +67,13 @@ Build steps:<br>
    <b>command line:</b>{{ r['command'] }}<br>
    
    {% if r.has_key('output') and r['output'].strip() %}
-   <b>stdout:</b><tt><div class='resultpre'>{{ r['output'] }}</div></tt><br>
+   <b>stdout:</b><tt><div class='resultpre'>{{ r['output']|e }}</div></tt><br>
    {% else %}
    <i>no stdout</i><br>
    {% endif %}
 
    {% if r['errout'].strip() %}
-   <b>stderr:</b><tt><div class='resultpre'>{{ r['errout'] }}</div></tt><br>
+   <b>stderr:</b><tt><div class='resultpre'>{{ r['errout']|e }}</div></tt><br>
    {% else %}
    <i>no stderr</i><br>
    {% endif %}

@@ -33,7 +33,7 @@ Client info:
    <li>Result {{ loop.index }}:<br>
    <div class='resultpre'>
    {% for k, v in result_d.items() -%}
-      {{ k }}: {{ v }}
+      {{ k|e }}: {{ v|e }}
    {% endfor -%}
    </div>
 </div>

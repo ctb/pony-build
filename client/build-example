@@ -20,7 +20,7 @@ if not options.force_build:
         sys.exit(0)
 
 commands = [ BuildCommand(['/bin/echo', 'hello, world'], name='David'),
-             TestCommand(['/bin/echo', 'this is a test'], name='Bill')
+             TestCommand(['/bin/echo', 'this is a test <> &'], name='Bill')
              ]
 
 context = TempDirectoryContext()
