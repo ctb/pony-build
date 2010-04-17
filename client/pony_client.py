@@ -17,6 +17,8 @@ import traceback
 from optparse import OptionParser
 import pprint
 import glob
+import datetime
+import signal
 
 pb_servers = {
     'pb-dev' : 'http://lyorn.idyll.org/ctb/pb-dev/xmlrpc',
@@ -91,7 +93,10 @@ def _replace_variables(cmd, variables_d):
         cmd = variables_d[cmd[3:]]
     return cmd
 
-def _run_command(command_list, cwd=None, variables=None, extra_kwargs={}):
+
+def _run_command(command_list, timeout=None, cwd=None, variables=None, extra_kwargs={},
+                 verbose=False):
+
     if variables:
         x = []
         for cmd in command_list:
