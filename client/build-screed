@@ -2,18 +2,19 @@
 import sys
 import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
-     TempDirectoryContext, SetupCommand, GitClone, check, parse_cmdline, \
-     PythonPackageEgg, get_python_version
+     VirtualenvContext, SetupCommand, GitClone, check, parse_cmdline, \
+     PythonPackageEgg
 
-options, _ = parse_cmdline()
+options, args = parse_cmdline()
 
-python_exe = options.python_executable
+python_exe = 'python2.5'
+if args:
+    python_exe = args[0]
 
-repo_url = 'git://quixote.ca/quixote'
+repo_url = 'git://github.com/ctb/screed.git'
 
-python_ver = 'python' + get_python_version(python_exe)
-tags = [python_ver] + options.tagset
-name = 'quixote'
+tags = [python_exe]
+name = 'screed'
 
 server_url = options.server_url
 
@@ -22,9 +23,13 @@ if not options.force_build:
         print 'check build says no need to build; bye'
         sys.exit(0)
 
-context = TempDirectoryContext()
+# requires pygr, which isn't pip-installable.
+context = VirtualenvContext(dependencies=['nose'], include_site_packages=True,
+                            python=python_exe)
 commands = [ GitClone(repo_url, name='checkout'),
-             BuildCommand([python_exe, 'setup.py', 'install'], name='compile')]
+             BuildCommand([python_exe, 'setup.py', 'install']),
+             TestCommand(['nosetests'], name='run tests'),
+             PythonPackageEgg(python_exe) ]
 
 results = do(name, commands, context=context)
 client_info, reslist, files = results

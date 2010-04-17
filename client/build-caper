@@ -1,19 +1,24 @@
 #! /usr/bin/env python
-import sys
+import sys, os
 import pprint
 from pony_client import BuildCommand, TestCommand, do, send, \
-     TempDirectoryContext, SetupCommand, SvnCheckout, check, parse_cmdline
+     VirtualenvContext, SetupCommand, GitClone, check, parse_cmdline, \
+     PythonPackageEgg
 
 options, args = parse_cmdline()
-
-repo_url = 'http://twill.googlecode.com/svn/branches/0.9.2-dev/twill'
 
 python_exe = 'python2.5'
 if args:
     python_exe = args[0]
 
-name = 'twill'
+repo_url = 'git://github.com/ctb/Caper.git'
+
+# for installation by pip
+screed_repo = 'git+git://github.com/acr/screed.git'
+
 tags = [python_exe]
+name = 'caper'
+
 server_url = options.server_url
 
 if not options.force_build:
@@ -21,11 +26,16 @@ if not options.force_build:
         print 'check build says no need to build; bye'
         sys.exit(0)
 
-commands = [ SvnCheckout('twill', repo_url, name='checkout'),
-             BuildCommand([python_exe, 'setup.py', 'test'])
-             ]
+# requires pygr, which isn't pip-installable; include_site_packages.
+context = VirtualenvContext(dependencies=['nose', screed_repo],
+                            include_site_packages=True,
+                            python=python_exe,
+                            always_cleanup=options.cleanup_temp)
 
-context = TempDirectoryContext()
+commands = [ GitClone(repo_url, name='checkout'),
+             BuildCommand(['make', 'clean', 'all'], run_cwd='Pyrex'),
+             BuildCommand(['make', 'tests'], run_cwd='Pyrex') ]
+
 results = do(name, commands, context=context)
 client_info, reslist, files = results
 
