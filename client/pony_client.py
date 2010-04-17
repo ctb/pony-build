@@ -844,6 +844,8 @@ def send(server_url, x, hostname=None, tags=()):
             _upload_file(server_url, fileobj, auth_key)
 
 def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
+    import socket
+    
     if hostname is None:
         hostname = get_hostname()
 
@@ -853,7 +855,12 @@ def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     server_url = get_server_url(server_url)
     s = xmlrpclib.ServerProxy(server_url, allow_none=True)
-    (flag, reason) = s.check_should_build(client_info, True, reserve_time)
+    try:
+        (flag, reason) = s.check_should_build(client_info, True, reserve_time)
+    except socket.error:
+        log_critical('cannot connect to pony-build server: %s' % server_url)
+        sys.exit(-1)
+        
     return flag
 
 def get_server_url(server_name):
@@ -888,7 +895,7 @@ def parse_cmdline(argv=[]):
                        help='do not clean up the temp directory')
 
     cmdline.add_option('-s', '--server-url', dest='server_url',
-                       action='store', default='local',
+                       action='store', default='pb-dev',
                        help='set pony-build server URL for reporting results')
 
     cmdline.add_option('-v', '--verbose', dest='verbose',
