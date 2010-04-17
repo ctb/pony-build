@@ -223,9 +223,6 @@ class VirtualenvContext(Context):
 
         log_info('creating virtualenv')
 
-        cmdlist = [python, '-m', 'virtualenv', '--no-site-packages',
-                   self.tempdir]
-
         cmdlist = list([python, '-m', 'virtualenv'])
         if not include_site_packages:
             cmdlist.append('--no-site-packages')
@@ -849,6 +846,8 @@ def send(server_url, x, hostname=None, tags=()):
             _upload_file(server_url, fileobj, auth_key)
 
 def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
+    import socket
+    
     if hostname is None:
         hostname = get_hostname()
 
@@ -858,7 +857,12 @@ def check(name, server_url, tags=(), hostname=None, arch=None, reserve_time=0):
     client_info = dict(package=name, host=hostname, arch=arch, tags=tags)
     server_url = get_server_url(server_url)
     s = xmlrpclib.ServerProxy(server_url, allow_none=True)
-    (flag, reason) = s.check_should_build(client_info, True, reserve_time)
+    try:
+        (flag, reason) = s.check_should_build(client_info, True, reserve_time)
+    except socket.error:
+        log_critical('cannot connect to pony-build server: %s' % server_url)
+        sys.exit(-1)
+        
     return flag
 
 def get_server_url(server_name):
@@ -892,7 +896,7 @@ def parse_cmdline(argv=[]):
                        help='do not clean up the temp directory')
 
     cmdline.add_option('-s', '--server-url', dest='server_url',
-                       action='store', default='default',
+                       action='store', default='pb-dev',
                        help='set pony-build server URL for reporting results')
 
     cmdline.add_option('-v', '--verbose', dest='verbose',
@@ -910,9 +914,6 @@ def parse_cmdline(argv=[]):
     cmdline.add_option('-t', '--tagset', dest='tagset',
                        action='store', default=[],
                        help='comma-delimited list of tags to be applied')
-    cmdline.add_option('-l', '--log-level', dest='log_level',
-                       action='store', default='WARNING_LEVEL',
-                       help='Change the amount of output you get during build process.')
 
     if not argv:
         (options, args) = cmdline.parse_args()
@@ -943,13 +944,28 @@ def parse_cmdline(argv=[]):
 
 ###
 
+class PythonVersionNotFound(Exception):
+    def __init__(self, python_exe):
+        self.python_exe = python_exe
+    def __str__(self):
+        return repr(self.python_exe + " not found on system.")
 
-def test_python_version(python_exe):
-    result = subprocess.Popen(python_exe + " -c \"print 'hello, world'\"", shell=True, \
-                    stdout=subprocess.PIPE).communicate()
-    if result[0] != "hello, world\n":
-        return False
-    return True
+
+def get_python_version(python_exe='python'):
+    """
+    Return the major.minor number for the given Python executable.
+    """
+    
+    cmd = python_exe + " -c \"import sys \nprint" \
+    " str(sys.version_info[0]) + '.' + str(sys.version_info[1])\""
+    
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    
+    if not stdout:
+        raise PythonVersionNotFound(python_exe)
+    
+    return stdout.strip()
 
 ###
 
