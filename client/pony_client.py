@@ -662,7 +662,6 @@ class HgClone(_VersionControlClientBase):
             cwd = os.getcwd()
             raise Exception("cannot clone repository %s in %s" % (url, cwd))
 
-        # @CTB branch stuff unimplemented
         if self.branch != 'default':
             # update to the right branch
             branchspec = '%s:%s' % (self.branch, self.branch)
