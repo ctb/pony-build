@@ -188,18 +188,18 @@ class TempDirectoryContext(Context):
         log_info('changing to temp directory:', self.tempdir)
         os.chdir(self.tempdir)
 
-def finish(self):
-    os.chdir(self.cwd)
-    try:
-        Context.finish(self)
-    finally:
-        if self.cleanup:
-            log_info('removing', self.tempdir)
-            shutil.rmtree(self.tempdir, ignore_errors=True)
+    def finish(self):
+        os.chdir(self.cwd)
+        try:
+            Context.finish(self)
+        finally:
+            if self.cleanup:
+                log_info('removing', self.tempdir)
+                shutil.rmtree(self.tempdir, ignore_errors=True)
 
-def update_client_info(self, info):
-    Context.update_client_info(self, info)
-    info['tempdir'] = self.tempdir
+    def update_client_info(self, info):
+        Context.update_client_info(self, info)
+        info['tempdir'] = self.tempdir
 
 class VirtualenvContext(Context):
     """
