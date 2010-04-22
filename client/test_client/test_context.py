@@ -1,4 +1,5 @@
-from pony_client import Context, BaseCommand, do
+import os
+from pony_client import Context, BaseCommand, do, TempDirectoryContext
 import pony_client
 
 class StubCommand(BaseCommand):
@@ -29,7 +30,9 @@ class ExceptedCommand(StubCommand):
 class FailedContextInit(Context):
     def __init__(self, *args, **kwargs):
         Context.__init__(self, *args, **kwargs)
-        pony_client.error_state = True
+    def initialize(self):
+        Context.initialize(self)
+        raise Exception("I suck too")
 
 def test_context_failure():
     c = FailedContextInit()
@@ -48,3 +51,15 @@ def test_exception_command():
 
     (client_info, _, _) = do('foo', [ ExceptedCommand() ], context=c)
     assert not client_info['success']
+
+def test_misc_TempDirectoryContext_things():
+
+    c = TempDirectoryContext()
+
+    c.initialize()
+    # test for temp folder creation
+    assert os.path.exists(c.tempdir)
+
+    c.finish()
+    # test for temp folder proper deletion
+    assert not os.path.exists(c.tempdir)
