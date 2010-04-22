@@ -792,22 +792,30 @@ def _upload_file(server_url, fileobj, auth_key):
 
 def do(name, commands, context=None, arch=None, stop_if_failure=True):
     reslist = []
+    init_status = True
     
     if context:
-        context.initialize()
-        
-    for c in commands:
-        log_debug('running:', str(c))
-        if context:
-            context.start_command(c)
-        c.run(context)
-        if context:
-            context.end_command(c)
+        try:
+            context.initialize()
+        except:
+            init_status = False
 
-        reslist.append(c.get_results())
+    if init_status:
+        for c in commands:
+            log_debug('running:', str(c))
+            if context:
+                context.start_command(c)
+            try:
+                c.run(context)
+            except:
+                break
+            if context:
+                context.end_command(c)
+
+            reslist.append(c.get_results())
         
-        if stop_if_failure and not c.success():
-            break
+            if stop_if_failure and not c.success():
+                break
 
     if context:
         context.finish()
