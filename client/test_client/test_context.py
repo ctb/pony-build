@@ -34,6 +34,12 @@ class FailedContextInit(Context):
         Context.initialize(self)
         raise Exception("I suck too")
 
+def test_successful_command():
+    c = Context()
+
+    (client_info, _, _) = do('foo', [ SuccessfulCommand() ], context=c)
+    assert client_info['success']
+
 def test_context_failure():
     c = FailedContextInit()
 
