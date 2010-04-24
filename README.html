@@ -327,17 +327,19 @@ that communicate via webhooks whenever possible.</p>
 <h1><a id="pony-build-server" name="pony-build-server">pony-build server</a></h1>
 <p>The command:</p>
 <pre class="literal-block">
-python -m pony_build.web.run &lt;shelve filename&gt; -p &lt;port&gt;
+python -m pony_build.web.run -f &lt;shelve filename&gt; -p &lt;port&gt;
 </pre>
 <p>will run the Quixote-based pony-build Web app on the given port,
-reading &amp; writing from the sqlite database in 'filename'.</p>
+reading &amp; writing from the sqlite database in 'filename'.  If you omit
+the '-f' argument, it will use an in-memory database.</p>
 <p>For example,</p>
 <pre class="literal-block">
-python -m pony_build.web.run test.db -p 8080
+python -m pony_build.web.run -f test.db -p 8080
 </pre>
 <p>will run a server that can be accessed on <a class="reference" href="http://localhost:8080/">http://localhost:8080/</a>.  This
 server will report on whatever results are sent to it by the client (see
-below), based on the package name ('name', below).</p>
+below), based on the package name ('name', below).  All data will be
+saved to 'test.db'.</p>
 <p>See 'architecture, and extending pony-build', below.</p>
 </div>
 <div class="section">

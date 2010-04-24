@@ -27,7 +27,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if args:
-        print "pony-build Web server doesn't take any arguments??"
+        print "pony-build Web server doesn't take any arguments??  Maybe you meant to use '-f'"
         sys.exit(-1)
 
     push_server = None

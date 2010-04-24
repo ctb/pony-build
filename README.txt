@@ -48,18 +48,21 @@ pony-build server
 
 The command: ::
 
-   python -m pony_build.web.run <shelve filename> -p <port>
+   python -m pony_build.web.run -f <shelve filename> -p <port>
 
 will run the Quixote-based pony-build Web app on the given port,
-reading & writing from the sqlite database in 'filename'.
+reading & writing from the sqlite database in 'filename'.  If you omit
+the '-f' argument, it will use an in-memory database.
+
 
 For example, ::
 
-   python -m pony_build.web.run test.db -p 8080
+   python -m pony_build.web.run -f test.db -p 8080
 
 will run a server that can be accessed on http://localhost:8080/.  This
 server will report on whatever results are sent to it by the client (see
-below), based on the package name ('name', below).
+below), based on the package name ('name', below).  All data will be
+saved to 'test.db'.
 
 See 'architecture, and extending pony-build', below.
 
